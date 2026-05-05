@@ -1,0 +1,49 @@
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/moderation_banner_premium.png');">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">System</span> Moderacji
+            </h1>
+            <p class="hero-subtitle">
+                Zarządzaj bezpieczeństwem swojego serwera. Skonfiguruj komendy moderacyjne i uprawnienia dla swojej administracji.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-gavel"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">Aktywna</span>
+                    <span class="stat-label">Ochrona serwera</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="settings-card">
+    <div class="card-header">
+        <h3><i class="fas fa-shield-alt"></i> Ustawienia Ogólne</h3>
+    </div>
+    <div class="card-body">
+        <div class="setting-item">
+            <div>
+                <div style="font-weight: 700;">System Moderacji</div>
+                <div style="font-size: 0.8rem; color: var(--text-gray);">Włącza/wyłącza wszystkie komendy moderacyjne (ban, kick, mute).</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="mod-enabled-switch" {% if main_settings.moderation_enabled %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="setting-item">
+            <div>
+                <div style="font-weight: 700;">Wymagaj potwierdzenia</div>
+                <div style="font-size: 0.8rem; color: var(--text-gray);">Bot zapyta o potwierdzenie przed banem/kickiem.</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="mod-confirm-switch" {% if main_settings.moderation_confirm %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div>
+</div>

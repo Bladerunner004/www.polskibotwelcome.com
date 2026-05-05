@@ -1,0 +1,787 @@
+<style>
+    :root {
+        --bg-card: rgba(13, 15, 20, 0.98);
+        --border-gray: rgba(255, 255, 255, 0.08);
+        --accent-green: #74b816;
+        --text-muted: #8b8e94;
+        --discord-embed-bg: #1e1f22;
+        --discord-outer-bg: #2b2d31;
+    }
+
+    .settings-card { background: var(--bg-card); border: 1px solid var(--border-gray); border-radius: 16px; margin-bottom: 24px; max-width: 100%; }
+    .card-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gray); background: linear-gradient(90deg, rgba(116,184,22,0.05), transparent); }
+    .card-header h3 { margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+    .card-header h3 i { color: var(--accent-green); }
+    .card-body { padding: 20px; }
+    
+    /* KONFIGURACJA LISTY */
+    .config-item { 
+        background: rgba(116, 184, 22, 0.08); 
+        border: 1px solid rgba(116, 184, 22, 0.3); 
+        border-radius: 14px; 
+        padding: 18px 24px; 
+        margin-bottom: 12px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        cursor: pointer; 
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .config-item:hover { 
+        background: rgba(116, 184, 22, 0.15); 
+        border-color: var(--accent-green); 
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    .config-item span { font-weight: 700; color: white; display: flex; align-items: center; gap: 12px; }
+    .config-item span i { color: var(--accent-green); font-size: 1.1rem; }
+
+    .new-config-btn { 
+        width: 100%;
+        box-sizing: border-box;
+        border: 2px dashed rgba(116, 184, 22, 0.3); 
+        background: rgba(116, 184, 22, 0.03);
+        border-radius: 14px; 
+        padding: 18px 24px; 
+        text-align: center; 
+        cursor: pointer; 
+        color: var(--accent-green); 
+        transition: 0.3s; 
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 10px;
+    }
+    .new-config-btn:hover { 
+        background: rgba(116, 184, 22, 0.1); 
+        border-color: var(--accent-green); 
+        color: white; 
+    }
+
+    /* MODAL */
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-backdrop.active { display: flex; }
+    .modal-content { background: #0b0c10; border: 1px solid var(--border-gray); border-radius: 24px; width: 95%; max-width: 900px; max-height: 95vh; overflow-y: auto; padding: 30px; box-shadow: 0 30px 100px rgba(0,0,0,0.9); }
+    
+    /* DISCORD STYLE EDITOR */
+    .discord-editor-outer { background: var(--discord-outer-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; color: #dbdee1; font-family: 'Inter', sans-serif; }
+    .outer-text { margin-bottom: 12px; font-size: 0.95rem; outline: none; min-height: 20px; }
+    .outer-text[placeholder]:empty:before { content: attr(placeholder); color: #5c5e66; }
+
+    .discord-embed { background: var(--discord-embed-bg); border-left: 4px solid var(--accent-green); border-radius: 4px; padding: 12px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px; position: relative; }
+    .embed-main { grid-column: 1; }
+    
+    .ee-author { font-size: 0.85rem; font-weight: 700; color: white; margin-bottom: 8px; outline: none; }
+    .ee-title { font-size: 1rem; font-weight: 700; color: #00a8fc; margin-bottom: 8px; outline: none; cursor: text; text-decoration: none; }
+    .ee-desc { font-size: 0.9rem; color: #dbdee1; line-height: 1.375; outline: none; }
+    .ee-footer { font-size: 0.75rem; color: #949ba4; margin-top: 12px; outline: none; }
+    
+    .ee-thumb { grid-column: 2; width: 80px; height: 80px; background: #2b2d31; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #4e5058; cursor: pointer; background-size: cover; background-position: center; }
+    .ee-large-img { grid-column: 1 / span 2; width: 100%; height: 200px; background: #2b2d31; border-radius: 8px; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #4e5058; cursor: pointer; background-size: cover; background-position: center; }
+
+    /* CARDS */
+    .ux-card { background: #0d0e12; border: 1px solid var(--border-gray); border-radius: 12px; margin-top: 20px; overflow: hidden; display: block !important; }
+    .ux-header { padding: 15px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gray); background: rgba(255,255,255,0.02); }
+    .ux-body { padding: 24px; min-height: 50px; }
+    
+    .modal-section { margin-bottom: 24px; }
+    .modal-section label { display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 1px; }
+    
+    /* INPUTS */
+    .modal-input, .modal-select { 
+        display: block !important; 
+        width: 100% !important; 
+        min-height: 45px !important;
+        background: #1a1c23 !important; 
+        border: 1px solid rgba(255,255,255,0.15) !important; 
+        color: white !important; 
+        padding: 12px 15px !important; 
+        border-radius: 10px !important; 
+        outline: none !important; 
+        box-sizing: border-box !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    .modal-select option { background: #1a1c23; color: white; }
+
+    .upload-controls { display: flex; gap: 10px; margin-top: 10px; }
+    .btn-upload { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border-gray); padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; flex: 1; text-align: center; }
+    .btn-upload:hover { background: var(--accent-green); color: black; border-color: var(--accent-green); }
+
+    .toggle-row { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .toggle-switch { width: 44px; height: 22px; background: #2a2d35; border-radius: 20px; position: relative; transition: 0.3s; }
+    .toggle-switch::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: 0.3s; }
+    input:checked + .toggle-switch { background: var(--accent-green); }
+    input:checked + .toggle-switch::after { transform: translateX(22px); background: black; }
+    .toggle-row input { display: none !important; }
+
+    .emoji-btn { background: #1a1c23; border: 1px solid var(--border-gray); padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1.5rem; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+    .emoji-btn:hover { border-color: var(--accent-green); background: rgba(116,184,22,0.1); }
+
+    /* PREMIUM HERO BANNER */
+    .hero-banner {
+        width: 100%;
+        min-height: 300px;
+        background-size: cover;
+        background-position: center;
+        border-radius: 30px;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        padding: 40px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .hero-glass {
+        background: rgba(17, 19, 23, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        padding: 40px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        max-width: 600px;
+    }
+
+    .hero-title { font-size: 2.5rem; font-weight: 900; color: white; margin: 0; line-height: 1.1; letter-spacing: -1px; }
+    .decorative-text { font-family: 'Dancing Script', cursive; color: var(--accent-green); display: block; font-size: 3rem; margin-bottom: -10px; }
+    .hero-subtitle { color: rgba(255, 255, 255, 0.7); font-size: 1rem; line-height: 1.6; margin: 20px 0 30px; }
+
+    .hero-stats { display: flex; gap: 30px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 25px; }
+    .hero-stat-item { display: flex; align-items: center; gap: 15px; }
+    .stat-icon { width: 45px; height: 45px; background: rgba(116, 184, 22, 0.1); color: var(--accent-green); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .stat-info { display: flex; flex-direction: column; }
+    .stat-value { font-weight: 800; color: white; font-size: 0.95rem; }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); }
+
+    .btn-save { width: 100%; padding: 15px; background: linear-gradient(135deg, #74b816, #4d7c0f); color: black; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
+    .btn-save:hover { filter: brightness(1.1); }
+</style>
+
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/embeds_banner_premium.png');">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Kreator</span> Osadzeń
+            </h1>
+            <p class="hero-subtitle">
+                Projektuj zaawansowane wiadomości Embed z obrazami, stopkami i pełną personalizacją stylu.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">Aktywne</span>
+                    <span id="embed-count-hero" class="stat-label">Ładowanie...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="osadzenia-container">
+    <!-- SEKCJA OSADZENIA -->
+    <div class="settings-card">
+        <div class="card-header">
+            <div>
+                <h3><i class="fas fa-layer-group"></i> Panele z osadzeniami</h3>
+            </div>
+            <span id="embed-count" class="count-pill">{{ embed_configs|length }} / {% if main_settings.premium %}50{% else %}5{% endif %}</span>
+        </div>
+        <div class="card-body">
+            <div id="embed-list"></div>
+            <div class="new-config-btn" onclick="openGeneralModal()"><i class="fas fa-plus"></i> Dodaj nową konfigurację osadzenia</div>
+        </div>
+    </div>
+
+    <!-- SEKCJA ZASADY -->
+    <div class="settings-card">
+        <div class="card-header">
+            <div>
+                <h3><i class="fas fa-gavel"></i> Panel z zasadami</h3>
+            </div>
+            <span id="rules-count" class="count-pill">{{ rules_configs|length }} / {% if main_settings.premium %}10{% else %}2{% endif %}</span>
+        </div>
+        <div class="card-body">
+            <div id="rules-list"></div>
+            <div class="new-config-btn" onclick="openRulesModal()"><i class="fas fa-plus"></i> Dodaj nowe zasady</div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: KONFIGURACJA OSADZENIA (GENERAL) -->
+<div class="modal-backdrop" id="modal-general">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0;">Konfiguracja Osadzenia</h2>
+            <button type="button" onclick="closeModal('general')" style="background:none; border:none; color:gray; font-size:1.5rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background: rgba(116, 184, 22, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(116, 184, 22, 0.1);">
+            <h3 style="margin:0; font-size: 0.9rem; color: var(--accent-green);">STATUS OSADZENIA:</h3>
+            <label class="toggle-row">
+                <input type="checkbox" id="g-enabled" checked>
+                <div class="toggle-switch"></div>
+            </label>
+        </div>
+        
+        <input type="hidden" id="g-name">
+        <div class="modal-section">
+            <label>KANAŁ DOCELOWY:</label>
+            <select id="g-channel" class="modal-select"></select>
+        </div>
+
+        <div class="modal-section">
+            <label>EDYCJA WIADOMOŚCI</label>
+            <div class="discord-editor-outer">
+                <div id="ge-outer-text" class="outer-text" contenteditable="true" placeholder="Tekst nad embedem..."></div>
+                <div class="discord-embed" id="ge-box">
+                    <div class="embed-main">
+                        <div id="ge-author" class="ee-author" contenteditable="true" placeholder="Autor..."></div>
+                        <div id="ge-title" class="ee-title" contenteditable="true" placeholder="Tytuł..."></div>
+                        <div id="ge-desc" class="ee-desc" contenteditable="true" placeholder="Opis..."></div>
+                    </div>
+                    <div id="ge-thumb" class="ee-thumb" onclick="document.getElementById('gu-thumb').click()">
+                        <i class="fas fa-image" id="ge-thumb-icon"></i>
+                    </div>
+                    <div id="ge-large-img" class="ee-large-img" onclick="document.getElementById('gu-large').click()">
+                        <i class="fas fa-image" id="ge-large-icon"></i>
+                    </div>
+                    <div class="embed-main">
+                        <div id="ge-footer" class="ee-footer" contenteditable="true" placeholder="Stopka..."></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-controls" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                <button type="button" class="tag-btn" style="width: 100%; padding: 12px; text-align: center;" onclick="document.getElementById('gu-thumb').click()">
+                    <i class="fas fa-image"></i> ZMIEŃ MINIATURKĘ (JPG, PNG, GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
+                </button>
+                <button type="button" class="tag-btn" style="width: 100%; padding: 12px; text-align: center;" onclick="document.getElementById('gu-large').click()">
+                    <i class="fas fa-expand"></i> ZMIEŃ DUŻY OBRAZ (JPG, PNG, GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
+                </button>
+                <input type="file" id="gu-thumb" hidden onchange="uploadImage('thumb', 'g')" accept="image/*">
+                <input type="file" id="gu-large" hidden onchange="uploadImage('large', 'g')" accept="image/*">
+                <input type="hidden" id="g-thumb-url">
+                <input type="hidden" id="g-large-url">
+            </div>
+        </div>
+
+        <div class="ux-card">
+            <div class="ux-header">
+                <h3 style="margin:0; font-size:0.9rem;"><i class="fas fa-palette"></i> PERSONALIZACJA</h3>
+                <label class="toggle-row">
+                    <input type="checkbox" id="gp-toggle" onchange="togglePersonalizacja('g'); updatePreviewStyles('g');">
+                    <div class="toggle-switch"></div>
+                </label>
+            </div>
+            <div id="gp-body" class="ux-body" style="display:none;">
+                <div style="margin-bottom: 10px;">
+                    <label>LINK TYTUŁU:</label>
+                    <input type="text" id="g-title-url" class="modal-input" placeholder="Wklej link..." oninput="updatePreviewStyles('g')">
+                </div>
+                <input type="hidden" id="g-color" value="#74b816">
+                <input type="hidden" id="g-link-color" value="#00a8fc">
+            </div>
+        </div>
+
+        <button type="button" class="btn-save" onclick="saveConfig('general')">ZAPISZ KONFIGURACJĘ</button>
+        <button type="button" class="btn-save" id="g-btn-send" style="background: linear-gradient(135deg, #00a8fc, #0078b1); margin-top: 10px; display: none;" onclick="sendEmbed('general')">WYŚLIJ NA DISCORDA</button>
+        <button type="button" onclick="closeModal('general')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px; font-weight:bold;">ANULUJ</button>
+    </div>
+</div>
+
+<!-- MODAL: KONFIGURACJA ZASAD (RULES) -->
+<div class="modal-backdrop" id="modal-rules">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0;">Konfiguracja Zasad</h2>
+            <button type="button" onclick="closeModal('rules')" style="background:none; border:none; color:gray; font-size:1.5rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background: rgba(116, 184, 22, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(116, 184, 22, 0.1);">
+            <h3 style="margin:0; font-size: 0.9rem; color: var(--accent-green);">STATUS ZASAD:</h3>
+            <label class="toggle-row">
+                <input type="checkbox" id="r-enabled" checked>
+                <div class="toggle-switch"></div>
+            </label>
+        </div>
+        
+        <input type="hidden" id="r-name">
+        <div class="modal-section">
+            <label>KANAŁ DOCELOWY:</label>
+            <select id="r-channel" class="modal-select"></select>
+        </div>
+
+        <!-- SYSTEM BLOKOWY ZASAD -->
+        <div class="modal-section">
+            <label>LISTA ZASAD (BLOKI OBRAZ + TEKST):</label>
+            <div id="rules-blocks-container" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                <!-- Bloki będą dodawane tutaj dynamicznie -->
+            </div>
+            <button type="button" class="new-config-btn" style="margin-top: 0; padding: 12px; border-style: solid; font-size: 0.8rem; width: 100%;" onclick="addRuleBlock()">
+                <i class="fas fa-plus-circle"></i> DODAJ KOLEJNY BLOK ZASAD (GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
+            </button>
+        </div>
+
+        <!-- REAKCJA NA ROLE -->
+        <div class="ux-card" style="border-left: 4px solid var(--accent-green); margin-top: 30px;">
+            <div class="ux-header" style="background: rgba(116, 184, 22, 0.05);">
+                <h3 style="margin:0; font-size:0.9rem;"><i class="fas fa-fingerprint"></i> ROLA ZA REAKCJĘ (POD CAŁYM REGULAMINEM)</h3>
+            </div>
+            <div class="ux-body">
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                    <div>
+                        <label>EMOTIKONA:</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                            <div class="emoji-btn" style="padding: 8px;" onclick="setEmoji('✅', 'r')">✅</div>
+                            <div class="emoji-btn" style="padding: 8px;" onclick="setEmoji('📝', 'r')">📝</div>
+                            <div class="emoji-btn" style="padding: 8px;" onclick="setEmoji('👍', 'r')">👍</div>
+                        </div>
+                        <input type="text" id="r-reaction-emoji" class="modal-input" placeholder="Emoji...">
+                    </div>
+                    <div>
+                        <label>ROLA DO NADANIA:</label>
+                        <select id="r-reaction-role" class="modal-select"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UKRYTE USTAWIENIA KOLORÓW DLA ZASAD -->
+        <input type="hidden" id="r-color" value="#74b816">
+        <input type="hidden" id="r-link-color" value="#00a8fc">
+
+        <button type="button" class="btn-save" onclick="saveConfig('rules')">ZAPISZ KONFIGURACJĘ</button>
+        <button type="button" class="btn-save" id="r-btn-send" style="background: linear-gradient(135deg, #00a8fc, #0078b1); margin-top: 10px; display: none;" onclick="sendEmbed('rules')">WYŚLIJ NA DISCORDA</button>
+        <button type="button" onclick="closeModal('rules')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px; font-weight:bold;">ANULUJ</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    const guildId = '{{ server_id }}';
+    const API = `/api/${guildId}`;
+    let editingId = null;
+
+    // Lokalny bufor osadzeń
+    window.localEmbedConfigs = [];
+
+    window.getEmbedData = () => window.localEmbedConfigs;
+
+    // --- HELPERY ---
+    const getE = id => document.getElementById(id);
+    const getT = id => getE(id).innerText;
+    const setT = (id, val) => getE(id).innerText = val || '';
+    const getV = id => getE(id).value;
+    const setV = (id, val) => getE(id).value = val || '';
+
+    window.togglePersonalizacja = (p) => {
+        const active = getE(p + 'p-toggle').checked;
+        getE(p + 'p-body').style.display = active ? 'block' : 'none';
+    };
+
+    window.setEmoji = (emoji, p) => setV(p + '-reaction-emoji', emoji);
+
+    window.updatePreviewStyles = (p) => {
+        if (p === 'r') {
+            updateRulesPreview();
+            return;
+        }
+        const isPersonalized = getE(p + 'p-toggle').checked;
+        const titleUrl = isPersonalized ? getV(p + '-title-url') : '';
+        const titleEl = getE(p + 'e-title');
+        
+        if (titleUrl && titleUrl.trim() !== '') {
+            titleEl.style.textDecoration = 'underline';
+            titleEl.style.cursor = 'pointer';
+            titleEl.onclick = () => window.open(titleUrl, '_blank');
+            titleEl.title = "Link: " + titleUrl;
+        } else {
+            titleEl.style.textDecoration = 'none';
+            titleEl.style.cursor = 'text';
+            titleEl.onclick = null;
+            titleEl.title = "";
+        }
+    };
+
+    // --- SYSTEM BLOKOWY ZASAD (LOGIKA) ---
+    window.addRuleBlock = (imgUrl = '', text = '') => {
+        const container = getE('rules-blocks-container');
+        const blockId = Date.now() + Math.random();
+        const div = document.createElement('div');
+        div.className = 'rule-block-editor';
+        div.style = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); border-radius: 12px; padding: 15px; position: relative;';
+        div.dataset.id = blockId;
+        
+        div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 0.7rem; font-weight: 800; color: var(--accent-green);">BLOK ZASAD</span>
+                <i class="fas fa-times" style="color: #ff4444; cursor: pointer;" onclick="removeRuleBlock('${blockId}')"></i>
+            </div>
+            
+            <div class="ee-large-img" id="rb-img-${blockId}" style="height: 120px; margin-top: 0; background-image: ${imgUrl ? `url('${imgUrl}')` : 'none'};" onclick="triggerBlockUpload('${blockId}')">
+                <i class="fas fa-image" style="display: ${imgUrl ? 'none' : 'block'};"></i>
+            </div>
+            <input type="file" id="rb-input-${blockId}" hidden accept="image/*" onchange="uploadBlockImage('${blockId}')">
+            <input type="hidden" id="rb-url-${blockId}" value="${imgUrl}">
+            
+            <div class="modal-input" id="rb-text-${blockId}" contenteditable="true" placeholder="Opis do tego bloku..." style="margin-top: 10px; min-height: 40px;">${text}</div>
+        `;
+        container.appendChild(div);
+    };
+
+    window.removeRuleBlock = (id) => {
+        const el = document.querySelector(`[data-id="${id}"]`);
+        if (el) el.remove();
+    };
+
+    window.triggerBlockUpload = (id) => getE(`rb-input-${id}`).click();
+
+    window.uploadBlockImage = async (id) => {
+        const input = getE(`rb-input-${id}`);
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        
+        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
+        if (isGif && !isPremium) {
+            alert('⚠️ Animowane obrazy (GIF) są dostępne tylko dla serwerów z aktywnym pakietem PREMIUM!');
+            input.value = "";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const res = await fetch(`${API}/upload_bg`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                getE(`rb-url-${id}`).value = data.url;
+                const preview = getE(`rb-img-${id}`);
+                preview.style.backgroundImage = `url('${data.url}')`;
+                preview.querySelector('i').style.display = 'none';
+            }
+        } catch(e) { alert('Błąd przesłania zdjęcia'); }
+    };
+
+    window.updateRulesPreview = () => {
+        // Podgląd dla zasad jest teraz dynamiczny wewnątrz modala
+    };
+
+    window.uploadImage = async (type, p) => {
+        const input = getE(`${p}u-${type}`);
+        if (!input.files || !input.files[0]) return;
+        
+        const file = input.files[0];
+        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
+
+        if (isGif && !isPremium) {
+            alert('⚠️ Animowane obrazy (GIF) są dostępne tylko dla serwerów z aktywnym pakietem PREMIUM!');
+            input.value = "";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const res = await fetch(`${API}/upload_bg`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                setV(`${p}-${type}-url`, data.url);
+                const container = getE(`${p}e-${type === 'thumb' ? 'thumb' : 'large-img'}`);
+                container.style.backgroundImage = `url('${data.url}')`;
+                container.querySelector('i').style.display = 'none';
+            }
+        } catch(e) {
+            alert('Błąd przesyłania obrazu');
+        } finally {
+            input.value = ""; // RESETUJEMY INPUT
+        }
+    };
+
+    window.removeEmbedImage = (type, p) => {
+        setV(`${p}-${type}-url`, '');
+        const container = getE(`${p}e-${type === 'thumb' ? 'thumb' : 'large-img'}`);
+        container.style.backgroundImage = 'none';
+        container.querySelector('i').style.display = 'block';
+    };
+
+    async function loadSelects(p) {
+        const chSel = getE(p + '-channel');
+        const roleSel = getE(p + '-reaction-role');
+        
+        chSel.innerHTML = '<option value="">Ładowanie kanałów...</option>';
+        if (roleSel) roleSel.innerHTML = '<option value="">Ładowanie ról...</option>';
+
+        try {
+            const [chRes, rRes] = await Promise.all([
+                fetch(`${API}/channels`),
+                roleSel ? fetch(`${API}/roles`) : Promise.resolve(null)
+            ]);
+            
+            const channels = await chRes.json();
+            chSel.innerHTML = '<option value="">Wybierz kanał...</option>';
+            channels.forEach(ch => {
+                const opt = document.createElement('option');
+                opt.value = ch.id; opt.textContent = `# ${ch.name}`; chSel.appendChild(opt);
+            });
+
+            if (rRes) {
+                const roles = await rRes.json();
+                roleSel.innerHTML = '<option value="">Wybierz rolę...</option>';
+                roles.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.id; opt.textContent = r.name; roleSel.appendChild(opt);
+                });
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    // --- MODALE ---
+    window.openGeneralModal = async () => {
+        editingId = null;
+        resetModal('g');
+        getE('g-btn-send').style.display = 'none';
+        await loadSelects('g');
+        getE('modal-general').classList.add('active');
+    };
+
+    window.openRulesModal = async () => {
+        editingId = null;
+        resetModal('r');
+        getE('r-btn-send').style.display = 'none';
+        await loadSelects('r');
+        getE('modal-rules').classList.add('active');
+    };
+
+    window.closeModal = (type) => getE('modal-' + type).classList.remove('active');
+
+    function resetModal(p) {
+        if (p === 'r') {
+            getE('rules-blocks-container').innerHTML = '';
+            addRuleBlock(); 
+            setV('r-name', '');
+            getE('r-enabled').checked = true;
+            setV('r-reaction-emoji', '');
+            setV('r-reaction-role', '');
+        } else {
+            setV(p + '-name', '');
+            getE(p + '-enabled').checked = true;
+            setT(p + 'e-outer-text', '');
+            setT(p + 'e-author', '');
+            setT(p + 'e-title', '');
+            setT(p + 'e-desc', '');
+            setT(p + 'e-footer', '');
+            setV(p + '-thumb-url', '');
+            setV(p + '-large-url', '');
+            setV(p + '-title-url', '');
+            getE(p + 'e-thumb').style.backgroundImage = '';
+            getE(p + 'e-large-img').style.backgroundImage = '';
+            getE(p + 'e-thumb-icon').style.display = 'block';
+            getE(p + 'e-large-icon').style.display = 'block';
+            getE(p + 'p-toggle').checked = false;
+            togglePersonalizacja(p);
+        }
+    }
+
+    window.editConfig = async (id, category) => {
+        editingId = id;
+        const p = category === 'rules' ? 'r' : 'g';
+        await loadSelects(p);
+        
+        const cfg = window.localEmbedConfigs.find(c => c.id === id);
+        if (!cfg) return;
+
+        if (p === 'r') {
+            setV('r-name', cfg.name);
+            setV('r-channel', cfg.channel_id);
+            getE('r-enabled').checked = cfg.enabled !== 0;
+            setV('r-reaction-emoji', cfg.reaction_emoji);
+            setV('r-reaction-role', cfg.reaction_role_id);
+            
+            const container = getE('rules-blocks-container');
+            container.innerHTML = '';
+            try {
+                const blocks = JSON.parse(cfg.description);
+                if (Array.isArray(blocks)) {
+                    blocks.forEach(b => addRuleBlock(b.image, b.text));
+                } else { addRuleBlock('', cfg.description); }
+            } catch(e) { addRuleBlock('', cfg.description); }
+            
+            getE('modal-rules').classList.add('active');
+        } else {
+            setV(p + '-name', cfg.name);
+            setV(p + '-channel', cfg.channel_id);
+            getE(p + '-enabled').checked = cfg.enabled !== 0;
+            setT(p + 'e-outer-text', cfg.outer_text || '');
+            setT(p + 'e-author', cfg.author);
+            setT(p + 'e-title', cfg.title);
+            setT(p + 'e-desc', cfg.description);
+            setT(p + 'e-footer', cfg.footer);
+            setV(p + '-thumb-url', cfg.thumbnail_url);
+            setV(p + '-large-url', cfg.image_url);
+            setV(p + '-title-url', cfg.title_url);
+            
+            if (cfg.thumbnail_url) {
+                getE(p + 'e-thumb').style.backgroundImage = `url('${cfg.thumbnail_url}')`;
+                getE(p + 'e-thumb-icon').style.display = 'none';
+            }
+            if (cfg.image_url) {
+                getE(p + 'e-large-img').style.backgroundImage = `url('${cfg.image_url}')`;
+                getE(p + 'e-large-icon').style.display = 'none';
+            }
+
+            getE(p + 'p-toggle').checked = !!cfg.title_url;
+            togglePersonalizacja(p);
+            getE(p + '-btn-send').style.display = 'block';
+            getE('modal-general').classList.add('active');
+        }
+    };
+
+    window.saveConfig = function(type) {
+        const p = type === 'rules' ? 'r' : 'g';
+        let name = getV(p + '-name');
+        
+        // Dla rules nie istnieją elementy re-title, re-desc, re-author, re-footer
+        const isRules = type === 'rules';
+        const title = isRules ? '' : getT(p + 'e-title');
+        if (!name) name = title || (isRules ? 'Zasady' : 'Osadzenie');
+
+        let finalDesc = '';
+        if (isRules) {
+            const blocks = [];
+            document.querySelectorAll('.rule-block-editor').forEach(el => {
+                const id = el.dataset.id;
+                blocks.push({
+                    image: document.getElementById(`rb-url-${id}`).value,
+                    text: document.getElementById(`rb-text-${id}`).innerText
+                });
+            });
+            finalDesc = JSON.stringify(blocks);
+        } else {
+            finalDesc = getT(p + 'e-desc');
+        }
+
+        // Sprawdzenie czy element personalizacji istnieje (nie istnieje w modalu zasad)
+        const hasPersonalization = !isRules && getE(p + 'p-toggle');
+        const isPersonalized = hasPersonalization ? getE(p + 'p-toggle').checked : false;
+
+        const config = {
+            id: editingId || Date.now(),
+            category: type,
+            name: name,
+            channel_id: getV(p + '-channel'),
+            author: isRules ? '' : getT(p + 'e-author'),
+            author_url: isRules ? '' : (isPersonalized ? (getV(p + '-author-url') || '') : ''),
+            title: isRules ? '' : title,
+            title_url: isRules ? '' : (isPersonalized ? getV(p + '-title-url') : ''),
+            description: finalDesc,
+            footer: isRules ? '' : getT(p + 'e-footer'),
+            color: getV(p + '-color'),
+            link_color: getV(p + '-link-color'),
+            thumbnail_url: isRules ? '' : getV(p + '-thumb-url'),
+            image_url: isRules ? '' : getV(p + '-large-url'),
+            reaction_emoji: isRules ? getV('r-reaction-emoji') : '',
+            reaction_role_id: isRules ? getV('r-reaction-role') : '',
+            enabled: getE(p + '-enabled').checked
+        };
+
+        if (editingId) {
+            const idx = window.localEmbedConfigs.findIndex(c => c.id === editingId);
+            if (idx !== -1) window.localEmbedConfigs[idx] = config;
+        } else {
+            window.localEmbedConfigs.push(config);
+        }
+
+        renderLists(window.localEmbedConfigs);
+        closeModal(type);
+        console.log("Osadzenie zapisane lokalnie:", config);
+    };
+
+    window.sendEmbed = async (type) => {
+        if (!editingId) return;
+        const btn = getE(type === 'rules' ? 'r-btn-send' : 'g-btn-send');
+        btn.innerText = 'WYSYŁANIE...'; btn.disabled = true;
+        try {
+            const res = await fetch(`${API}/embeds/${editingId}/send`, { method: 'POST' });
+            if ((await res.json()).success) alert('✅ Wysłano!');
+            else alert('❌ Błąd wysyłki.');
+        } catch(e) { alert('❌ Błąd połączenia.'); }
+        btn.innerText = 'WYŚLIJ NA DISCORDA'; btn.disabled = false;
+    };
+
+    window.deleteEmbed = (id, e) => {
+        e.stopPropagation();
+        if (confirm('Usunąć tę konfigurację z listy?')) { 
+            window.localEmbedConfigs = window.localEmbedConfigs.filter(c => c.id !== id);
+            renderLists(window.localEmbedConfigs);
+        }
+    };
+
+    async function loadEmbeds() {
+        try {
+            const res = await fetch(`${API}/embeds`);
+            const configs = await res.json();
+            window.localEmbedConfigs = configs || [];
+            renderLists(window.localEmbedConfigs);
+        } catch(e) {}
+    }
+
+    function renderLists(configs) {
+        const gCont = getE('embed-list');
+        const rCont = getE('rules-list');
+        if (!gCont || !rCont) return;
+        
+        gCont.innerHTML = ''; rCont.innerHTML = '';
+        let gCount = 0, rCount = 0;
+
+        configs.forEach(cfg => {
+            const div = document.createElement('div');
+            div.className = 'config-item';
+            div.onclick = (e) => { if(!e.target.closest('.btn-del')) editConfig(cfg.id, cfg.category); };
+            
+            let subtitle = "";
+            let icon = "fas fa-bullhorn";
+            
+            if (cfg.category === 'rules') {
+                icon = "fas fa-scroll";
+                try {
+                    const blocks = JSON.parse(cfg.description);
+                    subtitle = Array.isArray(blocks) ? `${blocks.length} bloków zasad` : "Regulamin tekstowy";
+                } catch(e) { subtitle = "Regulamin tekstowy"; }
+            } else {
+                subtitle = cfg.description ? (cfg.description.length > 45 ? cfg.description.substring(0, 42) + '...' : cfg.description) : "Brak opisu";
+            }
+
+            div.innerHTML = `
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font-weight:700; font-size:0.95rem;"><i class="${icon}" style="color:var(--accent-green); margin-right:8px; width:20px;"></i> ${cfg.name}</span>
+                    <span style="font-size:0.75rem; color:var(--text-gray); margin-left:28px;">${subtitle}</span>
+                </div>
+                <button type="button" class="btn-del" onclick="deleteEmbed(${cfg.id}, event)"><i class="fas fa-trash"></i></button>
+            `;
+            
+            if (cfg.category === 'rules') { rCont.appendChild(div); rCount++; }
+            else { gCont.appendChild(div); gCount++; }
+        });
+
+        const embedLimit = {% if main_settings.premium %}50{% else %}5{% endif %};
+        const rulesLimit = {% if main_settings.premium %}10{% else %}2{% endif %};
+        getE('embed-count').textContent = `${gCount} / ${embedLimit}`;
+        getE('rules-count').textContent = `${rCount} / ${rulesLimit}`;
+        getE('embed-count-hero').textContent = `${gCount + rCount} aktywnych`;
+    }
+
+        window.getEmbedData = () => window.localEmbedConfigs;
+
+    loadEmbeds();
+})();
+</script>
+

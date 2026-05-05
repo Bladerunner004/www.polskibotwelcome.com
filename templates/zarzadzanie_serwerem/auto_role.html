@@ -1,0 +1,624 @@
+<style>
+    /* ===== AUTO ROLE — PREMIUM EDITOR ===== */
+    .ar-hero {
+        width: 100%;
+        min-height: 280px;
+        background: linear-gradient(135deg, rgba(12, 13, 17, 0.85), rgba(12, 13, 17, 0.4)),
+                    url('/static/uploads/autorole_banner_premium.png');
+        background-size: cover;
+        background-position: center;
+        border-radius: 30px;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        padding: 40px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .ar-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%;
+        width: 200%; height: 200%;
+        background: radial-gradient(ellipse at 30% 50%, rgba(116,184,22,0.06) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.04) 0%, transparent 50%);
+        pointer-events: none;
+        animation: ar-aurora 12s ease-in-out infinite alternate;
+    }
+    @keyframes ar-aurora {
+        0% { transform: translate(0, 0) scale(1); }
+        100% { transform: translate(-5%, 5%) scale(1.1); }
+    }
+    .ar-hero-glass {
+        background: rgba(17, 19, 23, 0.55);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        padding: 40px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        max-width: 600px;
+        position: relative;
+        z-index: 1;
+    }
+    .ar-hero-title {
+        font-size: 2.5rem; font-weight: 900; color: white;
+        margin: 0; line-height: 1.1; letter-spacing: -1px;
+    }
+    .ar-hero-title .decorative-text {
+        font-family: 'Dancing Script', cursive;
+        color: var(--accent-green);
+        display: block; font-size: 3rem; margin-bottom: -10px;
+    }
+    .ar-hero-subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.95rem; line-height: 1.6; margin: 20px 0 0;
+    }
+    .ar-hero-stats {
+        display: flex; gap: 30px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-top: 22px; margin-top: 22px;
+    }
+    .ar-stat-item { display: flex; align-items: center; gap: 12px; }
+    .ar-stat-icon {
+        width: 42px; height: 42px;
+        background: rgba(116, 184, 22, 0.1); color: var(--accent-green);
+        border-radius: 12px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem;
+    }
+    .ar-stat-info { display: flex; flex-direction: column; }
+    .ar-stat-value { font-weight: 800; color: white; font-size: 0.9rem; }
+    .ar-stat-label { font-size: 0.72rem; color: #666; }
+
+    /* ===== CARDS ===== */
+    .ar-cards-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+    }
+    .ar-card {
+        background: var(--bg2);
+        border-radius: 22px;
+        border: 1px solid var(--border-gray);
+        /* NO overflow: hidden — dropdown musi być widoczny */
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .ar-card:hover {
+        border-color: rgba(116, 184, 22, 0.2);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    }
+    .ar-card-header {
+        padding: 22px 28px;
+        border-bottom: 1px solid var(--border-gray);
+        display: flex; justify-content: space-between; align-items: center;
+        background: linear-gradient(135deg, rgba(116,184,22,0.03), transparent);
+        border-radius: 22px 22px 0 0;
+    }
+    .ar-card-header h3 {
+        margin: 0; font-weight: 800; font-size: 1.05rem;
+        display: flex; align-items: center; gap: 12px; color: #e2e4e9;
+    }
+    .ar-card-header h3 i { color: var(--accent-green); font-size: 1.1rem; }
+    .ar-card-header-sub { font-size: 0.78rem; color: #555; margin-top: 3px; }
+    .ar-card-body { padding: 25px 28px 28px; }
+
+    /* ===== ROLE PICKER ===== */
+    .ar-role-picker { position: relative; }
+    .ar-role-picker-label {
+        display: block; font-size: 0.7rem; font-weight: 800;
+        color: #555; text-transform: uppercase;
+        letter-spacing: 1px; margin-bottom: 10px;
+    }
+    .ar-role-input-area {
+        display: flex; flex-wrap: wrap; gap: 8px;
+        min-height: 52px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--border-gray);
+        border-radius: 14px;
+        padding: 10px 14px;
+        cursor: pointer;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        align-items: center;
+    }
+    .ar-role-input-area:focus-within,
+    .ar-role-input-area.focused {
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 3px rgba(116,184,22,0.1);
+    }
+    .ar-role-placeholder {
+        color: #444; font-size: 0.85rem; pointer-events: none;
+        user-select: none;
+    }
+
+    /* Role Chip/Tag */
+    .ar-role-chip {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 5px 12px; border-radius: 20px;
+        font-size: 0.82rem; font-weight: 600; color: white;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        animation: ar-chipIn 0.2s ease;
+        transition: 0.2s;
+        white-space: nowrap;
+    }
+    @keyframes ar-chipIn {
+        from { opacity: 0; transform: scale(0.8); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .ar-role-chip .ar-dot {
+        width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .ar-role-chip .ar-remove-chip {
+        width: 18px; height: 18px; border-radius: 50%;
+        background: rgba(255,255,255,0.08); color: #888;
+        border: none; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.65rem; transition: 0.2s; margin-left: 2px;
+    }
+    .ar-role-chip .ar-remove-chip:hover {
+        background: rgba(248,113,113,0.3); color: #ff6b6b;
+    }
+
+    /* Dropdown */
+    .ar-role-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0; right: 0;
+        background: rgba(12, 13, 18, 0.98);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px;
+        max-height: 260px;
+        overflow-y: auto;
+        z-index: 9990;
+        display: none;
+        box-shadow: 0 16px 48px rgba(0,0,0,0.7);
+        scrollbar-width: thin;
+        scrollbar-color: rgba(116,184,22,0.2) transparent;
+    }
+    .ar-role-dropdown.open {
+        display: block;
+        animation: ar-dropIn 0.15s ease;
+    }
+    @keyframes ar-dropIn {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: none; }
+    }
+    .ar-dropdown-search {
+        position: sticky; top: 0;
+        background: rgba(12,13,18,0.98);
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        z-index: 1;
+    }
+    .ar-dropdown-search input {
+        width: 100%;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        padding: 9px 14px; color: white;
+        font-size: 0.85rem; outline: none;
+        font-family: 'Inter', sans-serif;
+    }
+    .ar-dropdown-search input:focus { border-color: var(--accent-green); }
+    .ar-dropdown-search input::placeholder { color: #444; }
+
+    .ar-dropdown-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 16px; cursor: pointer;
+        font-size: 0.85rem; color: #c5c8cd;
+        transition: background 0.15s;
+    }
+    .ar-dropdown-item:hover {
+        background: rgba(116,184,22,0.08); color: white;
+    }
+    .ar-dropdown-item.selected {
+        background: rgba(116,184,22,0.12);
+        color: var(--accent-green); font-weight: 700;
+    }
+    .ar-dropdown-item .ar-dot {
+        width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+    }
+    .ar-dropdown-item .ar-check {
+        margin-left: auto; color: var(--accent-green);
+        font-size: 0.8rem; opacity: 0; transition: 0.15s;
+    }
+    .ar-dropdown-item.selected .ar-check { opacity: 1; }
+    .ar-dropdown-empty {
+        padding: 20px; text-align: center; color: #444; font-size: 0.85rem;
+    }
+    .ar-dropdown-loading {
+        padding: 20px; text-align: center; color: #555; font-size: 0.85rem;
+    }
+    .ar-dropdown-loading i { margin-right: 8px; }
+
+    /* ===== TOGGLE ROW ===== */
+    .ar-toggle-row {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-top: 20px;
+        background: rgba(255,255,255,0.02);
+        padding: 16px 20px;
+        border-radius: 14px;
+        border: 1px solid var(--border-gray);
+    }
+    .ar-toggle-info h4 {
+        font-size: 0.9rem; font-weight: 700; color: #e2e4e9; margin: 0;
+    }
+    .ar-toggle-info p {
+        font-size: 0.78rem; color: var(--text-gray); margin: 3px 0 0;
+    }
+    .ar-switch {
+        position: relative; display: inline-block;
+        width: 48px; height: 26px; flex-shrink: 0;
+    }
+    .ar-switch input { opacity: 0; width: 0; height: 0; }
+    .ar-switch .ar-slider {
+        position: absolute; cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255,255,255,0.08);
+        border-radius: 26px; transition: 0.3s;
+    }
+    .ar-switch .ar-slider::before {
+        content: ""; position: absolute;
+        height: 20px; width: 20px; left: 3px; bottom: 3px;
+        background: white; border-radius: 50%; transition: 0.3s;
+    }
+    .ar-switch input:checked + .ar-slider {
+        background: var(--accent-green);
+        box-shadow: 0 0 12px rgba(116,184,22,0.3);
+    }
+    .ar-switch input:checked + .ar-slider::before {
+        transform: translateX(22px);
+    }
+
+    /* ===== ROLE COUNT BADGE ===== */
+    .ar-role-count {
+        background: rgba(116,184,22,0.1); color: var(--accent-green);
+        padding: 4px 12px; border-radius: 20px;
+        font-size: 0.75rem; font-weight: 700;
+        border: 1px solid rgba(116,184,22,0.15);
+        white-space: nowrap;
+    }
+</style>
+
+<!-- ===== HERO BANNER ===== -->
+<div class="ar-hero">
+    <div class="ar-hero-glass">
+        <div>
+            <h1 class="ar-hero-title">
+                <span class="decorative-text">Automatyczne</span> Role
+            </h1>
+            <p class="ar-hero-subtitle">
+                Wybierz role, które zostaną natychmiast nadane nowym użytkownikom, botom lub boosterom po dołączeniu na serwer.
+            </p>
+        </div>
+        <div class="ar-hero-stats">
+            <div class="ar-stat-item">
+                <div class="ar-stat-icon"><i class="fas fa-user-tag"></i></div>
+                <div class="ar-stat-info">
+                    <span id="ar-total-count" class="ar-stat-value">0 ról</span>
+                    <span class="ar-stat-label">Skonfigurowano</span>
+                </div>
+            </div>
+            <div class="ar-stat-item">
+                <div class="ar-stat-icon"><i class="fas fa-bolt"></i></div>
+                <div class="ar-stat-info">
+                    <span class="ar-stat-value">Natychmiast</span>
+                    <span class="ar-stat-label">Przypisanie</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CARDS ===== -->
+<div class="ar-cards-grid">
+
+    <!-- NOWI UŻYTKOWNICY -->
+    <div class="ar-card">
+        <div class="ar-card-header">
+            <div>
+                <h3><i class="fas fa-user-plus"></i> Nowi Użytkownicy</h3>
+                <div class="ar-card-header-sub">Role nadawane automatycznie osobom dołączającym na serwer</div>
+            </div>
+            <span id="ar-human-count" class="ar-role-count">0 ról</span>
+        </div>
+        <div class="ar-card-body">
+            <div class="ar-role-picker" id="picker-human">
+                <label class="ar-role-picker-label">WYBRANE ROLE DLA NOWYCH UŻYTKOWNIKÓW:</label>
+                <div class="ar-role-input-area" id="chips-human"></div>
+                <div class="ar-role-dropdown" id="dropdown-human">
+                    <div class="ar-dropdown-search">
+                        <input type="text" placeholder="Szukaj roli..." id="search-human">
+                    </div>
+                    <div id="dropdown-list-human"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOWE BOTY -->
+    <div class="ar-card">
+        <div class="ar-card-header">
+            <div>
+                <h3><i class="fas fa-robot"></i> Nowe Boty</h3>
+                <div class="ar-card-header-sub">Role nadawane automatycznie po dodaniu bota na serwer</div>
+            </div>
+            <span id="ar-bot-count" class="ar-role-count">0 ról</span>
+        </div>
+        <div class="ar-card-body">
+            <div class="ar-role-picker" id="picker-bot">
+                <label class="ar-role-picker-label">WYBRANE ROLE DLA NOWYCH BOTÓW:</label>
+                <div class="ar-role-input-area" id="chips-bot"></div>
+                <div class="ar-role-dropdown" id="dropdown-bot">
+                    <div class="ar-dropdown-search">
+                        <input type="text" placeholder="Szukaj roli..." id="search-bot">
+                    </div>
+                    <div id="dropdown-list-bot"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOSTERZY -->
+    <div class="ar-card">
+        <div class="ar-card-header">
+            <div>
+                <h3><i class="fas fa-gem"></i> Boosterzy <span style="font-size:0.7rem; color:#f472b6; margin-left:6px;">Server Boost</span></h3>
+                <div class="ar-card-header-sub">Role nadawane użytkownikom, którzy ulepszyli serwer</div>
+            </div>
+            <span id="ar-booster-count" class="ar-role-count">0 ról</span>
+        </div>
+        <div class="ar-card-body">
+            <div class="ar-role-picker" id="picker-booster">
+                <label class="ar-role-picker-label">WYBRANE ROLE DLA BOOSTERÓW:</label>
+                <div class="ar-role-input-area" id="chips-booster"></div>
+                <div class="ar-role-dropdown" id="dropdown-booster">
+                    <div class="ar-dropdown-search">
+                        <input type="text" placeholder="Szukaj roli..." id="search-booster">
+                    </div>
+                    <div id="dropdown-list-booster"></div>
+                </div>
+            </div>
+
+            <div class="ar-toggle-row">
+                <div class="ar-toggle-info">
+                    <h4>Zabierz role po zakończeniu boosta</h4>
+                    <p>Automatycznie usuwa role, gdy użytkownik przestanie ulepszać serwer.</p>
+                </div>
+                <label class="ar-switch">
+                    <input type="checkbox" id="autorole-booster-remove" {% if main_settings.autorole_booster_remove %}checked{% endif %}>
+                    <span class="ar-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const guildId = '{{ server_id }}';
+
+    // ===== DANE BEZPIECZNE z Jinja2 (przez tojson) =====
+    const allRoles = {{ (roles or []) | tojson | safe }};
+
+    const selectedHumanIds = {{ (main_settings.autorole_human_roles or []) | tojson | safe }};
+    const selectedBotIds = {{ (main_settings.autorole_bot_roles or []) | tojson | safe }};
+    const selectedBoosterIds = {{ (main_settings.autorole_booster_roles or []) | tojson | safe }};
+
+    // Konwertujemy na Set<string>
+    const selected = {
+        human: new Set(selectedHumanIds.map(String)),
+        bot: new Set(selectedBotIds.map(String)),
+        booster: new Set(selectedBoosterIds.map(String))
+    };
+
+    // Normalizujemy ID ról do stringów
+    allRoles.forEach(r => { r.id = String(r.id); });
+
+    let openDropdownType = null;
+
+    // ===== RENDER CHIPS =====
+    function renderChips(type) {
+        const container = document.getElementById('chips-' + type);
+        if (!container) return;
+        container.innerHTML = '';
+        const ids = selected[type];
+
+        if (ids.size === 0) {
+            const ph = document.createElement('span');
+            ph.className = 'ar-role-placeholder';
+            ph.textContent = 'Kliknij, aby dodać role...';
+            container.appendChild(ph);
+        } else {
+            ids.forEach(function(id) {
+                const role = allRoles.find(function(r) { return r.id === id; });
+                if (!role) return;
+
+                const chip = document.createElement('div');
+                chip.className = 'ar-role-chip';
+
+                const dot = document.createElement('span');
+                dot.className = 'ar-dot';
+                dot.style.background = role.color;
+                chip.appendChild(dot);
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = role.name;
+                chip.appendChild(nameSpan);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'ar-remove-chip';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    selected[type].delete(id);
+                    renderChips(type);
+                    if (openDropdownType === type) renderDropdown(type);
+                });
+                chip.appendChild(removeBtn);
+
+                container.appendChild(chip);
+            });
+        }
+
+        // Aktualizuj badge
+        var countEl = document.getElementById('ar-' + type + '-count');
+        if (countEl) countEl.textContent = ids.size + ' ról';
+
+        updateTotalCount();
+    }
+
+    function updateTotalCount() {
+        var total = selected.human.size + selected.bot.size + selected.booster.size;
+        var el = document.getElementById('ar-total-count');
+        if (el) el.textContent = total + ' ról';
+    }
+
+    // ===== RENDER DROPDOWN =====
+    function renderDropdown(type, filter) {
+        filter = filter || '';
+        var listEl = document.getElementById('dropdown-list-' + type);
+        if (!listEl) return;
+        listEl.innerHTML = '';
+
+        var lowerFilter = filter.toLowerCase();
+        var filtered = allRoles.filter(function(r) {
+            return r.name.toLowerCase().indexOf(lowerFilter) !== -1;
+        });
+
+        if (filtered.length === 0) {
+            listEl.innerHTML = '<div class="ar-dropdown-empty">Nie znaleziono żadnych ról</div>';
+            return;
+        }
+
+        filtered.forEach(function(role) {
+            var isSelected = selected[type].has(role.id);
+            var item = document.createElement('div');
+            item.className = 'ar-dropdown-item' + (isSelected ? ' selected' : '');
+
+            var dot = document.createElement('span');
+            dot.className = 'ar-dot';
+            dot.style.background = role.color;
+            item.appendChild(dot);
+
+            var nameSpan = document.createElement('span');
+            nameSpan.textContent = role.name;
+            item.appendChild(nameSpan);
+
+            var check = document.createElement('i');
+            check.className = 'fas fa-check ar-check';
+            item.appendChild(check);
+
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (selected[type].has(role.id)) {
+                    selected[type].delete(role.id);
+                } else {
+                    selected[type].add(role.id);
+                }
+                renderChips(type);
+                renderDropdown(type, filter);
+            });
+
+            listEl.appendChild(item);
+        });
+    }
+
+    // ===== TOGGLE DROPDOWN =====
+    function toggleDropdown(type) {
+        var dropdown = document.getElementById('dropdown-' + type);
+        var inputArea = document.getElementById('chips-' + type);
+        if (!dropdown) return;
+
+        if (openDropdownType === type) {
+            dropdown.classList.remove('open');
+            if (inputArea) inputArea.classList.remove('focused');
+            openDropdownType = null;
+            return;
+        }
+
+        // Zamknij inne
+        ['human', 'bot', 'booster'].forEach(function(t) {
+            var dd = document.getElementById('dropdown-' + t);
+            var ia = document.getElementById('chips-' + t);
+            if (dd) dd.classList.remove('open');
+            if (ia) ia.classList.remove('focused');
+        });
+
+        renderDropdown(type);
+        dropdown.classList.add('open');
+        if (inputArea) inputArea.classList.add('focused');
+        openDropdownType = type;
+
+        // Focus na search input
+        var searchInput = document.getElementById('search-' + type);
+        if (searchInput) {
+            searchInput.value = '';
+            setTimeout(function() { searchInput.focus(); }, 50);
+        }
+    }
+
+    // ===== EVENT LISTENERS =====
+
+    // Kliknięcie na input areas
+    ['human', 'bot', 'booster'].forEach(function(type) {
+        var area = document.getElementById('chips-' + type);
+        if (area) {
+            area.addEventListener('click', function(e) {
+                // Nie otwieraj, jeśli kliknięto na przycisk usuwania
+                if (e.target.closest('.ar-remove-chip')) return;
+                toggleDropdown(type);
+            });
+        }
+
+        // Search input
+        var searchInput = document.getElementById('search-' + type);
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                renderDropdown(type, this.value);
+            });
+        }
+    });
+
+    // Zamknij dropdown przy kliknięciu poza
+    document.addEventListener('click', function(e) {
+        if (openDropdownType) {
+            var picker = document.getElementById('picker-' + openDropdownType);
+            if (picker && !picker.contains(e.target)) {
+                var dd = document.getElementById('dropdown-' + openDropdownType);
+                var ia = document.getElementById('chips-' + openDropdownType);
+                if (dd) dd.classList.remove('open');
+                if (ia) ia.classList.remove('focused');
+                openDropdownType = null;
+            }
+        }
+    });
+
+    // ===== SAVE =====
+    window.saveAutoRoleSettings = async function() {
+        var data = {
+            human_roles: Array.from(selected.human),
+            bot_roles: Array.from(selected.bot),
+            booster_roles: Array.from(selected.booster),
+            booster_remove: document.getElementById('autorole-booster-remove').checked
+        };
+
+        await fetch('/api/' + guildId + '/autorole', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+    };
+
+    // ===== INIT =====
+    console.log('[AutoRole] Załadowano ' + allRoles.length + ' ról z serwera');
+    console.log('[AutoRole] Wybrane: human=' + selected.human.size + ', bot=' + selected.bot.size + ', booster=' + selected.booster.size);
+
+    renderChips('human');
+    renderChips('bot');
+    renderChips('booster');
+})();
+</script>

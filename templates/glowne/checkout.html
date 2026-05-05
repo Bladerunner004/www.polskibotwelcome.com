@@ -1,0 +1,170 @@
+{% extends "config.html" %}
+
+{% block dashboard_content %}
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.9), rgba(12, 13, 17, 0.6)), url('/static/uploads/premium_plus_banner.png');">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Finalizacja</span> Zamówienia
+            </h1>
+            <p class="hero-subtitle">
+                Wybrałeś plan <strong>{{ plan_name }}</strong> za <strong>{{ plan_price }} PLN</strong>. Wybierz metodę płatności poniżej.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="checkout-container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <div class="settings-card">
+        <div class="card-header">
+            <h3><i class="fas fa-wallet"></i> Metody Płatności</h3>
+        </div>
+        <div class="card-body">
+            <div class="payment-methods-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                <div class="payment-card active" onclick="selectPayment('transfer', this)">
+                    <i class="fas fa-university"></i>
+                    <span>Przelew Bankowy</span>
+                </div>
+                <div class="payment-card" onclick="selectPayment('blik', this)">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>BLIK / Telefon</span>
+                </div>
+                <div class="payment-card" onclick="selectPayment('paypal', this)">
+                    <i class="fab fa-paypal"></i>
+                    <span>PayPal</span>
+                </div>
+            </div>
+
+            <div id="payment-details-box" class="payment-info-box">
+                <!-- Szczegóły będą wstawiane tutaj przez JS -->
+                <div class="instruction-step">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong id="method-title">Przelew Tradycyjny</strong>
+                        <p id="method-desc">Proszę dokonać wpłaty na poniższe dane:</p>
+                    </div>
+                </div>
+
+                <div class="account-details" style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 12px; border: 1px solid var(--border-gray); margin-top: 20px;">
+                    <div class="detail-row">
+                        <span>Odbiorca:</span>
+                        <strong id="pay-recipient">Daniel K. (PolskiBot)</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Numer konta:</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <strong id="pay-account">PL 00 0000 0000 0000 0000 0000 0000</strong>
+                            <i class="fas fa-copy" style="cursor: pointer; color: var(--accent-green);" onclick="copyToClipboard('PL 00 0000 0000 0000 0000 0000 0000')"></i>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span>Tytuł przelewu:</span>
+                        <strong id="pay-title">PREMIUM-{{ server_id }}</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Kwota:</span>
+                        <strong id="pay-amount">{{ plan_price }} PLN</strong>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <label class="toggle-row" style="justify-content: flex-start; gap: 15px; cursor: pointer;">
+                        <input type="checkbox" id="auto-renew-toggle">
+                        <div class="toggle-switch"></div>
+                        <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Odnawiaj automatycznie co miesiąc</span>
+                    </label>
+                    <p style="font-size: 0.8rem; color: #777; margin: 10px 0 0 50px;">
+                        Zaznaczając tę opcję, zgadzasz się na zapisanie formy płatności i automatyczne pobieranie środków 15-tego dnia każdego miesiąca.
+                    </p>
+                </div>
+
+                <div style="margin-top: 30px; padding: 15px; background: rgba(116, 184, 22, 0.05); border-radius: 10px; border: 1px solid rgba(116, 184, 22, 0.1);">
+                    <p style="font-size: 0.85rem; color: #aaa;">
+                        <i class="fas fa-clock" style="color: var(--accent-green); margin-right: 5px;"></i>
+                        Po dokonaniu wpłaty, status Premium zostanie aktywowany automatycznie po zaksięgowaniu (zwykle do 24h). 
+                        Możesz wysłać potwierdzenie na naszym serwerze Discord dla szybszej aktywacji.
+                    </p>
+                </div>
+            </div>
+
+            <button class="btn-sidebar-save" style="margin-top: 30px; width: 100%;" onclick="confirmPaymentRequest()">
+                POTWIERDZAM DOKONANIE WPŁATY
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payment-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border-gray);
+        padding: 20px;
+        border-radius: 14px;
+        text-align: center;
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .payment-card i { font-size: 1.5rem; color: #888; }
+    .payment-card span { font-size: 0.8rem; font-weight: 700; color: #aaa; }
+    
+    .payment-card.active {
+        background: rgba(116, 184, 22, 0.05);
+        border-color: var(--accent-green);
+        box-shadow: 0 0 20px rgba(116, 184, 22, 0.1);
+    }
+    .payment-card.active i { color: var(--accent-green); }
+    .payment-card.active span { color: #fff; }
+    
+    .instruction-step { display: flex; gap: 15px; align-items: flex-start; }
+    .instruction-step i { font-size: 1.2rem; color: var(--accent-green); margin-top: 3px; }
+    .instruction-step strong { display: block; font-size: 1.1rem; color: #fff; }
+    .instruction-step p { font-size: 0.9rem; color: #888; margin-top: 4px; }
+    
+    .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; }
+    .detail-row span { color: #888; }
+    .detail-row strong { color: #fff; }
+</style>
+
+<script>
+    function selectPayment(method, el) {
+        document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        
+        const title = document.getElementById('method-title');
+        const desc = document.getElementById('method-desc');
+        const recipient = document.getElementById('pay-recipient');
+        const account = document.getElementById('pay-account');
+        const payTitle = document.getElementById('pay-title');
+        
+        if (method === 'transfer') {
+            title.innerText = 'Przelew Tradycyjny';
+            desc.innerText = 'Proszę dokonać wpłaty na poniższe dane:';
+            account.innerText = 'PL 00 0000 0000 0000 0000 0000 0000';
+            payTitle.innerText = 'PREMIUM-{{ server_id }}';
+        } else if (method === 'blik') {
+            title.innerText = 'Przelew na telefon (BLIK)';
+            desc.innerText = 'Wyślij przelew na numer telefonu:';
+            account.innerText = '+48 000 000 000';
+            payTitle.innerText = 'PREMIUM-{{ server_id }}';
+        } else if (method === 'paypal') {
+            title.innerText = 'PayPal / Skrill';
+            desc.innerText = 'Wyślij środki na adres e-mail:';
+            account.innerText = 'kontakt@polskibot.pl';
+            payTitle.innerText = 'Serwer ID: {{ server_id }}';
+        }
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+        alert('Skopiowano do schowka!');
+    }
+
+    function confirmPaymentRequest() {
+        alert('Dziękujemy! Twoje zgłoszenie wpłaty zostało zarejestrowane. Nasz zespół zweryfikuje przelew i aktywuje Premium wkrótce.');
+        window.location.href = '/config/{{ server_id }}/premium';
+    }
+</script>
+{% endblock %}

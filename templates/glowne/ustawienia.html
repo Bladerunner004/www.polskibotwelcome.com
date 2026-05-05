@@ -1,0 +1,91 @@
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/home_banner_premium.png');">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Ustawienia</span> Główne
+            </h1>
+            <p class="hero-subtitle">
+                Skonfiguruj podstawowe parametry bota dla swojego serwera.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="settings-card">
+    <div class="card-header">
+        <h3><i class="fas fa-cog"></i> Konfiguracja podstawowa</h3>
+    </div>
+    <div class="card-body">
+        <div class="config-item">
+            <div class="config-info">
+                <span class="config-title">
+                    Prefix bota 
+                    <i class="fas fa-crown" style="color: var(--accent-gold); font-size: 0.8rem; margin-left: 5px;"></i>
+                    <span class="premium-badge" style="background: var(--accent-gold); color: black; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: 900;">PREMIUM</span>
+                </span>
+                <span class="config-desc">Znak, którym wywołujesz komendy tekstowe (np. !, ?, .).</span>
+            </div>
+            <div class="config-control">
+                <input type="text" id="prefix-input-field" class="premium-input" 
+                       value="{{ main_settings.prefix }}" placeholder="!" 
+                       style="width: 80px; text-align: center;"
+                       {% if not main_settings.premium %}disabled title="Funkcja dostępna tylko dla subskrybentów Premium"{% endif %}>
+            </div>
+        </div>
+
+        <div class="config-item">
+            <div class="config-info">
+                <span class="config-title">Główny kolor bota</span>
+                <span class="config-desc">Kolor paska w wiadomościach typu Embed oraz powitaniach.</span>
+            </div>
+            <div class="config-control" style="display: flex; align-items: center; gap: 20px;">
+                <label class="toggle-row" style="margin: 0; padding: 0; gap: 8px; font-size: 0.7rem; color: #adb5bd; text-transform: uppercase; font-weight: 700;">
+                    <input type="checkbox" id="global-rgb-switch" {% if main_settings.rgb_mode %}checked{% endif %} onchange="toggleGlobalRGB(this.checked)">
+                    <div class="toggle-switch" style="transform: scale(0.75);"></div>
+                    TRYB RGB
+                </label>
+                <div id="global-color-picker-container" style="display:flex; align-items:center; gap:8px; {% if main_settings.rgb_mode %}opacity: 0.3; pointer-events: none;{% endif %}">
+                    <input type="color" id="global-embed-color" value="{{ main_settings.embed_color or '#74b816' }}" 
+                           style="background:none; border:none; width:35px; height:35px; cursor:pointer;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleGlobalRGB(enabled) {
+    const pickerCont = document.getElementById('global-color-picker-container');
+    if (enabled) {
+        pickerCont.style.opacity = '0.3';
+        pickerCont.style.pointerEvents = 'none';
+    } else {
+        pickerCont.style.opacity = '1';
+        pickerCont.style.pointerEvents = 'all';
+    }
+}
+</script>
+
+<style>
+    .premium-input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-gray);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 10px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+    .premium-input:focus:not(:disabled) {
+        border-color: var(--accent-green);
+        outline: none;
+        background: rgba(255, 255, 255, 0.08);
+    }
+    .premium-input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(212, 175, 55, 0.2);
+    }
+</style>

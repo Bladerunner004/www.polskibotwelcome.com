@@ -1,0 +1,69 @@
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/automod_banner_premium.png');">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Auto</span> Moderacja
+            </h1>
+            <p class="hero-subtitle">
+                Automatyczny system ochrony przed spamem, reklamami i toksycznym zachowaniem. Bot zareaguje zanim zrobi to administrator.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-robot"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">Aktywny</span>
+                    <span class="stat-label">Filtr spamu</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="settings-card">
+    <div class="card-header">
+        <h3><i class="fas fa-filter"></i> Filtry Tekstu</h3>
+    </div>
+    <div class="card-body">
+        <div class="setting-item">
+            <div>
+                <div style="font-weight: 700;">Anty-Link</div>
+                <div style="font-size: 0.8rem; color: var(--text-gray);">Blokuje wysyłanie linków zaproszeń i zewnętrznych stron.</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="automod-antilink-switch" {% if main_settings.automod_antilink %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="setting-item">
+            <div>
+                <div style="font-weight: 700;">Anty-Caps</div>
+                <div style="font-size: 0.8rem; color: var(--text-gray);">Blokuje wiadomości zawierające nadmierną ilość dużych liter.</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="automod-anticaps-switch" {% if main_settings.automod_anticaps %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="setting-item">
+            <div>
+                <div style="font-weight: 700;">Anty-Spam</div>
+                <div style="font-size: 0.8rem; color: var(--text-gray);">Wykrywa i usuwa powtarzające się wiadomości.</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="automod-antispam-switch" {% if main_settings.automod_antispam %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="setting-item">
+            <div>
+                <div style="font-weight: 700;">Anty-Badwords</div>
+                <div style="font-size: 0.8rem; color: var(--text-gray);">Automatycznie blokuje wulgaryzmy, rasizm i toksyczne słowa.</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="automod-badwords-switch" {% if main_settings.automod_badwords %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div>
+</div>

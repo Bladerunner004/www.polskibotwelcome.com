@@ -1,0 +1,327 @@
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/socialmedia_banner_premium.png');">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Social</span> Media
+            </h1>
+            <p class="hero-subtitle">
+                Automatyczne powiadomienia o nowych filmach, streamach i postach na Twoim serwerze Discord.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="media-container">
+    <div class="platforms-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <!-- YouTube -->
+        <div class="platform-card youtube" onclick="openMediaModal('youtube')">
+            <div class="platform-icon"><i class="fab fa-youtube"></i></div>
+            <div class="platform-info">
+                <span class="platform-name">YouTube</span>
+                <span class="platform-status" id="count-youtube">0/3 kont</span>
+                <div class="platform-preview" id="preview-youtube"></div>
+            </div>
+            <div class="platform-arrow"><i class="fas fa-chevron-right"></i></div>
+        </div>
+
+        <!-- Twitch -->
+        <div class="platform-card twitch" onclick="openMediaModal('twitch')">
+            <div class="platform-icon"><i class="fab fa-twitch"></i></div>
+            <div class="platform-info">
+                <span class="platform-name">Twitch</span>
+                <span class="platform-status" id="count-twitch">0/3 kont</span>
+                <div class="platform-preview" id="preview-twitch"></div>
+            </div>
+            <div class="platform-arrow"><i class="fas fa-chevron-right"></i></div>
+        </div>
+
+        <!-- TikTok -->
+        <div class="platform-card tiktok {% if not main_settings.premium %}premium-locked{% endif %}" onclick="{% if main_settings.premium %}openMediaModal('tiktok'){% else %}alert('Ta platforma wymaga subskrypcji PREMIUM!'){% endif %}">
+            <div class="platform-icon"><i class="fab fa-tiktok"></i></div>
+            <div class="platform-info">
+                <span class="platform-name">TikTok {% if not main_settings.premium %}<i class="fas fa-crown" style="color: #ffd700; font-size: 0.8rem;"></i>{% endif %}</span>
+                <span class="platform-status" id="count-tiktok">{% if not main_settings.premium %}Zablokowane{% else %}0/3 kont{% endif %}</span>
+                <div class="platform-preview" id="preview-tiktok"></div>
+            </div>
+            <div class="platform-arrow">{% if not main_settings.premium %}<i class="fas fa-lock"></i>{% else %}<i class="fas fa-chevron-right"></i>{% endif %}</div>
+        </div>
+
+        <!-- Kick -->
+        <div class="platform-card kick {% if not main_settings.premium %}premium-locked{% endif %}" onclick="{% if main_settings.premium %}openMediaModal('kick'){% else %}alert('Ta platforma wymaga subskrypcji PREMIUM!'){% endif %}">
+            <div class="platform-icon"><i class="fas fa-bolt"></i></div>
+            <div class="platform-info">
+                <span class="platform-name">Kick {% if not main_settings.premium %}<i class="fas fa-crown" style="color: #ffd700; font-size: 0.8rem;"></i>{% endif %}</span>
+                <span class="platform-status" id="count-kick">{% if not main_settings.premium %}Zablokowane{% else %}0/3 kont{% endif %}</span>
+                <div class="platform-preview" id="preview-kick"></div>
+            </div>
+            <div class="platform-arrow">{% if not main_settings.premium %}<i class="fas fa-lock"></i>{% else %}<i class="fas fa-chevron-right"></i>{% endif %}</div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL KONFIGURACJI MEDIÓW -->
+<div class="modal-backdrop" id="media-modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h2 id="media-modal-title" style="margin: 0;">Konfiguracja</h2>
+            <div onclick="closeMediaModal()" style="cursor: pointer; opacity: 0.6;"><i class="fas fa-times"></i></div>
+        </div>
+
+        <div id="media-configs-list" style="margin-bottom: 20px;">
+            <!-- Tutaj będą wskakiwać aktywne konfiguracje dla danej platformy -->
+        </div>
+
+        <div class="new-config-btn" onclick="addNewMediaConfig()" id="add-media-btn">
+            <i class="fas fa-plus"></i> Dodaj nowe konto
+        </div>
+
+        <button type="button" class="btn-save" style="margin-top: 30px;" onclick="saveMediaLocal()">ZAPISZ LOKALNIE</button>
+    </div>
+</div>
+
+<style>
+    .platform-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-gray);
+        border-radius: 20px;
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .platform-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.06);
+    }
+    .platform-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+    .youtube .platform-icon { background: rgba(255, 0, 0, 0.1); color: #ff0000; }
+    .twitch .platform-icon { background: rgba(145, 70, 255, 0.1); color: #9146ff; }
+    .tiktok .platform-icon { background: rgba(0, 242, 234, 0.1); color: #00f2ea; }
+    .kick .platform-icon { background: rgba(83, 252, 24, 0.1); color: #53fc18; }
+    
+    .platform-name { display: block; font-weight: 800; font-size: 1.1rem; }
+    .platform-status { font-size: 0.8rem; color: var(--text-gray); }
+    .platform-arrow { margin-left: auto; opacity: 0.3; }
+
+    .premium-locked {
+        opacity: 0.6;
+        filter: grayscale(0.8);
+        cursor: not-allowed !important;
+        border-style: dashed !important;
+    }
+    .premium-locked:hover {
+        transform: none !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        border-color: var(--border-gray) !important;
+    }
+
+    .media-config-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-gray);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 15px;
+        position: relative;
+    }
+    .platform-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+    }
+    .preview-badge {
+        background: rgba(116, 184, 22, 0.1);
+        color: var(--accent-green);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        border: 1px solid rgba(116, 184, 22, 0.2);
+    }
+</style>
+
+<script>
+(function() {
+    const guildId = '{{ server_id }}';
+    let currentPlatform = null;
+    let localMediaConfigs = []; // Płaska lista wszystkich konfiguracji
+
+    async function loadMediaConfigs() {
+        try {
+            const res = await fetch(`/api/${guildId}/media`);
+            localMediaConfigs = await res.json();
+            updatePlatformCounts();
+        } catch(e) { console.error("Błąd ładowania mediów:", e); }
+    }
+
+    function updatePlatformCounts() {
+        const platforms = ['youtube', 'twitch', 'tiktok', 'kick'];
+        const premium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const limit = premium ? 5 : 3;
+
+        platforms.forEach(p => {
+            const configs = localMediaConfigs.filter(c => c.platform === p);
+            const count = configs.length;
+            
+            // Licznik X/Y
+            const el = document.getElementById(`count-${p}`);
+            if (el && !el.textContent.includes('Zablokowane')) {
+                el.textContent = `${count}/${limit} kont`;
+            }
+
+            // Podgląd kont na stronie głównej
+            const preview = document.getElementById(`preview-${p}`);
+            if (preview) {
+                preview.innerHTML = '';
+                configs.forEach(c => {
+                    if (c.account_id) {
+                        const badge = document.createElement('span');
+                        badge.className = 'preview-badge';
+                        badge.style.cursor = 'pointer'; // Kursor wskazujący klikalność
+                        badge.textContent = c.account_id;
+                        badge.title = "Kliknij, aby edytować";
+                        preview.appendChild(badge);
+                    }
+                });
+            }
+        });
+    }
+
+    window.openMediaModal = (platform) => {
+        currentPlatform = platform;
+        document.getElementById('media-modal-title').textContent = `Konfiguracja ${platform.toUpperCase()}`;
+        renderMediaConfigsForPlatform();
+        document.getElementById('media-modal').classList.add('active');
+        
+        // Limit sprawdzany na podstawie premium: 3 dla darmowych, 5 dla premium
+        const premium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const platformConfigs = localMediaConfigs.filter(c => c.platform === currentPlatform);
+        const limit = premium ? 5 : 3;
+        
+        if (platformConfigs.length >= limit) {
+            document.getElementById('add-media-btn').style.display = 'none';
+        } else {
+            document.getElementById('add-media-btn').style.display = 'block';
+        }
+    };
+
+    window.closeMediaModal = () => document.getElementById('media-modal').classList.remove('active');
+
+    async function renderMediaConfigsForPlatform() {
+        const list = document.getElementById('media-configs-list');
+        list.innerHTML = '';
+        
+        const filtered = localMediaConfigs.filter(c => c.platform === currentPlatform);
+        
+        // Pobieramy kanały (tylko raz lub z cache)
+        const channelsRes = await fetch(`/api/${guildId}/channels`);
+        const channels = await channelsRes.json();
+
+        filtered.forEach((cfg, idx) => {
+            const div = document.createElement('div');
+            div.className = 'media-config-item';
+            div.innerHTML = `
+                <div style="font-size: 0.75rem; font-weight: 900; color: var(--accent-green); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-hashtag"></i> KONTO #${idx + 1}
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-size: 0.7rem; font-weight: 800; color: #666; display: block; margin-bottom: 5px;">ID KONTA / LINK:</label>
+                        <input type="text" class="modal-input m-account-id" value="${cfg.account_id || ''}" placeholder="np. @polskibot">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.7rem; font-weight: 800; color: #666; display: block; margin-bottom: 5px;">KANAŁ DISCORD:</label>
+                        <select class="modal-select m-discord-channel">
+                            <option value="">Wybierz kanał...</option>
+                            ${channels.map(ch => `<option value="${ch.id}" ${ch.id == cfg.discord_channel_id ? 'selected' : ''}># ${ch.name}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size: 0.7rem; font-weight: 800; color: #666; display: block; margin-bottom: 5px;">WIADOMOŚĆ POWIADOMIENIA:</label>
+                    <input type="text" class="modal-input m-message" value="${cfg.message || ''}" placeholder="Wiadomość...">
+                </div>
+                <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                    <label class="toggle-row" style="margin:0;">
+                        <input type="checkbox" class="m-enabled" ${cfg.enabled ? 'checked' : ''}>
+                        <div class="toggle-switch"></div>
+                        <span style="font-size: 0.85rem; font-weight: 600; color: #ddd;">Aktywne</span>
+                    </label>
+                    <button type="button" class="btn-del" onclick="removeMediaConfig(${idx})" title="Usuń to konto"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    window.addNewMediaConfig = () => {
+        localMediaConfigs.push({
+            platform: currentPlatform,
+            account_id: '',
+            discord_channel_id: '',
+            message: (currentPlatform === 'twitch' || currentPlatform === 'kick') ? 'Na żywo! {account} właśnie odpalił strumień!' : 'Nowy materiał od {account}!',
+            enabled: true
+        });
+        renderMediaConfigsForPlatform();
+    };
+
+    window.removeMediaConfig = (idxInPlatform) => {
+        const platformConfigs = localMediaConfigs.filter(c => c.platform === currentPlatform);
+        const configToRemove = platformConfigs[idxInPlatform];
+        localMediaConfigs = localMediaConfigs.filter(c => c !== configToRemove);
+        renderMediaConfigsForPlatform();
+    };
+
+    window.saveMediaLocal = () => {
+        // Pobieramy dane z DOM dla aktualnej platformy i aktualizujemy localMediaConfigs
+        const items = document.querySelectorAll('.media-config-item');
+        const platformConfigs = localMediaConfigs.filter(c => c.platform === currentPlatform);
+        
+        items.forEach((item, i) => {
+            if (platformConfigs[i]) {
+                platformConfigs[i].account_id = item.querySelector('.m-account-id').value;
+                platformConfigs[i].discord_channel_id = item.querySelector('.m-discord-channel').value;
+                platformConfigs[i].message = item.querySelector('.m-message').value;
+                platformConfigs[i].enabled = item.querySelector('.m-enabled').checked;
+            }
+        });
+        
+        updatePlatformCounts();
+        closeMediaModal();
+        console.log("Zapisano media lokalnie");
+    };
+
+    window.saveMediaSettings = async () => {
+        const btn = document.querySelector('.save-btn-floating') || document.querySelector('.save-btn') || { innerHTML: '' };
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Zapisywanie...';
+
+        try {
+            await fetch(`/api/${guildId}/media`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ configs: localMediaConfigs })
+            });
+            
+            btn.innerHTML = '<i class="fas fa-check"></i> Zapisano!';
+            setTimeout(() => { btn.innerHTML = originalText; }, 3000);
+        } catch (error) {
+            console.error('Błąd zapisu:', error);
+            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Błąd zapisu';
+            setTimeout(() => { btn.innerHTML = originalText; }, 3000);
+        }
+    };
+
+    loadMediaConfigs();
+})();
+</script>

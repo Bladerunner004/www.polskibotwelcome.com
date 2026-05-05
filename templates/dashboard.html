@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - POLSKIBOT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #06070a;
+            --bg-card: #0c0d12;
+            --accent: #74b816;
+            --accent-glow: rgba(116, 184, 22, 0.25);
+            --border: rgba(255, 255, 255, 0.05);
+            --text: #e2e4e9;
+            --text-muted: #8b8e94;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% -20%, rgba(116, 184, 22, 0.05), transparent 80%);
+        }
+
+        /* ── NAVBAR (Styl premium) ── */
+        .nav {
+            height: 66px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(4, 5, 7, 0.82);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.2;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.15rem;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .custom-menu {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.025);
+            padding: 5px 20px;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .menu-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.83rem;
+            font-weight: 500;
+            padding: 7px 13px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .menu-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ── AVATAR DROPDOWN ── */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            cursor: pointer;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            object-fit: cover;
+            animation: pulse-green-dash 3s infinite;
+        }
+
+        .avatar:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 0 20px var(--accent-glow);
+            filter: brightness(1.1);
+        }
+
+        @keyframes pulse-green-dash {
+            0% {
+                box-shadow: 0 0 0 0 rgba(116, 184, 22, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(116, 184, 22, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(116, 184, 22, 0);
+            }
+        }
+
+
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 54px;
+            background: rgba(8, 9, 14, 0.97);
+            backdrop-filter: blur(20px);
+            min-width: 210px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+        }
+
+        .dropdown-content.show {
+            display: block;
+            animation: dropIn 0.18s ease;
+        }
+
+        @keyframes dropIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .dropdown-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(116, 184, 22, 0.07), transparent);
+        }
+
+        .dropdown-header small {
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dropdown-header strong {
+            display: block;
+            color: white;
+            font-size: 0.92rem;
+            margin-top: 3px;
+        }
+
+        .dropdown-item {
+            padding: 11px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #9ca3af;
+            font-size: 0.84rem;
+            transition: 0.15s;
+        }
+
+        .dropdown-item i {
+            width: 16px;
+            text-align: center;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(116, 184, 22, 0.1);
+            color: white;
+        }
+
+        .dropdown-item.logout {
+            color: #f87171;
+        }
+
+        .dropdown-item.logout:hover {
+            background: rgba(248, 113, 113, 0.1);
+            color: #fca5a5;
+        }
+
+        /* ── GRID ── */
+        .container {
+            max-width: 1600px;
+            margin: 80px auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+        }
+
+        .header h1 span {
+            color: var(--accent);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 26px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(116, 184, 22, 0.5);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .icon {
+            width: 90px;
+            height: 90px;
+            border-radius: 32px;
+            margin: 0 auto 25px;
+            background: #16181d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #222;
+            border: 2px solid var(--border);
+            transition: 0.3s;
+            object-fit: cover;
+        }
+
+        .card:hover .icon {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+        }
+
+        .btn-manage {
+            background: rgba(255, 255, 255, 0.03);
+            color: white;
+            border: 1px solid var(--border);
+        }
+
+        .btn-manage:hover {
+            background: white;
+            color: black;
+        }
+
+        .btn-config {
+            background: var(--accent);
+            color: black;
+        }
+
+        .btn-config:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 25px var(--accent-glow);
+        }
+
+        .btn-config {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+
+        .footer {
+            margin-top: 100px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding-bottom: 50px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="nav">
+        <a href="/" class="logo">POLSKI<span>BOT</span></a>
+
+        <div class="custom-menu">
+            <a href="https://discord.gg/G5F3WBbZ" target="_blank" class="menu-link">Discord</a>
+        </div>
+
+        <div class="user-dropdown">
+
+            <img src="{{ user_avatar }}" class="avatar" id="avatarBtn" alt="Avatar">
+            <div class="dropdown-content" id="myDropdown">
+                <div class="dropdown-header">
+                    <small>Zalogowany jako</small>
+                    <strong>{{ user.username }}</strong>
+                </div>
+                <a href="/" class="dropdown-item"><i class="fas fa-home"></i> Strona główna</a>
+                <a href="/dashboard" class="dropdown-item"><i class="fas fa-server"></i> Zmień serwer</a>
+                <a href="/logout" class="dropdown-item logout"><i class="fas fa-sign-out-alt"></i> Wyloguj się</a>
+
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>Wybierz <span>Serwer</span></h1>
+            <p>Skonfiguruj ustawienia <strong>POLSKIBOT</strong> dla swoich społeczności</p>
+        </div>
+
+        <div class="grid">
+            {% for server in servers %}
+            <div class="card">
+                {% if server.icon %}
+                <img src="https://cdn.discordapp.com/icons/{{ server.id }}/{{ server.icon }}.png" class="icon">
+                {% else %}
+                <div class="icon">{{ server.name[0] }}</div>
+                {% endif %}
+
+                <div class="name">{{ server.name }}</div>
+
+                {% if server.has_bot %}
+                {% if server.id %}
+                <a href="/config/{{ server.id }}" class="btn-config">KONFIGURUJ</a>
+                {% else %}
+                <button class="btn-config" disabled>BŁĄD ID</button>
+                {% endif %}
+                {% else %}
+                <a href="{{ discord_invite }}&guild_id={{ server.id }}" class="btn btn-add">
+                    <i class="fas fa-plus"></i> Dodaj Bota
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2024 <strong>POLSKIBOT</strong>. Wszystkie prawa zastrzeżone.
+    </div>
+
+    <script>
+        const avatarBtn = document.getElementById('avatarBtn');
+        const dropdown = document.getElementById('myDropdown');
+        if (avatarBtn) {
+            avatarBtn.addEventListener('click', e => { e.stopPropagation(); dropdown.classList.toggle('show'); });
+        }
+        window.addEventListener('click', () => {
+            if (dropdown && dropdown.classList.contains('show')) dropdown.classList.remove('show');
+        });
+    </script>
+
+</body>
+
+</html>

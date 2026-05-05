@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Panel zarządzania serwerem Discord - PolskiBot">
+    <title>Konfiguracja Serwera: {{ guild.name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg:         #06070a;
+            --bg2:        #0c0d12;
+            --sidebar-bg: #0e0f14;
+            --sidebar-width: 270px;
+            --server-nav-width: 68px;
+            --accent-green: #74b816;
+            --green-dim:  rgba(116,184,22,0.12);
+            --green-glow: rgba(116,184,22,0.35);
+            --accent-gold: #d4af37;
+            --text-gray: #8b8e94;
+            --navbar-height: 64px;
+            --border-gray: rgba(255,255,255,0.06);
+            --radius: 12px;
+        }
+
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg); color: #e2e4e9;
+            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+            background-image: linear-gradient(rgba(116,184,22,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(116,184,22,0.025) 1px, transparent 1px);
+            background-size: 44px 44px;
+        }
+
+        .navbar { height: 66px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; background: rgba(4, 5, 7, 0.82); backdrop-filter: blur(18px); border-bottom: 1px solid var(--border-gray); position: relative; z-index: 1001; }
+        .navbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-green), transparent); opacity: 0.2; }
+        .nav-logo { font-weight: 900; font-size: 1.15rem; letter-spacing: 1.5px; text-decoration: none; color: white; }
+        .nav-logo span { color: var(--accent-green); }
+
+        .custom-menu { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.025); padding: 5px 20px; border-radius: 50px; border: 1px solid var(--border-gray); position: absolute; left: 50%; transform: translateX(-50%); }
+        .menu-link { text-decoration: none; color: var(--text-gray); font-size: 0.83rem; font-weight: 500; padding: 7px 13px; border-radius: 8px; transition: 0.2s; }
+        .menu-link:hover { color: white; background: rgba(255,255,255,0.05); }
+
+        .user-dropdown { position: relative; display: inline-block; }
+        .nav-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 2px solid var(--accent-green); cursor: pointer;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); object-fit: cover;
+            animation: pulse-green 3s infinite;
+        }
+        .nav-avatar:hover { transform: scale(1.1) rotate(5deg); box-shadow: 0 0 20px var(--green-glow); filter: brightness(1.1); }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(116, 184, 22, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(116, 184, 22, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(116, 184, 22, 0); }
+        }
+
+        .dropdown-content { display: none; position: absolute; right: 0; top: 54px; background: rgba(8,9,14,0.97); backdrop-filter: blur(20px); min-width: 210px; border: 1px solid var(--border-gray); border-radius: 14px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.7); z-index: 9999; }
+        .dropdown-content.show { display: block; animation: dropIn 0.18s ease; }
+        @keyframes dropIn { from { opacity:0; transform:translateY(-8px) scale(0.97); } to { opacity:1; transform:none; } }
+
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-gray); background: linear-gradient(135deg, rgba(116,184,22,0.07), transparent); }
+        .dropdown-header small { color: var(--text-gray); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .dropdown-header strong { display: block; color: white; font-size: 0.92rem; margin-top: 3px; }
+        .dropdown-item { padding: 11px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; color: #9ca3af; font-size: 0.84rem; transition: 0.15s; }
+        .dropdown-item:hover { background: rgba(116, 184, 22, 0.1); color: white; }
+        .dropdown-item.logout { color: #f87171; }
+        .dropdown-item.logout:hover { background: rgba(248,113,113,0.1); color: #fca5a5; }
+
+        .app-container { display: flex; flex: 1; overflow: hidden; }
+
+        .server-nav { width: var(--server-nav-width); background: rgba(3,4,6,0.95); display: flex; flex-direction: column; align-items: center; padding-top: 16px; gap: 10px; border-right: 1px solid var(--border-gray); flex-shrink: 0; overflow-y: auto; scrollbar-width: none; }
+        .server-pfp { width: 46px; height: 46px; border-radius: 14px; background: #1a1d24; border: 2px solid transparent; transition: 0.2s; object-fit: cover; }
+        .server-link { display: block; border-radius: 14px; }
+        .server-link:hover .server-pfp { border-radius: 12px; border-color: rgba(116,184,22,0.4); }
+        .server-link.active .server-pfp { border-color: var(--accent-green); border-radius: 12px; box-shadow: 0 0 12px var(--green-glow); }
+
+        .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); display: flex; flex-direction: column; border-right: 1px solid var(--border-gray); flex-shrink: 0; overflow: hidden; }
+        .sidebar-scroll-area { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(116,184,22,0.2) transparent; }
+
+        .sidebar-header { padding: 24px 20px 20px; text-align: center; border-bottom: 1px solid var(--border-gray); background: linear-gradient(180deg, rgba(116,184,22,0.05) 0%, transparent 100%); }
+        .server-pfp-large { width: 68px; height: 68px; border-radius: 20px; margin: 0 auto 12px; background-size: cover; background-position: center; background-color: #1a1d24; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(116,184,22,0.2); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        .category-label { font-size: 0.62rem; font-weight: 700; color: rgba(255,255,255,0.2); padding: 18px 20px 6px; letter-spacing: 1px; text-transform: uppercase; }
+        .sidebar-category {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.3);
+        margin: 25px 0 10px 20px;
+        font-weight: 800;
+    }
+
+    .menu-item { padding: 10px 20px; display: flex; align-items: center; gap: 11px; font-size: 0.86rem; color: var(--text-gray); text-decoration: none; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; margin: 1px 0; }
+        .menu-item i { width: 18px; text-align: center; font-size: 0.9rem; flex-shrink: 0; }
+        .menu-item:hover { background: rgba(255,255,255,0.04); color: white; border-left-color: rgba(116,184,22,0.3); }
+        .menu-item.active { background: linear-gradient(90deg, rgba(116,184,22,0.12), transparent); color: white; border-left-color: var(--accent-green); font-weight: 600; }
+
+        .sidebar-save-container { padding: 14px 16px; background: rgba(3,4,6,0.8); border-top: 1px solid var(--border-gray); display: flex; flex-direction: column; gap: 8px; z-index: 10; }
+        .btn-sidebar-save { background: linear-gradient(135deg, #74b816 0%, #4d7c0f 100%); color: #000; border: none; padding: 13px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.25s; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 9px; font-size: 0.82rem; width: 100%; box-shadow: 0 4px 20px rgba(116,184,22,0.2); }
+
+        .module-banner {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url('/static/uploads/default_header.png');
+            background-size: cover;
+            background-position: center;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 40px;
+            border: 1px solid var(--border-gray);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .module-banner h1 { font-size: 2.2rem; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 15px; color: white; }
+        .module-banner h1 i { color: var(--accent-green); filter: drop-shadow(0 0 10px var(--accent-green)); }
+        .module-banner p { margin: 8px 0 0; color: rgba(255,255,255,0.7); font-size: 1rem; }
+
+        .main-view { flex: 1; padding: 20px; overflow-y: auto; background: var(--bg); scroll-behavior: smooth; }
+        .tab-content { display: none; animation: tabIn 0.25s ease; }
+        .tab-content.active { display: block; }
+        @keyframes tabIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+        /* ===== GLOBAL COMPONENTS ===== */
+
+        /* Hero Banner */
+        .hero-banner {
+            width: 100%;
+            min-height: 280px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 28px;
+            margin-bottom: 35px;
+            display: flex;
+            align-items: center;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+        }
+        .hero-glass {
+            background: rgba(17, 19, 23, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 36px;
+            border-radius: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            max-width: 600px;
+        }
+        .hero-title { font-size: 2.4rem; font-weight: 900; color: white; margin: 0; line-height: 1.1; letter-spacing: -1px; }
+        .decorative-text { font-family: 'Dancing Script', cursive; color: var(--accent-green); display: block; font-size: 2.8rem; margin-bottom: -8px; }
+        .hero-subtitle { color: rgba(255, 255, 255, 0.6); font-size: 0.95rem; line-height: 1.65; margin: 18px 0 0; }
+        .hero-stats { display: flex; gap: 28px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 22px; margin-top: 22px; }
+        .hero-stat-item { display: flex; align-items: center; gap: 14px; }
+        .stat-icon { width: 44px; height: 44px; background: rgba(116, 184, 22, 0.1); color: var(--accent-green); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; }
+        .stat-info { display: flex; flex-direction: column; }
+        .stat-value { font-weight: 800; color: white; font-size: 0.92rem; }
+        .stat-label { font-size: 0.73rem; color: #666; }
+
+        /* Settings Card */
+        .settings-card {
+            background: var(--bg2);
+            border: 1px solid var(--border-gray);
+            border-radius: 20px;
+            margin-bottom: 28px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .settings-card:hover {
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .card-header {
+            padding: 22px 28px;
+            border-bottom: 1px solid var(--border-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(116,184,22,0.03), transparent);
+            border-radius: 20px 20px 0 0;
+        }
+        .card-header h3 {
+            margin: 0; font-weight: 800; font-size: 1.05rem;
+            display: flex; align-items: center; gap: 12px; color: #e2e4e9;
+        }
+        .card-header h3 i { color: var(--accent-green); }
+        .card-body { padding: 25px 28px 28px; }
+
+        /* Config Item (setting row) */
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-gray);
+            border-radius: 14px;
+            margin-bottom: 10px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .config-item:hover {
+            background: rgba(255,255,255,0.035);
+            border-color: rgba(255,255,255,0.1);
+        }
+        .config-info { display: flex; flex-direction: column; gap: 3px; }
+        .config-title { font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; }
+        .config-desc { font-size: 0.78rem; color: var(--text-gray); }
+        .config-control { display: flex; align-items: center; gap: 10px; }
+
+        /* Setting Item (legacy row) */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-gray);
+        }
+        .setting-item:last-child { border-bottom: none; }
+
+        /* ===== UNIFIED SWITCH / TOGGLE ===== */
+        .switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: 0.3s; border-radius: 26px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 20px; width: 20px; left: 2px; bottom: 2px;
+            background: white; transition: 0.3s; border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        input:checked + .slider {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            box-shadow: 0 0 12px rgba(116,184,22,0.25);
+        }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Toggle Row (label with switch) */
+        .toggle-row {
+            display: flex; align-items: center; gap: 12px;
+            cursor: pointer; user-select: none;
+            font-size: 0.85rem; font-weight: 600; color: #c5c8cd;
+        }
+        .toggle-switch {
+            position: relative; width: 44px; height: 24px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 24px; transition: 0.3s; flex-shrink: 0;
+        }
+        .toggle-switch::before {
+            content: ''; position: absolute;
+            width: 18px; height: 18px; left: 3px; top: 3px;
+            background: white; border-radius: 50%; transition: 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .toggle-row input:checked + .toggle-switch {
+            background: var(--accent-green);
+        }
+        .toggle-row input:checked + .toggle-switch::before {
+            transform: translateX(20px);
+        }
+        .toggle-row input { display: none; }
+
+        /* ===== FORM CONTROLS ===== */
+        .modal-section { margin-bottom: 22px; }
+        .modal-label {
+            display: block; font-size: 0.7rem; font-weight: 800;
+            color: #555; text-transform: uppercase;
+            letter-spacing: 1px; margin-bottom: 10px;
+        }
+        .modal-input, .modal-select {
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-gray);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .modal-input:focus, .modal-select:focus {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px rgba(116,184,22,0.1);
+        }
+        .modal-input::placeholder { color: #444; }
+        .modal-select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+        .modal-select option {
+            background: #0c0d12;
+            color: white;
+            padding: 8px;
+        }
+
+        /* ===== CUSTOM CHECKBOX ===== */
+        .custom-checkbox {
+            display: flex; align-items: center; gap: 12px;
+            cursor: pointer; user-select: none;
+            font-size: 0.88rem; color: #c5c8cd;
+        }
+        .custom-checkbox input { display: none; }
+        .custom-checkbox .cb-box {
+            width: 22px; height: 22px;
+            background: rgba(255,255,255,0.04);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s; flex-shrink: 0;
+        }
+        .custom-checkbox .cb-box i {
+            font-size: 0.65rem; color: transparent; transition: 0.2s;
+        }
+        .custom-checkbox input:checked + .cb-box {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            box-shadow: 0 0 8px rgba(116,184,22,0.3);
+        }
+        .custom-checkbox input:checked + .cb-box i { color: black; }
+
+        /* ===== DASHBOARD OVERVIEW ===== */
+        .dashboard-overview { margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="nav-logo">POLSKI<span>BOT</span></a>
+        <div class="custom-menu">
+            <a href="https://discord.gg/G5F3WBbZ" target="_blank" class="menu-link">Discord</a>
+        </div>
+        <div class="user-dropdown">
+            <img src="{{ user_avatar or 'https://cdn.discordapp.com/embed/avatars/0.png' }}" class="nav-avatar" id="cfgAvatarBtn" alt="Avatar">
+            <div class="dropdown-content" id="cfgDropdown">
+                <div class="dropdown-header">
+                    <small>Zalogowany jako</small>
+                    <strong>{{ user.username if user else 'Użytkownik' }}</strong>
+                </div>
+                <a href="/" class="dropdown-item"><i class="fas fa-home"></i> Strona główna</a>
+                <a href="/dashboard" class="dropdown-item"><i class="fas fa-server"></i> Zmień serwer</a>
+                <a href="/logout" class="dropdown-item logout"><i class="fas fa-sign-out-alt"></i> Wyloguj się</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-container">
+        <div class="server-nav">
+            {% for ug in user_guilds %}
+                <a href="/config/{{ ug.id }}" class="server-link {% if ug.id|string == guild.id|string %}active{% endif %}" title="{{ ug.name }}">
+                    {% if ug.icon %}
+                        <img src="https://cdn.discordapp.com/icons/{{ ug.id }}/{{ ug.icon }}.png" class="server-pfp">
+                    {% else %}
+                        <div class="server-pfp" style="display:flex; align-items:center; justify-content:center; background:#1a1d24; color:#666; font-size:0.7rem;">{{ ug.name[0] }}</div>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+
+        <div class="sidebar">
+                <div class="sidebar-scroll-area">
+                <div class="sidebar-header">
+                    <div class="server-pfp-large" {% if guild.icon %} style="background-image: url('{{ guild.icon.url }}'); background-size: cover;" {% endif %}>
+                        {% if not guild.icon %}<span style="font-size: 1.5rem; color: #888;">{{ guild.name[0] }}</span>{% endif %}
+                    </div>
+                    <div style="font-weight: 800; font-size: 0.95rem;">{{ guild.name }}</div>
+                </div>
+
+                <div class="category-label">Konfiguracja bota</div>
+                <div class="menu-item active" onclick="openTab(event, 'strona_glowna')"><i class="fas fa-home"></i> <span>Strona Główna</span></div>
+                <div class="menu-item" onclick="openTab(event, 'ustawienia')"><i class="fas fa-cog"></i> <span>Ustawienia Ogólne</span></div>
+                <div class="menu-item" onclick="openTab(event, 'komendy')"><i class="fas fa-terminal"></i> <span>Komendy</span></div>
+                <div class="menu-item" onclick="openTab(event, 'strona_serwera')"><i class="fas fa-globe"></i> <span>Strona Serwera</span></div>
+                <div class="menu-item" onclick="openTab(event, 'wlasny_bot')">
+                    <i class="fas fa-robot"></i> <span>Własny bot</span>
+                </div>
+                <div class="menu-item" onclick="openTab(event, 'logowanie_discord')"><i class="fas fa-door-open"></i> <span>Logowanie Discord</span></div>
+                <div class="menu-item" onclick="openTab(event, 'premium')"><i class="fas fa-gem" style="color: #00a8fc;"></i> <span>Status Premium</span></div>
+
+                <div class="category-label">Zarządzanie serwerem</div>
+                <div class="menu-item" onclick="openTab(event, 'powitania')"><i class="fas fa-door-open"></i> <span>Powitania</span></div>
+                <div class="menu-item" onclick="openTab(event, 'auto_role')"><i class="fas fa-user-plus"></i> <span>Auto Role</span></div>
+                <div class="menu-item" onclick="openTab(event, 'liczniki')"><i class="fas fa-sort-numeric-up"></i> <span>Liczniki</span></div>
+                <div class="menu-item" onclick="openTab(event, 'media')"><i class="fas fa-share-alt"></i> <span>Media Socialne</span></div>
+                <div class="menu-item" onclick="openTab(event, 'monitor')">
+                    <i class="fas fa-chart-line"></i> <span>Analityka (Monitor)</span>
+                </div>
+                <div class="menu-item" onclick="openTab(event, 'osadzenia')"><i class="fas fa-bullhorn"></i> <span>Osadzenia</span></div>
+                <div class="menu-item" onclick="openTab(event, 'selfrole')"><i class="fas fa-tags"></i> <span>Selfrole</span></div>
+                
+                <div class="category-label">Moderacja</div>
+                <div class="menu-item" onclick="openTab(event, 'moderacja')"><i class="fas fa-gavel"></i> <span>Moderacja</span></div>
+                <div class="menu-item" onclick="openTab(event, 'auto_mod')">
+                    <i class="fas fa-shield-alt"></i> <span>Auto Mod</span>
+                </div>
+                <div class="menu-item" onclick="openTab(event, 'logi')">
+                    <i class="fas fa-history"></i> <span>Logi</span>
+                </div>
+                <div class="menu-item" onclick="openTab(event, 'zmiany_na_serwerze')"><i class="fas fa-history"></i> <span>Zmiany na serwerze</span></div>
+                <div class="menu-item" onclick="openTab(event, 'formularz')"><i class="fas fa-clipboard-list"></i> <span>Formularz</span></div>
+                <div class="menu-item" onclick="openTab(event, 'zgloszenia')"><i class="fas fa-ticket-alt"></i> <span>Zgłoszenia</span></div>
+            </div>
+
+            <div class="sidebar-save-container" id="sidebarSaveArea">
+                <button type="button" id="finalSaveBtn" class="btn-sidebar-save">
+                    <i class="fas fa-save"></i> ZAPISZ USTAWIENIA
+                </button>
+            </div>
+        </div>
+
+        <div class="main-view">
+            <form id="configForm">
+                <div id="strona_glowna" class="tab-content active">{% include 'glowne/strona_glowna.html' %}</div>
+                <div id="ustawienia" class="tab-content">{% include 'glowne/ustawienia.html' %}</div>
+                <div id="komendy" class="tab-content">{% include 'glowne/komendy.html' %}</div>
+                <div id="strona_serwera" class="tab-content">{% include 'glowne/strona_serwera.html' %}</div>
+                <div id="wlasny_bot" class="tab-content">{% include 'glowne/wlasny_bot.html' %}</div>
+                <div id="logowanie_discord" class="tab-content">{% include 'glowne/logowanie_discord.html' %}</div>
+                <div id="premium" class="tab-content">{% include 'glowne/premium.html' %}</div>
+                <div id="powitania" class="tab-content">{% include 'zarzadzanie_serwerem/powitania.html' %}</div>
+                <div id="auto_role" class="tab-content">{% include 'zarzadzanie_serwerem/auto_role.html' %}</div>
+                <div id="liczniki" class="tab-content">{% include 'zarzadzanie_serwerem/liczniki.html' %}</div>
+                <div id="media" class="tab-content">{% include 'zarzadzanie_serwerem/media.html' %}</div>
+                <div id="monitor" class="tab-content">{% include 'zarzadzanie_serwerem/monitor.html' %}</div>
+                <div id="osadzenia" class="tab-content">{% include 'zarzadzanie_serwerem/osadzenia.html' %}</div>
+                <div id="selfrole" class="tab-content">{% include 'zarzadzanie_serwerem/selfrole.html' %}</div>
+                <div id="moderacja" class="tab-content">{% include 'moderacja/moderacja.html' %}</div>
+                <div id="auto_mod" class="tab-content">{% include 'moderacja/auto_mod.html' %}</div>
+                <div id="logi" class="tab-content">{% include 'moderacja/logi.html' %}</div>
+                <div id="zmiany_na_serwerze" class="tab-content">{% include 'moderacja/zmiany_na_serwerze.html' %}</div>
+                <div id="formularz" class="tab-content">{% include 'moderacja/formularz.html' %}</div>
+                <div id="zgloszenia" class="tab-content">{% include 'moderacja/zgloszenia.html' %}</div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            const target = document.getElementById(tabName);
+            if (target) {
+                target.classList.add('active');
+                evt.currentTarget.classList.add('active');
+                document.getElementById('sidebarSaveArea').style.display = tabName === 'strona_glowna' ? 'none' : 'flex';
+            }
+        }
+
+        const cfgAvatarBtn = document.getElementById('cfgAvatarBtn');
+        const cfgDropdown  = document.getElementById('cfgDropdown');
+        if (cfgAvatarBtn) {
+            cfgAvatarBtn.addEventListener('click', e => { e.stopPropagation(); cfgDropdown.classList.toggle('show'); });
+        }
+        window.addEventListener('click', () => { if (cfgDropdown && cfgDropdown.classList.contains('show')) cfgDropdown.classList.remove('show'); });
+
+        document.getElementById('finalSaveBtn').addEventListener('click', async function () {
+            const btn = this;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
+            
+            try {
+                const prefix = document.getElementById('prefix-input-field')?.value || '!';
+                const language = document.getElementById('language-select')?.value || 'pl';
+                const embedColor = document.getElementById('global-embed-color')?.value || '#74b816';
+                const rgbMode = document.getElementById('global-rgb-switch')?.checked ? 1 : 0;
+                
+                const cmdCbs = document.querySelectorAll('.command-checkbox:checked');
+                const enabledCmds = Array.from(cmdCbs).map(cb => cb.value);
+                
+                // Nowe: Pobieranie ustawień moderacji i AutoMod
+                const modEnabled = document.getElementById('mod-enabled-switch')?.checked;
+                const modConfirm = document.getElementById('mod-confirm-switch')?.checked;
+                const amAntilink = document.getElementById('automod-antilink-switch')?.checked;
+                const amAnticaps = document.getElementById('automod-anticaps-switch')?.checked;
+                const amAntispam = document.getElementById('automod-antispam-switch')?.checked;
+                const amBadwords = document.getElementById('automod-badwords-switch')?.checked;
+                
+                // 1. Zapisywanie ustawień głównych (Prefix + Komendy + Język + Kolor + Moderacja + AutoMod)
+                await fetch(`/config/{{ guild.id }}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prefix: prefix, 
+                        commands: enabledCmds, 
+                        language: language,
+                        embed_color: embedColor,
+                        rgb_mode: rgbMode,
+                        moderation_enabled: modEnabled,
+                        moderation_confirm: modConfirm,
+                        automod_antilink: amAntilink,
+                        automod_anticaps: amAnticaps,
+                        automod_antispam: amAntispam,
+                        automod_badwords: amBadwords
+                    })
+                });
+
+                // 2. Moduł: Powitania
+                if (window.getWelcomeData) {
+                    const welcomeData = window.getWelcomeData();
+                    await fetch(`/api/{{ guild.id }}/welcome_sync`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(welcomeData)
+                    });
+                }
+
+                // 3. Moduł: Osadzenia (Embedy)
+                if (window.getEmbedData) {
+                    const embedData = window.getEmbedData();
+                    await fetch(`/api/{{ guild.id }}/embeds_sync`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ configs: embedData })
+                    });
+                }
+
+                // 3.5 Moduł: Selfrole
+                if (window.getSelfroleData) {
+                    const selfroleData = window.getSelfroleData();
+                    await fetch(`/api/{{ guild.id }}/selfrole/sync`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(selfroleData)
+                    });
+                }
+
+                // 4. Moduł: Auto Role
+                if (window.saveAutoRoleSettings) {
+                    await window.saveAutoRoleSettings();
+                }
+
+                // 5. Moduł: Liczniki
+                if (window.saveCounterSettings) {
+                    await window.saveCounterSettings();
+                }
+
+                // 6. Moduł: Media
+                if (window.saveMediaSettings) {
+                    await window.saveMediaSettings();
+                }
+
+                // 6.5 Moduł: Logi
+                if (window.saveLogSettings) {
+                    await window.saveLogSettings();
+                }
+
+                // 7. Moduł: Własny Bot (White Label)
+                if (window.getCustomBotData) {
+                    const cbData = window.getCustomBotData();
+                    await fetch(`/api/{{ guild.id }}/custom_bot/sync`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cbData)
+                    });
+                }
+
+                btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
+                btn.style.background = '#2d7d2a';
+                alert('✅ WSZYSTKIE USTAWIENIA ZOSTAŁY POMYŚLNIE ZSYNCHRONIZOWANE!');
+            } catch (err) {
+                console.error("Błąd podczas zapisu:", err);
+                btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+                btn.style.background = '#7d2a2a';
+                alert("❌ Wystąpił błąd podczas zapisywania! Sprawdź konsolę przeglądarki.");
+            } finally {
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 2000);
+            }
+        });
+        // Funkcja do aktualizacji opóźnienia bota w czasie rzeczywistym
+        async function updateBotLatency() {
+            const latencyElement = document.getElementById('bot-latency-value');
+            if (!latencyElement) return;
+            
+            try {
+                const response = await fetch('/api/bot/latency');
+                const data = await response.json();
+                if (data.latency && data.latency > 0) {
+                    latencyElement.innerText = data.latency + 'ms';
+                    latencyElement.style.color = '#74b816';
+                } else {
+                    latencyElement.innerText = 'OFFLINE';
+                    latencyElement.style.color = '#ff4444';
+                }
+            } catch (err) {
+                latencyElement.innerText = 'OFFLINE';
+                latencyElement.style.color = '#ff4444';
+            }
+        }
+
+
+        // Uruchom aktualizację co 5 sekund
+        setInterval(updateBotLatency, 5000);
+        updateBotLatency(); // Pierwsze wywołanie od razu
+    </script>
+</body>
+</html>

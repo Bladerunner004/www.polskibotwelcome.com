@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POLSKIBOT - Elitarny Panel Zarządzania Discord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #030406;
+            --bg-card: #0a0b10;
+            --accent: #74b816;
+            --accent-glow: rgba(116, 184, 22, 0.4);
+            --text: #ffffff;
+            --text-dim: #949ba4;
+            --border: rgba(255, 255, 255, 0.08);
+            --font: 'Outfit', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font);
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 20px var(--accent-glow); } 50% { box-shadow: 0 0 40px var(--accent-glow); } }
+
+        /* ── NAVBAR ── */
+        .nav {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10%;
+            position: absolute;
+            top: 0; width: 100%; z-index: 100;
+        }
+        .logo { font-weight: 900; font-size: 1.5rem; letter-spacing: 1px; color: white; text-decoration: none; }
+        .logo span { color: var(--accent); }
+
+        /* ── HERO SECTION ── */
+        .hero {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(116, 184, 22, 0.05), transparent 70%),
+                linear-gradient(180deg, rgba(3, 4, 6, 0.4) 0%, var(--bg) 100%),
+                url('/static/uploads/home_banner_premium.png');
+            background-size: cover;
+            background-position: center;
+            padding: 0 20px;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .hero-badge {
+            background: rgba(116, 184, 22, 0.1);
+            color: var(--accent);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 1px solid rgba(116, 184, 22, 0.2);
+            display: inline-block;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(to bottom, #fff 40%, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            color: var(--text-dim);
+            max-width: 650px;
+            margin: 0 auto 40px;
+            font-weight: 400;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 18px 45px;
+            border-radius: 16px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 10px 30px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        /* ── FEATURES ── */
+        .features {
+            padding: 100px 10%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: -100px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            padding: 50px 40px;
+            border-radius: 32px;
+            border: 1px solid var(--border);
+            transition: all 0.4s ease;
+            text-align: center;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(116, 184, 22, 0.3);
+            background: linear-gradient(180deg, var(--bg-card) 0%, rgba(116, 184, 22, 0.03) 100%);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 30px;
+            color: var(--accent);
+            transition: 0.3s;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+            background: var(--accent);
+            color: #000;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+
+        /* ── DECORATIVE ── */
+        .glow-overlay {
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 0%, rgba(116, 184, 22, 0.15), transparent 50%);
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3.5rem; }
+            .hero-actions { flex-direction: column; width: 100%; }
+            .btn { width: 100%; justify-content: center; }
+            .features { margin-top: 0; padding-top: 50px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <a href="/" class="logo">POLSKI<span>BOT</span></a>
+        <div style="display: flex; gap: 30px;">
+            <a href="https://discord.gg/G5F3WBbZ" target="_blank" class="menu-link" style="color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem;">SUPPORT</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="glow-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-badge">Next Generation Discord Bot</div>
+            <h1>ELITARNY<br><span>POLSKIBOT</span></h1>
+            <p>Najpotężniejszy panel zarządzania w Polsce. Dołącz do tysięcy serwerów, które wybrały stabilność, styl i niezawodność.</p>
+            <div class="hero-actions">
+                {% if user %}
+                <a href="/dashboard" class="btn btn-primary">
+                    <i class="fas fa-server"></i> PRZEJDŹ DO PANELU
+                </a>
+                {% else %}
+                <a href="{{ login_url }}" class="btn btn-primary">
+                    <i class="fab fa-discord"></i> ZALOGUJ SIĘ DO PANELU
+                </a>
+                {% endif %}
+                <a href="https://discord.gg/G5F3WBbZ" target="_blank" class="btn btn-secondary">
+                    DODAJ DO SERWERA
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
+            <h3>Pancerne Security</h3>
+            <p>Zaawansowane algorytmy AutoMod, które chronią Twój serwer przed spamem i rajdami w czasie rzeczywistym.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-bolt-lightning"></i></div>
+            <h3>Błyskawiczna Akcja</h3>
+            <p>Architektura oparta na najszybszych serwerach, zapewniająca zerowe opóźnienia w odpowiedziach bota.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-crown"></i></div>
+            <h3>Funkcje Elitarne</h3>
+            <p>Od zaawansowanych liczników po w pełni customowe systemy zgłoszeń (Ticket) dostępne tylko dla najlepszych.</p>
+        </div>
+    </div>
+
+    <div style="text-align: center; padding: 50px; color: var(--text-dim); font-size: 0.8rem; border-top: 1px solid var(--border); margin: 0 10%;">
+        &copy; 2024 <strong>POLSKIBOT</strong>. Zaprojektowane dla profesjonalnych społeczności.
+    </div>
+</body>
+</html>

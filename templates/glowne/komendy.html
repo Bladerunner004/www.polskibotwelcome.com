@@ -1,0 +1,42 @@
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/commands_banner_premium.png');">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Lista</span> Komend
+            </h1>
+            <p class="hero-subtitle">
+                Zarządzaj dostępnością komend na swoim serwerze. Włączaj lub wyłączaj poszczególne funkcje jednym kliknięciem.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-terminal"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">18</span>
+                    <span class="stat-label">Komend</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="settings-card">
+    <div class="card-header">
+        <h3><i class="fas fa-filter"></i> Dostępne komendy</h3>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            {% for cmd_name, enabled in command_states.items() %}
+            <div class="config-item">
+                <span style="font-size: 0.92rem; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-terminal" style="color: var(--accent-green); font-size: 0.8rem;"></i> /{{ cmd_name }}
+                </span>
+                <label class="switch">
+                    <input type="checkbox" class="command-checkbox" value="{{ cmd_name }}" {% if enabled %}checked{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

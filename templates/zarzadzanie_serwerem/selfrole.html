@@ -1,0 +1,358 @@
+<style>
+    /* PREMIUM HERO BANNER */
+    .hero-banner {
+        width: 100%;
+        min-height: 300px;
+        background-size: cover;
+        background-position: center;
+        border-radius: 30px;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        padding: 40px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .hero-glass {
+        background: rgba(17, 19, 23, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        padding: 40px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        max-width: 600px;
+    }
+
+    .hero-title { font-size: 2.5rem; font-weight: 900; color: white; margin: 0; line-height: 1.1; letter-spacing: -1px; }
+    .decorative-text { font-family: 'Dancing Script', cursive; color: var(--accent-green); display: block; font-size: 3rem; margin-bottom: -10px; }
+    .hero-subtitle { color: rgba(255, 255, 255, 0.7); font-size: 1rem; line-height: 1.6; margin: 20px 0 30px; }
+
+    .hero-stats { display: flex; gap: 30px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 25px; }
+    .hero-stat-item { display: flex; align-items: center; gap: 15px; }
+    .stat-icon { width: 45px; height: 45px; background: rgba(116, 184, 22, 0.1); color: var(--accent-green); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .stat-info { display: flex; flex-direction: column; }
+    .stat-value { font-weight: 800; color: white; font-size: 0.95rem; }
+    .stat-label { font-size: 0.75rem; color: #888; }
+
+    .selfrole-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 40px; }
+    .selfrole-card { background: var(--bg2); border-radius: 20px; border: 1px solid var(--border-gray); overflow: hidden; transition: 0.3s; }
+    .selfrole-card:hover { border-color: var(--accent-green); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    
+    .card-header { padding: 25px; border-bottom: 1px solid var(--border-gray); display: flex; justify-content: space-between; align-items: center; }
+    .card-header h3 { margin: 0; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+    .card-header h3 i { color: var(--accent-green); }
+    .card-desc { font-size: 0.85rem; color: var(--text-gray); margin-top: 5px; }
+
+    .card-body { padding: 25px; }
+    .config-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .config-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); padding: 12px 18px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
+    .config-item:hover { background: rgba(255,255,255,0.06); border-color: var(--text-gray); }
+    .config-item span { font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    
+    .new-config-btn { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px dashed var(--border-gray); border-radius: 12px; color: var(--text-gray); font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .new-config-btn:hover { background: rgba(116,184,22,0.1); border-color: var(--accent-green); color: var(--accent-green); }
+
+    .count-pill { background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: #888; border: 1px solid var(--border-gray); }
+
+    /* MODAL STYLES */
+    .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+    .modal-backdrop.active { display: flex; }
+    .modal-content { background: #0c0d11; width: 90%; max-width: 650px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); padding: 35px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+    
+    .modal-section { margin-bottom: 25px; }
+    .modal-label { display: block; font-size: 0.75rem; font-weight: 800; color: #555; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
+    .modal-input, .modal-select { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); border-radius: 12px; padding: 12px 15px; color: white; font-size: 0.95rem; }
+    .modal-input:focus { border-color: var(--accent-green); outline: none; }
+
+    .role-row { display: grid; grid-template-columns: 80px 1fr 40px; gap: 10px; margin-bottom: 10px; align-items: center; }
+    .btn-add-role { background: rgba(116,184,22,0.1); color: var(--accent-green); border: 1px solid rgba(116,184,22,0.2); padding: 10px; border-radius: 10px; width: 100%; font-weight: 700; cursor: pointer; }
+    .btn-del-role { color: #ff4444; background: none; border: none; cursor: pointer; }
+
+    .btn-save-modal { width: 100%; padding: 16px; background: linear-gradient(135deg, #74b816, #4d7c0f); color: black; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; margin-top: 20px; text-transform: uppercase; box-shadow: 0 10px 20px rgba(116,184,22,0.2); }
+</style>
+
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/selfrole_banner_premium.png');">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Zarządzanie</span> Selfrole
+            </h1>
+            <p class="hero-subtitle">
+                Pozwól swoim użytkownikom samodzielnie wybierać role za pomocą interaktywnych paneli, przycisków i menu.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-check-square"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">Konfiguracje</span>
+                    <span id="selfrole-count-hero" class="stat-label">Aktywne panele</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="selfrole-grid">
+    <!-- REACTION ROLES -->
+    <div class="selfrole-card">
+        <div class="card-header">
+            <div>
+                <h3><i class="fas fa-fingerprint"></i> Panele z rolami</h3>
+                <p class="card-desc">Uzyskaj role poprzez reakcję pod wiadomością.</p>
+            </div>
+            <span id="count-reaction" class="count-pill">0 / 3</span>
+        </div>
+        <div class="card-body">
+            <div id="list-reaction" class="config-list"></div>
+            <button type="button" class="new-config-btn" onclick="openSelfroleModal('reaction')">
+                <i class="fas fa-plus"></i> Nowa konfiguracja
+            </button>
+        </div>
+    </div>
+
+    <!-- BUTTON ROLES -->
+    <div class="selfrole-card">
+        <div class="card-header">
+            <div>
+                <h3><i class="fas fa-mouse-pointer"></i> Panele z przyciskami</h3>
+                <p class="card-desc">Uzyskaj role poprzez klikanie przycisków.</p>
+            </div>
+            <span id="count-button" class="count-pill">0 / 3</span>
+        </div>
+        <div class="card-body">
+            <div id="list-button" class="config-list"></div>
+            <button type="button" class="new-config-btn" onclick="openSelfroleModal('button')">
+                <i class="fas fa-plus"></i> Nowa konfiguracja
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL KONFIGURACJI -->
+<div class="modal-backdrop" id="selfrole-modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+            <h2 id="modal-selfrole-title" style="margin:0; font-weight: 900;">Konfiguracja Panelu</h2>
+            <div onclick="closeSelfroleModal()" style="cursor:pointer; color:#ff4444;"><i class="fas fa-times fa-lg"></i></div>
+        </div>
+
+        <div class="modal-section" style="display: flex; justify-content: space-between; align-items: center; background: rgba(163, 230, 53, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(163, 230, 53, 0.1);">
+            <label class="modal-label" style="margin:0; color: #a3e635;">PANEL AKTYWNY:</label>
+            <label class="toggle-row">
+                <input type="checkbox" id="sr-enabled" checked>
+                <div class="toggle-switch"></div>
+            </label>
+        </div>
+
+        <div class="modal-section">
+            <label class="modal-label">NAZWA PANELU (DLA CIEBIE):</label>
+            <input type="text" id="sr-name" class="modal-input" placeholder="np. Wybór Regionu">
+        </div>
+
+        <div id="section-standard">
+            <div class="modal-section">
+                <label class="modal-label">KANAŁ Z WIADOMOŚCIĄ:</label>
+                <select id="sr-channel" class="modal-select"></select>
+            </div>
+            <div class="modal-section">
+                <label class="modal-label">ID WIADOMOŚCI (Opcjonalnie):</label>
+                <input type="text" id="sr-message-id" class="modal-input" placeholder="Zostaw puste, aby bot wysłał nową wiadomość">
+                <p style="font-size: 0.75rem; color: #666; margin-top: 5px;">Jeśli bot ma użyć istniejącej już wiadomości, wklej tutaj jej ID.</p>
+            </div>
+            
+            <div class="modal-section">
+                <label class="modal-label">OPCJE / ROLE:</label>
+                <div id="sr-roles-container"></div>
+                <button type="button" class="btn-add-role" onclick="addRoleRow()">
+                    <i class="fas fa-plus"></i> DODAJ KOLEJNĄ ROLĘ
+                </button>
+            </div>
+        </div>
+
+
+
+        <button type="button" class="btn-save-modal" onclick="saveSelfroleLocal()">ZAPISZ KONFIGURACJĘ</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    const guildId = '{{ server_id }}';
+    const API = `/api/${guildId}`;
+    let currentType = 'reaction';
+    let editingId = null;
+    
+    window.localSelfroleConfigs = [];
+
+    window.getSelfroleData = () => { return { configs: window.localSelfroleConfigs }; };
+
+    async function loadAll() {
+        try {
+            const res = await fetch(`${API}/selfrole`);
+            window.localSelfroleConfigs = await res.json();
+            renderAll();
+        } catch(e) { console.error("Error loading selfroles:", e); }
+    }
+
+    function renderAll() {
+        const types = ['reaction', 'button'];
+        const limits = 3; 
+
+        types.forEach(t => {
+            const cont = document.getElementById(`list-${t}`);
+            const countEl = document.getElementById(`count-${t}`);
+            if(!cont || !countEl) return;
+            
+            cont.innerHTML = '';
+            
+            const filtered = window.localSelfroleConfigs.filter(c => c.type === t);
+            countEl.textContent = `${filtered.length} / ${limits}`;
+
+            filtered.forEach(cfg => {
+                const div = document.createElement('div');
+                div.className = 'config-item';
+                div.onclick = () => editSelfrole(cfg.id);
+                div.innerHTML = `
+                    <span><i class="fas fa-tag"></i> ${cfg.name || 'Bez nazwy'}</span>
+                    <i class="fas fa-chevron-right" style="opacity:0.3"></i>
+                `;
+                cont.appendChild(div);
+            });
+        });
+        document.getElementById('selfrole-count-hero').textContent = `${window.localSelfroleConfigs.length} aktywnych`;
+    }
+
+    window.openSelfroleModal = async function(type) {
+        currentType = type;
+        editingId = null;
+        
+        // Najpierw upewnij się, że mamy dane ról/kanałów (tylko raz)
+        if (!window.availableRoles || !window.availableChannels) {
+            await loadModalData();
+        } else {
+            // Jeśli już mamy, odśwież widok selectów (opcjonalnie w tle)
+            loadModalData(); 
+        }
+
+        document.getElementById('modal-selfrole-title').textContent = `Nowy Panel: ${type}`;
+        document.getElementById('sr-name').value = '';
+        document.getElementById('sr-channel').value = '';
+        document.getElementById('sr-message-id').value = '';
+        document.getElementById('sr-enabled').checked = true;
+        document.getElementById('sr-roles-container').innerHTML = '';
+        
+        document.getElementById('section-standard').style.display = 'block';
+        addRoleRow(); 
+        
+        document.getElementById('selfrole-modal').classList.add('active');
+    };
+
+    window.closeSelfroleModal = () => document.getElementById('selfrole-modal').classList.remove('active');
+
+    async function loadModalData() {
+        const chSel = document.getElementById('sr-channel');
+        
+        try {
+            const [chRes, rRes] = await Promise.all([
+                fetch(`${API}/channels`),
+                fetch(`${API}/roles`)
+            ]);
+            const channels = await chRes.json();
+            const roles = await rRes.json();
+
+            window.availableRoles = roles;
+            window.availableChannels = channels;
+
+            chSel.innerHTML = '<option value="">Wybierz kanał...</option>';
+            channels.forEach(ch => {
+                const opt = document.createElement('option');
+                opt.value = ch.id; opt.textContent = `# ${ch.name}`; chSel.appendChild(opt);
+            });
+
+        } catch(e) {}
+    }
+
+    window.addRoleRow = (data = null) => {
+        const cont = document.getElementById('sr-roles-container');
+        const div = document.createElement('div');
+        div.className = 'role-row';
+        
+        let roleOptions = '<option value="">Wybierz rolę...</option>';
+        if(window.availableRoles) {
+            window.availableRoles.forEach(r => {
+                roleOptions += `<option value="${r.id}" ${data && data.role_id === r.id ? 'selected' : ''}>${r.name}</option>`;
+            });
+        }
+
+        div.innerHTML = `
+            <input type="text" class="modal-input sr-emoji" placeholder="Emoji" value="${data ? data.emoji : ''}">
+            <select class="modal-select sr-role">${roleOptions}</select>
+            <button type="button" class="btn-del-role" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+        `;
+        cont.appendChild(div);
+    };
+
+    window.saveSelfroleLocal = function() {
+        const name = document.getElementById('sr-name').value;
+        const config = {
+            id: editingId || Date.now(),
+            type: currentType,
+            name: name || `Panel ${currentType}`,
+            channel_id: document.getElementById('sr-channel').value,
+            message_id: document.getElementById('sr-message-id').value,
+            enabled: document.getElementById('sr-enabled').checked,
+            roles_json: []
+        };
+
+        if(currentType !== 'voice') {
+            const rows = document.querySelectorAll('.role-row');
+            rows.forEach(row => {
+                const emoji = row.querySelector('.sr-emoji').value;
+                const roleId = row.querySelector('.sr-role').value;
+                if(emoji && roleId) config.roles_json.push({ emoji, role_id: roleId });
+            });
+            config.roles_json = JSON.stringify(config.roles_json);
+        }
+
+        if(editingId) {
+            const idx = window.localSelfroleConfigs.findIndex(c => c.id === editingId);
+            if(idx !== -1) window.localSelfroleConfigs[idx] = config;
+        } else {
+            window.localSelfroleConfigs.push(config);
+        }
+
+        renderAll();
+        closeSelfroleModal();
+    };
+
+    window.editSelfrole = async function(id) {
+        editingId = id;
+        const cfg = window.localSelfroleConfigs.find(c => c.id === id);
+        if(!cfg) return;
+
+        currentType = cfg.type;
+        await openSelfroleModal(cfg.type); // Przygotuj modal
+        
+        editingId = id; // Przywróć ID bo openSelfroleModal je czyści
+        document.getElementById('sr-name').value = cfg.name;
+        document.getElementById('sr-channel').value = cfg.channel_id;
+        document.getElementById('sr-message-id').value = cfg.message_id || '';
+        document.getElementById('sr-enabled').checked = cfg.enabled !== 0;
+
+        if(cfg.type !== 'voice') {
+            document.getElementById('sr-roles-container').innerHTML = '';
+            try {
+                const roles = JSON.parse(cfg.roles_json);
+                roles.forEach(r => addRoleRow(r));
+            } catch(e) {}
+        }
+    };
+
+    loadAll();
+})();
+</script>

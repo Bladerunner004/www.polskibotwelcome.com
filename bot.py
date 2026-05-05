@@ -15,7 +15,10 @@ GLOBAL_BADWORDS = [
     "kurwa", "chuj", "pizda", "jebac", "pierdol", "cwel", "pedal", "czarnuch", "nigger", "huj", 
     "suka", "dziwka", "kutas", "fiut", "szmata", "frajer", "zjeb", "debil", "idiota", "cipa",
     "skurwysyn", "pierdole", "jebie", "pizdziel", "kutasie", "fiucie", "pedale", "cwelu",
-    "k.u.r.w.a", "k_u_r_w_a", "k u r w a", "kurw@", "k0rwa", "j3bac", "jeb@c", "p3dal"
+    "k.u.r.w.a", "k_u_r_w_a", "k u r w a", "kurw@", "k0rwa", "j3bac", "jeb@c", "p3dal",
+    "faggot", "retard", "nigga", "bitch", "slut", "whore", "asshole", "dick", "pussy",
+    "spierdalaj", "zamknij sie", "morda", "konfident", "pedaly", "jebane", "pierdolone",
+    "cipsko", "ruchanie", "ruchac", "stuleja", "zjebie", "ryj", "suczo", "kurew"
 ]
 
 def check_badwords(text, custom_words=None):
@@ -533,13 +536,16 @@ async def send_welcome_message(guild: discord.Guild, member: discord.Member, con
         # POBIERANIE USTAWIEŃ GLOBALNYCH (Dla koloru)
         settings = get_settings(str(guild.id))
         global_color_hex = settings.get('embed_color', '#74b816').lstrip('#')
-        global_rgb = settings.get('rgb_mode', 0)
+        global_rgb = settings.get('rgb_mode', False)
 
         if global_rgb:
             # TRYB RGB: Losuj jaskrawy kolor neonowy
-            embed_color = random.randint(0, 0xFFFFFF)
+            embed_color = discord.Color.from_rgb(random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
         else:
-            embed_color = int(global_color_hex, 16) if global_color_hex else 0x74b816
+            try:
+                embed_color = int(global_color_hex, 16)
+            except:
+                embed_color = 0x74b816
 
         content = (cfg.get('plain_text') or '')
         for tag, val in tag_map.items(): content = content.replace(tag, val)

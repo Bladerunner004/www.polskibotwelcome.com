@@ -508,16 +508,24 @@ def get_settings(guild_id):
                 if field in res:
                     res[field] = (res[field] == 1)
             
-            # Automatyczne sprawdzanie wygaśnięcia triala
-            if res.get('premium') and res.get('trial_start'):
-                from datetime import datetime, timedelta
+            # Automatycznie sprawdzanie wygaśnięcia triala
+            if res.get('premium') and res.get('trial_start') and res.get('subscription_type') == 'Okres Próbny':
+                from datetime import datetime
                 try:
                     start_dt = datetime.fromisoformat(res['trial_start'])
+                    from datetime import timedelta
                     if datetime.now() > start_dt + timedelta(days=7):
-                        # Trial wygasł - aktualizujemy w bazie (po cichu przy odczycie lub lepiej w tle)
-                        # Tu tylko zmieniamy w słowniku, żeby od razu zablokować UI
+                        # Trial wygasł - aktualizujemy w bazie
+                        conn_upd = sqlite3.connect(DB_NAME)
+                        curr_upd = conn_upd.cursor()
+                        curr_upd.execute("UPDATE settings SET premium = 0, subscription_type = 'Wygasły Trial' WHERE guild_id = ?", (str(guild_id),))
+                        conn_upd.commit()
+                        conn_upd.close()
                         res['premium'] = False
-                except: pass
+                        res['subscription_type'] = 'Wygasły Trial'
+                        print(f"[PREMIUM] Trial wygasł dla {guild_id}")
+                except Exception as e:
+                    print(f"[PREMIUM] Błąd sprawdzania triala: {e}")
 
             return res
 

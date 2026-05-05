@@ -7,7 +7,7 @@ import os
 import json
 from flask import Blueprint, render_template, session, redirect, url_for, request, jsonify, flash
 from base import BOT_TOKEN
-from database import get_settings, save_settings, get_command_settings, save_command_settings, get_welcome_configs, save_welcome_config, delete_welcome_config
+from database import get_settings, save_settings, get_command_settings, save_command_settings, get_welcome_configs, save_welcome_config, delete_welcome_config, get_audit_logs
 from werkzeug.utils import secure_filename
 
 config_bp = Blueprint('config', __name__)
@@ -147,7 +147,7 @@ def config(server_id):
     main_settings = get_settings(server_id)
     from database import get_role_counters
     role_counters = get_role_counters(server_id)
-
+    audit_logs = get_audit_logs(server_id)
     # Awatar bota (bezpieczny fallback)
     bot_avatar_url = "/static/img/default_avatar.png"
 
@@ -492,16 +492,13 @@ def api_embeds(guild_id):
     new_id = save_embed_config(guild_id, data, config_id)
     
     if new_id:
+        # Powiadamiamy bota o nowym embedzie
+        call_bot_api("/send_embed", method="POST", data={
+            'guild_id': guild_id,
+            'config_id': config_id or new_id
+        })
         return jsonify({'success': True, 'id': new_id})
     return jsonify({'success': False, 'error': 'Błąd zapisu'}), 500
-
-    result = call_bot_api("/send_embed", method="POST", data={
-        'guild_id': guild_id,
-        'config_id': config_id
-    })
-    
-    if result: return jsonify(result)
-    return jsonify({'success': False, 'error': 'Błąd komunikacji z botem'}), 500
 
 
 

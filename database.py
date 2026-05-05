@@ -248,8 +248,9 @@ def init_db():
     cursor.execute('''CREATE TABLE IF NOT EXISTS channel_stats (
                         guild_id TEXT,
                         channel_id TEXT,
-                        name TEXT,
-                        PRIMARY KEY(guild_id, channel_id)
+                        date TEXT,
+                        messages_count INTEGER DEFAULT 0,
+                        PRIMARY KEY(guild_id, channel_id, date)
                     )''')
     
     # NOWA TABELA: LOGI AUDYTU (Dla zakładki Zmiany na serwerze)
@@ -263,10 +264,7 @@ def init_db():
                         details TEXT,
                         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                     )''')
-                        date TEXT,
-                        messages_count INTEGER DEFAULT 0,
-                        PRIMARY KEY(guild_id, channel_id, date)
-                    )''')
+
 
     # Tabela WĹ‚asny Bot (White Label)
     cursor.execute('''CREATE TABLE IF NOT EXISTS custom_bots (

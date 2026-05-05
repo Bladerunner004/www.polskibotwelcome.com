@@ -4,4 +4,4 @@ __pycache__/
 *.pyc
 .venv/
 bot_error.log
-static/uploads/
+# static/uploads/ (odkomentuj jeśli chcesz ignorować customowe uploady)

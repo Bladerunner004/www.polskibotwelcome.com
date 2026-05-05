@@ -1,8 +1,12 @@
+import os
 import sqlite3
 import json
 from base import LIMITS_FREE, LIMITS_PREMIUM
 
-DB_NAME = "database.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_NAME = os.path.join(BASE_DIR, "database.db")
+
+
 
 # Lista wszystkich komend w bocie â€“ to jest "ĹşrĂłdĹ‚o prawdy"
 ALL_COMMANDS = [

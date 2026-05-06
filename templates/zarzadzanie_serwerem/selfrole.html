@@ -69,7 +69,14 @@
 
     .role-row { display: grid; grid-template-columns: 80px 1fr 40px; gap: 10px; margin-bottom: 10px; align-items: center; }
     .btn-add-role { background: rgba(116,184,22,0.1); color: var(--accent-green); border: 1px solid rgba(116,184,22,0.2); padding: 10px; border-radius: 10px; width: 100%; font-weight: 700; cursor: pointer; }
-    .btn-del-role { color: #ff4444; background: none; border: none; cursor: pointer; }
+    .config-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
+    .config-item:hover { background: rgba(116,184,22,0.08); border-color: rgba(116,184,22,0.2); }
+    .config-item .actions { display: flex; gap: 8px; }
+    .btn-action-small { padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
+    .btn-send-panel { background: var(--accent-green); color: black; }
+    .btn-send-panel:hover { background: #5a8f11; transform: translateY(-2px); }
+    .btn-delete-panel { background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.2); }
+    .btn-delete-panel:hover { background: #ff4444; color: white; }
 
     .btn-save-modal { width: 100%; padding: 16px; background: linear-gradient(135deg, #74b816, #4d7c0f); color: black; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; margin-top: 20px; text-transform: uppercase; box-shadow: 0 10px 20px rgba(116,184,22,0.2); }
     /* EMBED PREVIEW STYLES */
@@ -240,16 +247,56 @@
             filtered.forEach(cfg => {
                 const div = document.createElement('div');
                 div.className = 'config-item';
-                div.onclick = () => editSelfrole(cfg.id);
                 div.innerHTML = `
-                    <span><i class="fas fa-tag"></i> ${cfg.name || 'Bez nazwy'}</span>
-                    <i class="fas fa-chevron-right" style="opacity:0.3"></i>
+                    <span onclick="editSelfrole(${cfg.id})"><i class="fas fa-tag"></i> ${cfg.name || 'Bez nazwy'}</span>
+                    <div class="actions">
+                        <button class="btn-action-small btn-send-panel" onclick="sendSelfrole(${cfg.id})">
+                            <i class="fas fa-paper-plane"></i> WYŚLIJ
+                        </button>
+                        <button class="btn-action-small btn-delete-panel" onclick="deleteSelfrole(${cfg.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 `;
                 cont.appendChild(div);
             });
         });
         document.getElementById('selfrole-count-hero').textContent = `${window.localSelfroleConfigs.length} aktywnych`;
     }
+
+    window.sendSelfrole = async function(id) {
+        if(!confirm("Czy na pewno chcesz wysłać ten panel na wybrany kanał? Jeśli panel już istnieje, zostanie wysłany ponownie.")) return;
+        
+        const btn = event.currentTarget;
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+            const res = await fetch(`${API}/selfrole/${id}/send`, { method: 'POST' });
+            const data = await res.json();
+            if(data.success) alert("✅ Panel został wysłany na kanał!");
+            else alert("❌ Błąd: " + (data.error || "Nie udało się wysłać panelu."));
+        } catch(e) {
+            alert("❌ Błąd komunikacji z serwerem.");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+    };
+
+    window.deleteSelfrole = async function(id) {
+        if(!confirm("Czy na pewno chcesz usunąć tę konfigurację?")) return;
+        window.localSelfroleConfigs = window.localSelfroleConfigs.filter(c => c.id !== id);
+        renderAll();
+        // Automatyczna synchronizacja po usunięciu
+        const selfroleData = window.getSelfroleData();
+        await fetch(`${API}/selfrole/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(selfroleData)
+        });
+    };
 
     window.openSelfroleModal = async function(type) {
         currentType = type;

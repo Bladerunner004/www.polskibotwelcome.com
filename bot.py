@@ -170,6 +170,32 @@ class TicketActions(ui.View):
         await interaction.channel.edit(name=f"closed-{interaction.channel.name}")
         await interaction.channel.set_permissions(interaction.guild.default_role, send_messages=False)
 
+# --- WIDOK SELFROLE (PRZYCISKI) ---
+class SelfroleView(ui.View):
+    def __init__(self, roles_data):
+        super().__init__(timeout=None)
+        for r_cfg in roles_data:
+            label = r_cfg.get('label', 'Rola')
+            role_id = r_cfg.get('role_id')
+            if role_id:
+                btn = ui.Button(label=label, style=discord.ButtonStyle.secondary, custom_id=f"sr_{role_id}")
+                btn.callback = self.create_callback(role_id)
+                self.add_item(btn)
+
+    def create_callback(self, role_id):
+        async def callback(interaction: discord.Interaction):
+            role = interaction.guild.get_role(int(role_id))
+            if not role:
+                return await interaction.response.send_message("❌ Nie znaleziono roli!", ephemeral=True)
+            
+            if role in interaction.user.roles:
+                await interaction.user.remove_roles(role)
+                await interaction.response.send_message(f"✅ Odebrano rolę: **{role.name}**", ephemeral=True)
+            else:
+                await interaction.user.add_roles(role)
+                await interaction.response.send_message(f"✅ Nadano rolę: **{role.name}**", ephemeral=True)
+        return callback
+
 # --- KOMENDY ---
 
 @bot.hybrid_command(name="ticket", description="Otwórz nowe zgłoszenie.")
@@ -1678,9 +1704,50 @@ async def handle_send_embed(request):
     import discord
     emb = discord.Embed(title=cfg.get('title', ''), description=cfg.get('description', ''), color=int(cfg.get('color', '#74b816').replace('#', ''), 16))
     if cfg.get('footer'): emb.set_footer(text=cfg['footer'])
-    if cfg.get('image_url'): emb.set_image(url=cfg['image_url'])
-    
     await channel.send(embed=emb)
+    return web.json_response({'success': True})
+
+async def handle_send_selfrole(request):
+    data = await request.json()
+    guild_id = data.get('guild_id')
+    config_id = data.get('config_id')
+    
+    from database import get_selfrole_configs
+    configs = get_selfrole_configs(guild_id)
+    cfg = next((c for c in configs if c['id'] == config_id), None)
+    if not cfg: return web.json_response({'success': False, 'error': 'Nie znaleziono configu'}, status=404)
+    
+    guild = bot.get_guild(int(guild_id))
+    if not guild: return web.json_response({'success': False, 'error': 'Bot poza serwerem'}, status=404)
+    
+    channel = guild.get_channel(int(cfg['channel_id']))
+    if not channel: return web.json_response({'success': False, 'error': 'Brak kanału'}, status=404)
+
+    roles_data = []
+    try: roles_data = json.loads(cfg['roles_json'])
+    except: pass
+
+    # Budowanie Embedu
+    emb = discord.Embed(
+        title=cfg.get('name', 'Panel Wyboru Ról'),
+        description=cfg.get('description', 'Wybierz swoje role poniżej:'),
+        color=0x74b816
+    )
+    if cfg.get('image_url'):
+        emb.set_image(url=cfg['image_url'])
+    
+    if cfg['type'] == 'button':
+        view = SelfroleView(roles_data)
+        await channel.send(embed=emb, view=view)
+    else:
+        # Reakcje
+        msg = await channel.send(embed=emb)
+        for r_cfg in roles_data:
+            emoji = r_cfg.get('emoji')
+            if emoji:
+                try: await msg.add_reaction(emoji)
+                except: pass
+                
     return web.json_response({'success': True})
 
 async def run_internal_api():
@@ -1693,6 +1760,7 @@ async def run_internal_api():
         web.post('/guilds/{guild_id}/sync_counters', handle_sync_counters),
         web.post('/guilds/{guild_id}/sync_boosters', handle_sync_boosters),
         web.post('/send_embed', handle_send_embed),
+        web.post('/send_selfrole', handle_send_selfrole),
     ])
     runner = web.AppRunner(app)
     await runner.setup()

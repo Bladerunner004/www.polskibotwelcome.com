@@ -51,6 +51,17 @@ def call_bot_api(endpoint, method="GET", data=None):
 
 @config_bp.route('/api/bot/latency')
 def api_bot_latency():
+    # Na PythonAnywhere używamy pliku statusu dla lepszej stabilności
+    try:
+        if os.path.exists("bot_status.json"):
+            with open("bot_status.json", "r") as f:
+                data = json.load(f)
+                # Sprawdzamy czy status jest "świeży" (ostatnie 30 sekund)
+                if time.time() - data.get('last_seen', 0) < 30:
+                    return jsonify(data)
+    except: pass
+    
+    # Fallback do starej metody (jeśli bot działa lokalnie na tym samym porcie)
     data = call_bot_api("/latency")
     if data:
         return jsonify(data)

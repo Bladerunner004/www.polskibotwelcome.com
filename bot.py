@@ -10,6 +10,11 @@ from dotenv import load_dotenv
 import io
 import re
 
+# Ścieżka do statusu (dla PythonAnywhere)
+STATUS_FILE_PATH = "/home/BLADERUNNER009/AntigravityProjekt/bot_status.json"
+if not os.path.exists("/home/BLADERUNNER009"):
+    STATUS_FILE_PATH = "bot_status.json" # Fallback lokalny
+
 # --- GLOBALNA LISTA ZAKAZANYCH SŁÓW (Wulgaryzmy, Rasizm, Toksyczność) ---
 GLOBAL_BADWORDS = [
     "kurwa", "chuj", "pizda", "jebac", "pierdol", "cwel", "pedal", "czarnuch", "nigger", "huj", 
@@ -1566,7 +1571,7 @@ async def update_status_file():
             "last_seen": time.time(),
             "status": "online"
         }
-        with open("bot_status.json", "w") as f:
+        with open(STATUS_FILE_PATH, "w") as f:
             json.dump(status, f)
             
         # 2. Sprawdzanie czy są oczekujące synchronizacje (POST z dashboardu)

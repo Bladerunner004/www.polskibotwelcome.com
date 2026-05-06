@@ -5,6 +5,11 @@ import json
 import time
 import os
 import json
+
+# Ścieżka do statusu (dla PythonAnywhere)
+STATUS_FILE_PATH = "/home/BLADERUNNER009/AntigravityProjekt/bot_status.json"
+if not os.path.exists("/home/BLADERUNNER009"):
+    STATUS_FILE_PATH = "bot_status.json" # Fallback lokalny
 from flask import Blueprint, render_template, session, redirect, url_for, request, jsonify, flash
 from base import BOT_TOKEN
 from database import get_settings, save_settings, get_command_settings, save_command_settings, get_welcome_configs, save_welcome_config, delete_welcome_config, get_audit_logs
@@ -53,8 +58,8 @@ def call_bot_api(endpoint, method="GET", data=None):
 def api_bot_latency():
     # Na PythonAnywhere używamy pliku statusu dla lepszej stabilności
     try:
-        if os.path.exists("bot_status.json"):
-            with open("bot_status.json", "r") as f:
+        if os.path.exists(STATUS_FILE_PATH):
+            with open(STATUS_FILE_PATH, "r") as f:
                 data = json.load(f)
                 # Sprawdzamy czy status jest "świeży" (ostatnie 30 sekund)
                 if time.time() - data.get('last_seen', 0) < 30:

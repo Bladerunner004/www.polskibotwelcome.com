@@ -41,3 +41,11 @@ def index():
     response = make_response(rendered)
     response.headers['Content-Type'] = 'text/html; charset=utf-8'
     return response
+
+@home_bp.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+@home_bp.route('/tos')
+def tos():
+    return render_template('tos.html')

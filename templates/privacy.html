@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polityka Prywatności - PolskiBot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        
+        :root {
+            --accent-green: #a3e635;
+            --bg-dark: #06070a;
+            --glass: rgba(15, 17, 23, 0.8);
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: #d1d5db;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 60px auto;
+            padding: 40px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        h1 { color: white; font-weight: 800; font-size: 2.5rem; margin-bottom: 30px; display: flex; align-items: center; gap: 15px; }
+        h1 i { color: var(--accent-green); }
+        
+        h2 { color: white; margin-top: 40px; font-weight: 600; font-size: 1.3rem; }
+        
+        p { margin-bottom: 20px; font-size: 0.95rem; }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent-green);
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 30px;
+            transition: 0.3s;
+        }
+        .back-link:hover { transform: translateX(-5px); opacity: 0.8; }
+
+        .footer { text-align: center; margin-top: 40px; font-size: 0.8rem; color: #4b5563; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Wróć do strony głównej</a>
+        <h1><i class="fas fa-shield-alt"></i> Polityka Prywatności</h1>
+        
+        <p>Ostatnia aktualizacja: {{ datetime.now().strftime('%d.%m.%Y') if datetime else '06.05.2026' }}</p>
+
+        <h2>1. Informacje ogólne</h2>
+        <p>Niniejsza Polityka Prywatności określa zasady przetwarzania danych osobowych użytkowników korzystających z bota PolskiBot oraz powiązanego z nim panelu zarządzania. Szanujemy Twoją prywatność i dbamy o bezpieczeństwo Twoich danych.</p>
+
+        <h2>2. Jakie dane zbieramy?</h2>
+        <p>PolskiBot zbiera jedynie niezbędne dane techniczne do poprawnego działania usług:</p>
+        <ul>
+            <li><strong>Identyfikatory Discord:</strong> ID użytkownika, ID serwera oraz ID kanałów.</li>
+            <li><strong>Metadane konta:</strong> Nazwa użytkownika, tag oraz awatar (tylko do wyświetlania w panelu).</li>
+            <li><strong>Konfiguracja:</strong> Ustawienia bota wybrane przez administratora serwera.</li>
+            <li><strong>Logi:</strong> Tymczasowe logi zdarzeń na serwerze (np. kto dołączył, kto wyszedł) - o ile funkcja ta została włączona przez administratora.</li>
+        </ul>
+
+        <h2>3. Cel przetwarzania danych</h2>
+        <p>Dane są przetwarzane wyłącznie w celu:</p>
+        <ul>
+            <li>Zapewnienia funkcjonalności bota (powitania, liczniki, moderacja).</li>
+            <li>Umożliwienia logowania do panelu zarządzania przez OAuth2.</li>
+            <li>Personalizacji ustawień dla konkretnego serwera Discord.</li>
+        </ul>
+
+        <h2>4. Przechowywanie danych</h2>
+        <p>Wszystkie dane są przechowywane na zabezpieczonych serwerach. Dane sesji logowania są usuwane po wylogowaniu użytkownika lub wygaśnięciu sesji. Nigdy nie sprzedajemy ani nie udostępniamy Twoich danych osobom trzecim.</p>
+
+        <h2>5. Twoje prawa</h2>
+        <p>Masz prawo do wglądu w swoje dane, ich poprawienia lub żądania usunięcia. W przypadku bota Discord, usunięcie bota z serwera lub kontakt z nami skutkuje trwałym usunięciem powiązanych danych konfiguracyjnych.</p>
+
+        <div class="footer">
+            &copy; 2026 PolskiBot - Wszystkie prawa zastrzeżone.
+        </div>
+    </div>
+</body>
+</html>

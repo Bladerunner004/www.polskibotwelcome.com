@@ -10,16 +10,10 @@
         </div>
         <div class="hero-stats">
             <div class="hero-stat-item">
-                <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+                <div class="stat-icon"><i class="fas fa-gem"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value" id="bot-latency-value">
-                        {% if bot_latency %}
-                            {{ (bot_latency)|round|int }}ms
-                        {% else %}
-                            <span style="color: #ff4757; font-size: 0.7rem;">OFFLINE</span>
-                        {% endif %}
-                    </span>
-                    <span class="stat-label">Opóźnienie</span>
+                    <span class="stat-value">{{ "Aktywne" if main_settings.premium else "Nieaktywne" }}</span>
+                    <span class="stat-label">Premium</span>
                 </div>
             </div>
             {% if not bot_latency %}

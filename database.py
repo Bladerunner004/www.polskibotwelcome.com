@@ -223,9 +223,15 @@ def init_db():
                     )''')
     
     # Migracja dla self_role_configs
-    try:
-        cursor.execute("ALTER TABLE self_role_configs ADD COLUMN enabled INTEGER DEFAULT 1")
-    except: pass
+    selfrole_cols = [
+        ("enabled", "INTEGER DEFAULT 1"),
+        ("image_url", "TEXT DEFAULT ''"),
+        ("description", "TEXT DEFAULT ''")
+    ]
+    for col_name, col_type in selfrole_cols:
+        try:
+            cursor.execute(f"ALTER TABLE self_role_configs ADD COLUMN {col_name} {col_type}")
+        except: pass
     # Tabela konfiguracji mediĂłw (Social Media)
     cursor.execute('''CREATE TABLE IF NOT EXISTS media_configs (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -950,13 +956,14 @@ def sync_selfrole_configs(guild_id, data):
         configs = data.get('configs', [])
         for cfg in configs:
             c.execute('''
-                INSERT INTO self_role_configs (guild_id, type, name, channel_id, message_id, role_id, roles_json, enabled)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO self_role_configs (guild_id, type, name, channel_id, message_id, role_id, roles_json, enabled, image_url, description)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 str(guild_id), cfg.get('type', 'reaction'), cfg.get('name', ''),
                 cfg.get('channel_id', ''), cfg.get('message_id', ''),
                 cfg.get('role_id', ''), cfg.get('roles_json', '[]'),
-                1 if cfg.get('enabled', True) else 0
+                1 if cfg.get('enabled', True) else 0,
+                cfg.get('image_url', ''), cfg.get('description', '')
             ))
         conn.commit()
         conn.close()

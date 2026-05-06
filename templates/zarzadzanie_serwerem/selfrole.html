@@ -72,6 +72,15 @@
     .btn-del-role { color: #ff4444; background: none; border: none; cursor: pointer; }
 
     .btn-save-modal { width: 100%; padding: 16px; background: linear-gradient(135deg, #74b816, #4d7c0f); color: black; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; margin-top: 20px; text-transform: uppercase; box-shadow: 0 10px 20px rgba(116,184,22,0.2); }
+    /* EMBED PREVIEW STYLES */
+    .discord-preview { background: #2f3136; border-radius: 8px; padding: 15px; margin-bottom: 25px; border-left: 4px solid #74b816; max-width: 100%; }
+    .preview-header { font-weight: 700; color: white; margin-bottom: 5px; }
+    .preview-desc { color: #dcddde; font-size: 0.9rem; white-space: pre-wrap; }
+    .preview-image { width: 100%; border-radius: 4px; margin-bottom: 10px; display: none; }
+    .preview-footer { color: #72767d; font-size: 0.75rem; margin-top: 10px; }
+    .preview-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
+    .preview-btn { background: #4f545c; color: white; padding: 6px 16px; border-radius: 3px; font-size: 0.85rem; }
+    .preview-emoji { font-size: 1.2rem; cursor: pointer; }
 </style>
 
 <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/selfrole_banner_premium.png');">
@@ -160,13 +169,28 @@
                 <select id="sr-channel" class="modal-select"></select>
             </div>
             <div class="modal-section">
-                <label class="modal-label">ID WIADOMOŚCI (Opcjonalnie):</label>
-                <input type="text" id="sr-message-id" class="modal-input" placeholder="Zostaw puste, aby bot wysłał nową wiadomość">
-                <p style="font-size: 0.75rem; color: #666; margin-top: 5px;">Jeśli bot ma użyć istniejącej już wiadomości, wklej tutaj jej ID.</p>
+                <label class="modal-label">PODGLĄD WIADOMOŚCI (EMBED):</label>
+                <div class="discord-preview" id="sr-preview-box">
+                    <img id="sr-preview-img" class="preview-image" src="">
+                    <div class="preview-header" id="sr-preview-title">Konfiguracja Selfrole</div>
+                    <div class="preview-desc" id="sr-preview-desc">Tutaj pojawi się Twój opis...</div>
+                    <div class="preview-actions" id="sr-preview-actions"></div>
+                    <div class="preview-footer">Dzisiaj o 12:00 • PolskiBot</div>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <label class="modal-label">LINK DO ZDJĘCIA (URL):</label>
+                <input type="text" id="sr-image-url" class="modal-input" placeholder="https://example.com/image.png" oninput="updateSRPreview()">
+            </div>
+
+            <div class="modal-section">
+                <label class="modal-label">TREŚĆ OPISU:</label>
+                <textarea id="sr-description" class="modal-input" style="min-height: 80px;" placeholder="Wpisz opis panelu..." oninput="updateSRPreview()"></textarea>
             </div>
             
             <div class="modal-section">
-                <label class="modal-label">OPCJE / ROLE:</label>
+                <label class="modal-label" id="sr-roles-label">OPCJE / ROLE:</label>
                 <div id="sr-roles-container"></div>
                 <button type="button" class="btn-add-role" onclick="addRoleRow()">
                     <i class="fas fa-plus"></i> DODAJ KOLEJNĄ ROLĘ
@@ -243,11 +267,16 @@
         document.getElementById('sr-name').value = '';
         document.getElementById('sr-channel').value = '';
         document.getElementById('sr-message-id').value = '';
+        document.getElementById('sr-image-url').value = '';
+        document.getElementById('sr-description').value = '';
         document.getElementById('sr-enabled').checked = true;
         document.getElementById('sr-roles-container').innerHTML = '';
         
+        document.getElementById('sr-roles-label').textContent = type === 'reaction' ? 'EMOTKI I ROLE:' : 'PRZYCISKI I ROLE:';
+        
         document.getElementById('section-standard').style.display = 'block';
         addRoleRow(); 
+        updateSRPreview();
         
         document.getElementById('selfrole-modal').classList.add('active');
     };
@@ -290,11 +319,49 @@
         }
 
         div.innerHTML = `
-            <input type="text" class="modal-input sr-emoji" placeholder="Emoji" value="${data ? data.emoji : ''}">
-            <select class="modal-select sr-role">${roleOptions}</select>
-            <button type="button" class="btn-del-role" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+            <input type="text" class="modal-input sr-emoji" oninput="updateSRPreview()" placeholder="${currentType === 'reaction' ? 'Emoji' : 'Tekst przycisku'}" value="${data ? (currentType === 'reaction' ? data.emoji : data.label) : ''}">
+            <select class="modal-select sr-role" onchange="updateSRPreview()">${roleOptions}</select>
+            <button type="button" class="btn-del-role" onclick="this.parentElement.remove(); updateSRPreview();"><i class="fas fa-trash"></i></button>
         `;
         cont.appendChild(div);
+        updateSRPreview();
+    };
+
+    window.updateSRPreview = function() {
+        const imgUrl = document.getElementById('sr-image-url').value;
+        const desc = document.getElementById('sr-description').value;
+        const imgEl = document.getElementById('sr-preview-img');
+        const descEl = document.getElementById('sr-preview-desc');
+        const actionCont = document.getElementById('sr-preview-actions');
+
+        if(imgUrl) {
+            imgEl.src = imgUrl;
+            imgEl.style.display = 'block';
+        } else {
+            imgEl.style.display = 'none';
+        }
+
+        descEl.textContent = desc || "Tutaj pojawi się Twój opis...";
+        
+        // Render actions (buttons or emojis)
+        actionCont.innerHTML = '';
+        const rows = document.querySelectorAll('.role-row');
+        rows.forEach(row => {
+            const val = row.querySelector('.sr-emoji').value;
+            if(!val) return;
+            
+            if(currentType === 'reaction') {
+                const span = document.createElement('span');
+                span.className = 'preview-emoji';
+                span.textContent = val;
+                actionCont.appendChild(span);
+            } else {
+                const btn = document.createElement('div');
+                btn.className = 'preview-btn';
+                btn.textContent = val;
+                actionCont.appendChild(btn);
+            }
+        });
     };
 
     window.saveSelfroleLocal = function() {
@@ -305,6 +372,8 @@
             name: name || `Panel ${currentType}`,
             channel_id: document.getElementById('sr-channel').value,
             message_id: document.getElementById('sr-message-id').value,
+            image_url: document.getElementById('sr-image-url').value,
+            description: document.getElementById('sr-description').value,
             enabled: document.getElementById('sr-enabled').checked,
             roles_json: []
         };
@@ -312,9 +381,12 @@
         if(currentType !== 'voice') {
             const rows = document.querySelectorAll('.role-row');
             rows.forEach(row => {
-                const emoji = row.querySelector('.sr-emoji').value;
+                const val = row.querySelector('.sr-emoji').value;
                 const roleId = row.querySelector('.sr-role').value;
-                if(emoji && roleId) config.roles_json.push({ emoji, role_id: roleId });
+                if(val && roleId) {
+                    if(currentType === 'reaction') config.roles_json.push({ emoji: val, role_id: roleId });
+                    else config.roles_json.push({ label: val, role_id: roleId });
+                }
             });
             config.roles_json = JSON.stringify(config.roles_json);
         }
@@ -342,6 +414,8 @@
         document.getElementById('sr-name').value = cfg.name;
         document.getElementById('sr-channel').value = cfg.channel_id;
         document.getElementById('sr-message-id').value = cfg.message_id || '';
+        document.getElementById('sr-image-url').value = cfg.image_url || '';
+        document.getElementById('sr-description').value = cfg.description || '';
         document.getElementById('sr-enabled').checked = cfg.enabled !== 0;
 
         if(cfg.type !== 'voice') {
@@ -351,6 +425,7 @@
                 roles.forEach(r => addRoleRow(r));
             } catch(e) {}
         }
+        updateSRPreview();
     };
 
     loadAll();

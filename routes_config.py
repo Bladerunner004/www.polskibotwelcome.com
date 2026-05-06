@@ -5,6 +5,7 @@ import json
 import time
 import os
 import json
+import datetime
 
 # Ścieżka do statusu (dla PythonAnywhere)
 STATUS_FILE_PATH = "/home/BLADERUNNER009/AntigravityProjekt/bot_status.json"

@@ -257,13 +257,17 @@
     }
 
     window.openSelfroleModal = async function(type) {
-        console.log(`[SELFROLE] Opening modal for type: ${type}`);
-        currentType = type;
+        console.log(`[SELFROLE] Opening modal: ${type}`);
+        currentType = type || 'reaction';
         editingId = null;
         
-        // Show modal immediately for better UX
-        document.getElementById('selfrole-modal').classList.add('active');
-        document.getElementById('modal-selfrole-title').textContent = `Nowy Panel: ${type === 'reaction' ? 'Reakcje' : 'Przyciski'}`;
+        const modal = document.getElementById('selfrole-modal');
+        const section = document.getElementById('section-standard');
+        
+        if (modal) modal.classList.add('active');
+        if (section) section.style.display = 'block';
+
+        document.getElementById('modal-selfrole-title').textContent = type === 'reaction' ? 'Nowy Panel Reakcji' : 'Nowy Panel Przycisków';
         
         // Reset fields
         document.getElementById('sr-name').value = '';
@@ -275,33 +279,29 @@
         document.getElementById('sr-roles-container').innerHTML = '';
         
         document.getElementById('sr-roles-label').textContent = type === 'reaction' ? 'EMOTKI I ROLE:' : 'PRZYCISKI I ROLE:';
-        document.getElementById('section-standard').style.display = 'block';
 
-        // Add first empty row
+        // Add first empty row immediately
         addRoleRow(); 
         updateSRPreview();
 
-        // Load data in background if missing
+        // Load or refresh data
         try {
-            if (!window.availableRoles || !window.availableChannels) {
-                await loadModalData();
-            } else {
-                loadModalData(); // Refresh in background
-            }
+            await loadModalData();
         } catch (e) {
-            console.error("[SELFROLE] Error during modal initialization:", e);
+            console.error("[SELFROLE] Modal data load failed, but continuing...", e);
         }
     };
 
     window.closeSelfroleModal = () => {
-        document.getElementById('selfrole-modal').classList.remove('active');
+        const modal = document.getElementById('selfrole-modal');
+        if (modal) modal.classList.remove('active');
     };
 
     async function loadModalData() {
         const chSel = document.getElementById('sr-channel');
         if (!chSel) return;
 
-        console.log("[SELFROLE] Loading modal data (channels/roles)...");
+        console.log("[SELFROLE] Syncing channels and roles...");
         try {
             const [chRes, rRes] = await Promise.all([
                 fetch(`${API}/channels`).catch(() => null),
@@ -311,7 +311,6 @@
             if (chRes && chRes.ok) {
                 const channels = await chRes.json();
                 window.availableChannels = channels;
-                
                 const currentVal = chSel.value;
                 chSel.innerHTML = '<option value="">Wybierz kanał...</option>';
                 channels.forEach(ch => {
@@ -326,19 +325,19 @@
             if (rRes && rRes.ok) {
                 const roles = await rRes.json();
                 window.availableRoles = roles;
-                // Refresh any existing role dropdowns in the modal
+                // Update all role dropdowns currently in the modal
                 document.querySelectorAll('.sr-role').forEach(sel => {
                     const currentVal = sel.value;
-                    let roleOptions = '<option value="">Wybierz rolę...</option>';
+                    let opts = '<option value="">Wybierz rolę...</option>';
                     roles.forEach(r => {
-                        roleOptions += `<option value="${r.id}">${r.name}</option>`;
+                        opts += `<option value="${r.id}">${r.name}</option>`;
                     });
-                    sel.innerHTML = roleOptions;
+                    sel.innerHTML = opts;
                     if (currentVal) sel.value = currentVal;
                 });
             }
         } catch(e) {
-            console.error("[SELFROLE] Failed to load modal data:", e);
+            console.warn("[SELFROLE] loadModalData non-critical error:", e);
         }
     }
 

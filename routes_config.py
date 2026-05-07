@@ -528,29 +528,21 @@ def api_get_selfrole(guild_id):
 
 @config_bp.route('/api/<guild_id>/selfrole/sync', methods=['POST'])
 def api_sync_selfrole(guild_id):
-    from database import sync_selfrole_configs
+    from database import sync_selfrole_configs, get_selfrole_configs
     data = request.json
     ok = sync_selfrole_configs(guild_id, data)
+    
+    if ok:
+        # Powiadamiamy bota o zmianach, aby wysłał/zaktualizował panele
+        configs = get_selfrole_configs(guild_id)
+        for cfg in configs:
+            if cfg.get('enabled', 1):
+                call_bot_api("/send_selfrole", method="POST", data={
+                    'guild_id': guild_id,
+                    'config_id': cfg['id']
+                })
+                
     return jsonify({'success': ok})
-
-@config_bp.route('/api/<guild_id>/selfrole/<int:config_id>/send', methods=['POST'])
-def api_send_selfrole(guild_id, config_id):
-    # Pobieramy dane z bazy, aby bot wiedział co wysłać
-    from database import get_selfrole_configs
-    configs = get_selfrole_configs(guild_id)
-    cfg = next((c for c in configs if c['id'] == config_id), None)
-    
-    if not cfg:
-        return jsonify({'success': False, 'error': 'Nie znaleziono konfiguracji'}), 404
-        
-    result = call_bot_api("/send_selfrole", method="POST", data={
-        'guild_id': guild_id,
-        'config_id': config_id
-    })
-    
-    if result:
-        return jsonify(result)
-    return jsonify({'success': False, 'error': 'Błąd komunikacji z botem'}), 500
 
 @config_bp.route('/api/<guild_id>/activity', methods=['GET'])
 def api_get_activity(guild_id):

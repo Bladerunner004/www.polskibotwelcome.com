@@ -69,14 +69,7 @@
 
     .role-row { display: grid; grid-template-columns: 80px 1fr 40px; gap: 10px; margin-bottom: 10px; align-items: center; }
     .btn-add-role { background: rgba(116,184,22,0.1); color: var(--accent-green); border: 1px solid rgba(116,184,22,0.2); padding: 10px; border-radius: 10px; width: 100%; font-weight: 700; cursor: pointer; }
-    .config-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
-    .config-item:hover { background: rgba(116,184,22,0.08); border-color: rgba(116,184,22,0.2); }
-    .config-item .actions { display: flex; gap: 8px; }
-    .btn-action-small { padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
-    .btn-send-panel { background: var(--accent-green); color: black; }
-    .btn-send-panel:hover { background: #5a8f11; transform: translateY(-2px); }
-    .btn-delete-panel { background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.2); }
-    .btn-delete-panel:hover { background: #ff4444; color: white; }
+    .btn-del-role { color: #ff4444; background: none; border: none; cursor: pointer; }
 
     .btn-save-modal { width: 100%; padding: 16px; background: linear-gradient(135deg, #74b816, #4d7c0f); color: black; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; margin-top: 20px; text-transform: uppercase; box-shadow: 0 10px 20px rgba(116,184,22,0.2); }
     /* EMBED PREVIEW STYLES */
@@ -178,9 +171,9 @@
             <div class="modal-section">
                 <label class="modal-label">PODGLĄD WIADOMOŚCI (EMBED):</label>
                 <div class="discord-preview" id="sr-preview-box">
-                    <img id="sr-preview-img" class="preview-image" src="">
-                    <div class="preview-header" id="sr-preview-title">Konfiguracja Selfrole</div>
-                    <div class="preview-desc" id="sr-preview-desc">Tutaj pojawi się Twój opis...</div>
+                    <img id="sr-preview-img" class="preview-image" src="" style="width: 100%; border-radius: 4px; margin-bottom: 10px; display: none;">
+                    <div class="preview-header" id="sr-preview-title" style="font-weight: 700; color: white; margin-bottom: 5px;">Konfiguracja Selfrole</div>
+                    <div class="preview-desc" id="sr-preview-desc" style="color: #dcddde; font-size: 0.9rem; white-space: pre-wrap;">Tutaj pojawi się Twój opis...</div>
                     <div class="preview-actions" id="sr-preview-actions"></div>
                     <div class="preview-footer">Dzisiaj o 12:00 • PolskiBot</div>
                 </div>
@@ -194,6 +187,11 @@
             <div class="modal-section">
                 <label class="modal-label">TREŚĆ OPISU:</label>
                 <textarea id="sr-description" class="modal-input" style="min-height: 80px;" placeholder="Wpisz opis panelu..." oninput="updateSRPreview()"></textarea>
+            </div>
+
+            <div class="modal-section">
+                <label class="modal-label">ID WIADOMOŚCI (OPCJONALNIE):</label>
+                <input type="text" id="sr-message-id" class="modal-input" placeholder="Zostaw puste, aby stworzyć nową">
             </div>
             
             <div class="modal-section">
@@ -247,16 +245,10 @@
             filtered.forEach(cfg => {
                 const div = document.createElement('div');
                 div.className = 'config-item';
+                div.onclick = () => editSelfrole(cfg.id);
                 div.innerHTML = `
-                    <span onclick="editSelfrole(${cfg.id})"><i class="fas fa-tag"></i> ${cfg.name || 'Bez nazwy'}</span>
-                    <div class="actions">
-                        <button class="btn-action-small btn-send-panel" onclick="sendSelfrole(${cfg.id})">
-                            <i class="fas fa-paper-plane"></i> WYŚLIJ
-                        </button>
-                        <button class="btn-action-small btn-delete-panel" onclick="deleteSelfrole(${cfg.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+                    <span><i class="fas fa-tag"></i> ${cfg.name || 'Bez nazwy'}</span>
+                    <i class="fas fa-chevron-right" style="opacity:0.3"></i>
                 `;
                 cont.appendChild(div);
             });
@@ -264,53 +256,16 @@
         document.getElementById('selfrole-count-hero').textContent = `${window.localSelfroleConfigs.length} aktywnych`;
     }
 
-    window.sendSelfrole = async function(id) {
-        if(!confirm("Czy na pewno chcesz wysłać ten panel na wybrany kanał? Jeśli panel już istnieje, zostanie wysłany ponownie.")) return;
-        
-        const btn = event.currentTarget;
-        const originalHTML = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-        try {
-            const res = await fetch(`${API}/selfrole/${id}/send`, { method: 'POST' });
-            const data = await res.json();
-            if(data.success) alert("✅ Panel został wysłany na kanał!");
-            else alert("❌ Błąd: " + (data.error || "Nie udało się wysłać panelu."));
-        } catch(e) {
-            alert("❌ Błąd komunikacji z serwerem.");
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalHTML;
-        }
-    };
-
-    window.deleteSelfrole = async function(id) {
-        if(!confirm("Czy na pewno chcesz usunąć tę konfigurację?")) return;
-        window.localSelfroleConfigs = window.localSelfroleConfigs.filter(c => c.id !== id);
-        renderAll();
-        // Automatyczna synchronizacja po usunięciu
-        const selfroleData = window.getSelfroleData();
-        await fetch(`${API}/selfrole/sync`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(selfroleData)
-        });
-    };
-
     window.openSelfroleModal = async function(type) {
+        console.log(`[SELFROLE] Opening modal for type: ${type}`);
         currentType = type;
         editingId = null;
         
-        // Najpierw upewnij się, że mamy dane ról/kanałów (tylko raz)
-        if (!window.availableRoles || !window.availableChannels) {
-            await loadModalData();
-        } else {
-            // Jeśli już mamy, odśwież widok selectów (opcjonalnie w tle)
-            loadModalData(); 
-        }
-
-        document.getElementById('modal-selfrole-title').textContent = `Nowy Panel: ${type}`;
+        // Show modal immediately for better UX
+        document.getElementById('selfrole-modal').classList.add('active');
+        document.getElementById('modal-selfrole-title').textContent = `Nowy Panel: ${type === 'reaction' ? 'Reakcje' : 'Przyciski'}`;
+        
+        // Reset fields
         document.getElementById('sr-name').value = '';
         document.getElementById('sr-channel').value = '';
         document.getElementById('sr-message-id').value = '';
@@ -320,37 +275,71 @@
         document.getElementById('sr-roles-container').innerHTML = '';
         
         document.getElementById('sr-roles-label').textContent = type === 'reaction' ? 'EMOTKI I ROLE:' : 'PRZYCISKI I ROLE:';
-        
         document.getElementById('section-standard').style.display = 'block';
+
+        // Add first empty row
         addRoleRow(); 
         updateSRPreview();
-        
-        document.getElementById('selfrole-modal').classList.add('active');
+
+        // Load data in background if missing
+        try {
+            if (!window.availableRoles || !window.availableChannels) {
+                await loadModalData();
+            } else {
+                loadModalData(); // Refresh in background
+            }
+        } catch (e) {
+            console.error("[SELFROLE] Error during modal initialization:", e);
+        }
     };
 
-    window.closeSelfroleModal = () => document.getElementById('selfrole-modal').classList.remove('active');
+    window.closeSelfroleModal = () => {
+        document.getElementById('selfrole-modal').classList.remove('active');
+    };
 
     async function loadModalData() {
         const chSel = document.getElementById('sr-channel');
-        
+        if (!chSel) return;
+
+        console.log("[SELFROLE] Loading modal data (channels/roles)...");
         try {
             const [chRes, rRes] = await Promise.all([
-                fetch(`${API}/channels`),
-                fetch(`${API}/roles`)
+                fetch(`${API}/channels`).catch(() => null),
+                fetch(`${API}/roles`).catch(() => null)
             ]);
-            const channels = await chRes.json();
-            const roles = await rRes.json();
 
-            window.availableRoles = roles;
-            window.availableChannels = channels;
+            if (chRes && chRes.ok) {
+                const channels = await chRes.json();
+                window.availableChannels = channels;
+                
+                const currentVal = chSel.value;
+                chSel.innerHTML = '<option value="">Wybierz kanał...</option>';
+                channels.forEach(ch => {
+                    const opt = document.createElement('option');
+                    opt.value = ch.id; 
+                    opt.textContent = `# ${ch.name}`; 
+                    chSel.appendChild(opt);
+                });
+                if (currentVal) chSel.value = currentVal;
+            }
 
-            chSel.innerHTML = '<option value="">Wybierz kanał...</option>';
-            channels.forEach(ch => {
-                const opt = document.createElement('option');
-                opt.value = ch.id; opt.textContent = `# ${ch.name}`; chSel.appendChild(opt);
-            });
-
-        } catch(e) {}
+            if (rRes && rRes.ok) {
+                const roles = await rRes.json();
+                window.availableRoles = roles;
+                // Refresh any existing role dropdowns in the modal
+                document.querySelectorAll('.sr-role').forEach(sel => {
+                    const currentVal = sel.value;
+                    let roleOptions = '<option value="">Wybierz rolę...</option>';
+                    roles.forEach(r => {
+                        roleOptions += `<option value="${r.id}">${r.name}</option>`;
+                    });
+                    sel.innerHTML = roleOptions;
+                    if (currentVal) sel.value = currentVal;
+                });
+            }
+        } catch(e) {
+            console.error("[SELFROLE] Failed to load modal data:", e);
+        }
     }
 
     window.addRoleRow = (data = null) => {

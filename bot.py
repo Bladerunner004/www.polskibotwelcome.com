@@ -170,32 +170,6 @@ class TicketActions(ui.View):
         await interaction.channel.edit(name=f"closed-{interaction.channel.name}")
         await interaction.channel.set_permissions(interaction.guild.default_role, send_messages=False)
 
-# --- WIDOK SELFROLE (PRZYCISKI) ---
-class SelfroleView(ui.View):
-    def __init__(self, roles_data):
-        super().__init__(timeout=None)
-        for r_cfg in roles_data:
-            label = r_cfg.get('label', 'Rola')
-            role_id = r_cfg.get('role_id')
-            if role_id:
-                btn = ui.Button(label=label, style=discord.ButtonStyle.secondary, custom_id=f"sr_{role_id}")
-                btn.callback = self.create_callback(role_id)
-                self.add_item(btn)
-
-    def create_callback(self, role_id):
-        async def callback(interaction: discord.Interaction):
-            role = interaction.guild.get_role(int(role_id))
-            if not role:
-                return await interaction.response.send_message("❌ Nie znaleziono roli!", ephemeral=True)
-            
-            if role in interaction.user.roles:
-                await interaction.user.remove_roles(role)
-                await interaction.response.send_message(f"✅ Odebrano rolę: **{role.name}**", ephemeral=True)
-            else:
-                await interaction.user.add_roles(role)
-                await interaction.response.send_message(f"✅ Nadano rolę: **{role.name}**", ephemeral=True)
-        return callback
-
 # --- KOMENDY ---
 
 @bot.hybrid_command(name="ticket", description="Otwórz nowe zgłoszenie.")
@@ -1046,6 +1020,25 @@ async def on_raw_reaction_remove(payload):
                     except: pass
                 return
 
+    # 2. Selfrole
+    sr_configs = get_selfrole_configs(payload.guild_id)
+    for cfg in sr_configs:
+        if not cfg.get('enabled', 1): continue
+        if cfg['type'] == 'reaction' and str(payload.message_id) == str(cfg.get('message_id')):
+            import json
+            try:
+                roles = json.loads(cfg['roles_json'])
+                for r in roles:
+                    if str(payload.emoji) == str(r['emoji']):
+                        guild = bot.get_guild(payload.guild_id)
+                        role = guild.get_role(int(r['role_id']))
+                        member = await guild.fetch_member(payload.user_id)
+                        if role and member:
+                            try: await member.remove_roles(role, reason="Selfrole (Reaction)")
+                            except: pass
+                        break
+            except: pass
+
 @bot.event
 async def on_message(message):
     if message.author.bot or not message.guild:
@@ -1117,25 +1110,6 @@ async def on_message(message):
                 except: pass
 
     await bot.process_commands(message)
-
-    # 2. Selfrole
-    sr_configs = get_selfrole_configs(payload.guild_id)
-    for cfg in sr_configs:
-        if not cfg.get('enabled', 1): continue
-        if cfg['type'] == 'reaction' and str(payload.message_id) == str(cfg.get('message_id')):
-            import json
-            try:
-                roles = json.loads(cfg['roles_json'])
-                for r in roles:
-                    if str(payload.emoji) == str(r['emoji']):
-                        guild = bot.get_guild(payload.guild_id)
-                        role = guild.get_role(int(r['role_id']))
-                        member = await guild.fetch_member(payload.user_id)
-                        if role and member:
-                            try: await member.remove_roles(role, reason="Selfrole (Reaction)")
-                            except: pass
-                        break
-            except: pass
 
 @bot.event
 async def on_interaction(interaction: discord.Interaction):
@@ -1704,6 +1678,8 @@ async def handle_send_embed(request):
     import discord
     emb = discord.Embed(title=cfg.get('title', ''), description=cfg.get('description', ''), color=int(cfg.get('color', '#74b816').replace('#', ''), 16))
     if cfg.get('footer'): emb.set_footer(text=cfg['footer'])
+    if cfg.get('image_url'): emb.set_image(url=cfg['image_url'])
+    
     await channel.send(embed=emb)
     return web.json_response({'success': True})
 
@@ -1714,7 +1690,8 @@ async def handle_send_selfrole(request):
     
     from database import get_selfrole_configs
     configs = get_selfrole_configs(guild_id)
-    cfg = next((c for c in configs if c['id'] == config_id), None)
+    # Znajdź konfigurację po ID (może być int lub str w zależności od bazy)
+    cfg = next((c for c in configs if str(c['id']) == str(config_id)), None)
     if not cfg: return web.json_response({'success': False, 'error': 'Nie znaleziono configu'}, status=404)
     
     guild = bot.get_guild(int(guild_id))
@@ -1723,31 +1700,50 @@ async def handle_send_selfrole(request):
     channel = guild.get_channel(int(cfg['channel_id']))
     if not channel: return web.json_response({'success': False, 'error': 'Brak kanału'}, status=404)
 
-    roles_data = []
-    try: roles_data = json.loads(cfg['roles_json'])
-    except: pass
-
+    import json
+    import discord
+    from discord import ui
+    
     # Budowanie Embedu
     emb = discord.Embed(
-        title=cfg.get('name', 'Panel Wyboru Ról'),
-        description=cfg.get('description', 'Wybierz swoje role poniżej:'),
+        title=cfg.get('name', 'Panel Ról'), 
+        description=cfg.get('description', ''), 
         color=0x74b816
     )
     if cfg.get('image_url'):
         emb.set_image(url=cfg['image_url'])
     
-    if cfg['type'] == 'button':
-        view = SelfroleView(roles_data)
-        await channel.send(embed=emb, view=view)
-    else:
-        # Reakcje
+    roles_data = json.loads(cfg.get('roles_json', '[]'))
+    
+    if cfg['type'] == 'reaction':
         msg = await channel.send(embed=emb)
-        for r_cfg in roles_data:
-            emoji = r_cfg.get('emoji')
-            if emoji:
-                try: await msg.add_reaction(emoji)
-                except: pass
-                
+        # Zapisujemy message_id w bazie (dla obsługi reakcji)
+        from database import DB_NAME
+        import sqlite3
+        conn = sqlite3.connect(DB_NAME)
+        conn.cursor().execute("UPDATE self_role_configs SET message_id = ? WHERE id = ?", (str(msg.id), cfg['id']))
+        conn.commit()
+        conn.close()
+        
+        for r in roles_data:
+            try: await msg.add_reaction(r['emoji'])
+            except: pass
+            
+    elif cfg['type'] == 'button':
+        class RoleView(ui.View):
+            def __init__(self):
+                super().__init__(timeout=None)
+                for r in roles_data:
+                    btn = ui.Button(
+                        label=r.get('label', 'Rola'), 
+                        emoji=r.get('emoji'), 
+                        custom_id=f"selfrole_btn_{r['role_id']}",
+                        style=discord.ButtonStyle.secondary
+                    )
+                    self.add_item(btn)
+        
+        await channel.send(embed=emb, view=RoleView())
+        
     return web.json_response({'success': True})
 
 async def run_internal_api():

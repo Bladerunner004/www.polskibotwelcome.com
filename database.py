@@ -66,6 +66,7 @@ def init_db():
         ("automod_antispam", "INTEGER DEFAULT 0"),
         ("automod_badwords", "INTEGER DEFAULT 0"),
         ("automod_badwords_list", "TEXT DEFAULT '[]'"),
+        ("automod_antiphishing", "INTEGER DEFAULT 0"),
         ("levels_enabled", "INTEGER DEFAULT 1"),
         ("prefix", "TEXT DEFAULT '!'"),
         ("autorole_mode", "TEXT DEFAULT 'disabled'"),
@@ -507,7 +508,7 @@ def get_settings(guild_id):
             
             # Mapowanie 1/0 na True/False dla wybranych pól
             bool_fields = ['ticket_enabled', 'moderation_enabled', 'moderation_confirm', 
-                           'automod_antilink', 'automod_anticaps', 'automod_antispam', 'automod_badwords',
+                           'automod_antilink', 'automod_anticaps', 'automod_antispam', 'automod_badwords', 'automod_antiphishing',
                            'levels_enabled', 'premium', 'trial_used',
                            'counter_humans_enabled', 'counter_bots_enabled', 'counter_bans_enabled',
                            'counter_humans_thousands', 'counter_bots_thousands', 'counter_bans_thousands',
@@ -566,7 +567,7 @@ def get_setting(guild_id, module_column):
     res = get_settings(guild_id)
     return res.get(module_column, True)
 
-def save_settings(guild_id, ticket, moderation, levels, prefix="!", language="pl", embed_color="#74b816", rgb_mode=0, moderation_confirm=0, automod_antilink=0, automod_anticaps=0, automod_antispam=0, automod_badwords=0, automod_badwords_list="[]"):
+def save_settings(guild_id, ticket, moderation, levels, prefix="!", language="pl", embed_color="#74b816", rgb_mode=0, moderation_confirm=0, automod_antilink=0, automod_anticaps=0, automod_antispam=0, automod_badwords=0, automod_badwords_list="[]", automod_antiphishing=0):
     """Zapisuje ustawienia przysĹ‚ane ze strony WWW."""
     try:
         conn = sqlite3.connect(DB_NAME, timeout=10)
@@ -587,8 +588,9 @@ def save_settings(guild_id, ticket, moderation, levels, prefix="!", language="pl
                 automod_anticaps=excluded.automod_anticaps,
                 automod_antispam=excluded.automod_antispam,
                 automod_badwords=excluded.automod_badwords,
-                automod_badwords_list=excluded.automod_badwords_list
-        ''', (guild_id, 1 if ticket else 0, 1 if moderation else 0, 1 if levels else 0, prefix, language, embed_color, 1 if rgb_mode else 0, 1 if moderation_confirm else 0, 1 if automod_antilink else 0, 1 if automod_anticaps else 0, 1 if automod_antispam else 0, 1 if automod_badwords else 0, automod_badwords_list))
+                automod_badwords_list=excluded.automod_badwords_list,
+                automod_antiphishing=excluded.automod_antiphishing
+        ''', (guild_id, 1 if ticket else 0, 1 if moderation else 0, 1 if levels else 0, prefix, language, embed_color, 1 if rgb_mode else 0, 1 if moderation_confirm else 0, 1 if automod_antilink else 0, 1 if automod_anticaps else 0, 1 if automod_antispam else 0, 1 if automod_badwords else 0, automod_badwords_list, 1 if automod_antiphishing else 0))
         conn.commit()
         conn.close()
         print(f"[OK] Zapisano ustawienia dla {guild_id}")

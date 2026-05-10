@@ -1071,6 +1071,44 @@ async def on_message(message):
                 embed.set_footer(text="Moderatorzy mogą zatwierdzić lub usunąć tę wiadomość.")
                 await message.channel.send(embed=embed, view=view)
 
+    # --- ANTY-PHISHING SYSTEM ---
+    if settings.get("automod_antiphishing"):
+        # Wzorce typowe dla nitro scamów i phishingu
+        phishing_patterns = [
+            r'discord(?:-app)?-nitro', r'discord(?:-app)?-gift', r'dlscord', 
+            r'nitro-discord', r'free-nitro', r'steam-nitro', r'nitro-gift',
+            r'discord(?:-app)?\.net', r'discord(?:-app)?\.org', r'nitro\.gl'
+        ]
+        is_phishing = False
+        content_lower = message.content.lower()
+        
+        for pattern in phishing_patterns:
+            if re.search(pattern, content_lower):
+                # Jeśli wzorzec pasuje, ale domena NIE jest oficjalna
+                official_domains = ['discord.com', 'discord.gift', 'discordapp.com', 'discord.gg']
+                if not any(dom in content_lower for dom in official_domains):
+                    is_phishing = True
+                    break
+        
+        if is_phishing:
+            if not message.author.guild_permissions.manage_messages:
+                try:
+                    await message.delete()
+                    ph_embed = discord.Embed(
+                        title="🛡️ System Anty-Phishing",
+                        description=f"⚠️ {message.author.mention}, Twoja wiadomość została zablokowana!\n\n**Powód:** Wykryto podejrzany link mogący służyć do wyłudzania danych (Phishing/Nitro Scam).",
+                        color=0xff0000
+                    )
+                    ph_embed.set_footer(text="Polski Bot • Bezpieczeństwo")
+                    await message.channel.send(embed=ph_embed, delete_after=15)
+                    return
+                except: pass
+
+    # Logowanie aktywności i przetwarzanie komend (Przeniesione z drugiego on_message)
+    if message.guild:
+        log_message_activity(message.guild.id, message.channel.id)
+    await bot.process_commands(message)
+
     # --- ANTY-BADWORDS SYSTEM ---
     if settings.get("automod_badwords"):
         custom_list = settings.get("automod_badwords_list", [])
@@ -1211,12 +1249,6 @@ async def on_voice_state_update(member, before, after):
             try: await member.remove_roles(role, reason="Connect Role")
             except: pass
 
-@bot.event
-async def on_message(message):
-    if message.author.bot: return
-    if message.guild:
-        log_message_activity(message.guild.id, message.channel.id)
-    await bot.process_commands(message)
 
 @bot.event
 async def on_ready():

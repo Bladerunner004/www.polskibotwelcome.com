@@ -37,6 +37,16 @@
         </div>
         <div class="setting-item">
             <div>
+                <div style="font-weight: 700; color: #ff4444;"><i class="fas fa-shield-virus"></i> System Anty-Phishing</div>
+                <div style="font-size: 0.8rem; color: var(--text-gray);">Inteligentne wykrywanie fałszywych linków (np. Nitro Scams, wyłudzanie haseł).</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="setting-item">
+            <div>
                 <div style="font-weight: 700;">Anty-Caps</div>
                 <div style="font-size: 0.8rem; color: var(--text-gray);">Blokuje wiadomości zawierające nadmierną ilość dużych liter.</div>
             </div>

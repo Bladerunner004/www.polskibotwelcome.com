@@ -504,6 +504,7 @@
                 const amAnticaps = document.getElementById('automod-anticaps-switch')?.checked;
                 const amAntispam = document.getElementById('automod-antispam-switch')?.checked;
                 const amBadwords = document.getElementById('automod-badwords-switch')?.checked;
+                const amAntiphishing = document.getElementById('automod-antiphishing-switch')?.checked;
                 
                 // 1. Zapisywanie ustawień głównych (Prefix + Komendy + Język + Kolor + Moderacja + AutoMod)
                 await fetch(`/config/{{ guild.id }}`, {
@@ -520,7 +521,8 @@
                         automod_antilink: amAntilink,
                         automod_anticaps: amAnticaps,
                         automod_antispam: amAntispam,
-                        automod_badwords: amBadwords
+                        automod_badwords: amBadwords,
+                        automod_antiphishing: amAntiphishing
                     })
                 });
 

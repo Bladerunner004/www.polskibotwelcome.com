@@ -92,12 +92,13 @@ def config(server_id):
         am_antispam = data.get('automod_antispam', False)
         am_badwords = data.get('automod_badwords', False)
         am_badwords_list = json.dumps(data.get('automod_badwords_list', []))
+        am_antiphishing = data.get('automod_antiphishing', False)
         
         rgb_mode = data.get('rgb_mode', 0)
         enabled_cmds = data.get('commands', [])
         
         # Zapisujemy prefix, język, kolory i moderację + automod
-        save_settings(server_id, True, mod_enabled, True, prefix, language, embed_color, rgb_mode, mod_confirm, am_antilink, am_anticaps, am_antispam, am_badwords, am_badwords_list)
+        save_settings(server_id, True, mod_enabled, True, prefix, language, embed_color, rgb_mode, mod_confirm, am_antilink, am_anticaps, am_antispam, am_badwords, am_badwords_list, am_antiphishing)
         # Zapisujemy stan komend
         save_command_settings(server_id, enabled_cmds)
         

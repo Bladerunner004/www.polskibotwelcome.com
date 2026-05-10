@@ -2,20 +2,36 @@
     <div class="hero-glass">
         <div class="hero-header">
             <h1 class="hero-title">
-                <span class="decorative-text">Moduł</span> w przygotowaniu
+                <span class="decorative-text">Prace</span> Techniczne
             </h1>
             <p class="hero-subtitle">
-                Trwają intensywne prace nad rozwojem tej funkcji. Już wkrótce będziesz mógł z niej korzystać bezpośrednio w swoim panelu.
+                System formularzy i ankiet jest obecnie w fazie intensywnej modernizacji.
             </p>
         </div>
     </div>
 </div>
 
 <div class="settings-card">
-    <div class="card-body" style="text-align: center; padding: 80px 20px;">
-        <i class="fas fa-tools" style="font-size: 5rem; color: var(--accent-green); opacity: 0.15; margin-bottom: 30px;"></i>
-        <h2 style="font-weight: 900; letter-spacing: -1px; color: white;">Pracujemy nad tym!</h2>
-        <p style="color: var(--text-gray); max-width: 500px; margin: 20px auto;">Ten moduł jest częścią nadchodzącej aktualizacji PolskiBot 2.0. Sprawdzaj nasze ogłoszenia na serwerze Support!</p>
-        <button class="btn-sidebar-save" style="width: auto; margin-top: 30px; padding: 12px 40px; background: rgba(255,255,255,0.05); color: white; box-shadow: none;" onclick="window.open('https://discord.gg/G5F3WBbZ', '_blank')">DOŁĄCZ DO SUPPORTU</button>
+    <div class="card-body" style="text-align: center; padding: 100px 20px;">
+        <div style="font-size: 6rem; color: #74b816; margin-bottom: 40px; animation: maintenance-pulse 2s infinite;">
+            <i class="fas fa-edit"></i>
+        </div>
+        <h2 style="font-weight: 900; letter-spacing: -1px; color: white; font-size: 2.5rem; margin-bottom: 20px;">MODUŁ W TRAKCIE PRAC</h2>
+        <p style="color: var(--text-gray); max-width: 600px; margin: 0 auto 40px; font-size: 1.1rem; line-height: 1.6;">
+            Projektujemy zupełnie nowy kreator formularzy z obsługą logiki warunkowej i zaawansowanych pól. Zapraszamy wkrótce do przetestowania nowej wersji!
+        </p>
+        <div style="display: flex; justify-content: center; gap: 20px;">
+            <button class="btn-sidebar-save" style="width: auto; padding: 15px 40px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;" onclick="window.open('https://discord.gg/G5F3WBbZ', '_blank')">
+                <i class="fas fa-comments"></i> DOŁĄCZ DO SUPPORTU
+            </button>
+        </div>
     </div>
 </div>
+
+<style>
+@keyframes maintenance-pulse {
+    0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(116, 184, 22, 0)); }
+    50% { transform: scale(1.05); opacity: 0.8; filter: drop-shadow(0 0 20px rgba(116, 184, 22, 0.3)); }
+    100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(116, 184, 22, 0)); }
+}
+</style>

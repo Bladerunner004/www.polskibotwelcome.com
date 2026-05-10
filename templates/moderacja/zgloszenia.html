@@ -2,20 +2,36 @@
     <div class="hero-glass">
         <div class="hero-header">
             <h1 class="hero-title">
-                <span class="decorative-text">System</span> Zgłoszeń
+                <span class="decorative-text">Prace</span> Techniczne
             </h1>
             <p class="hero-subtitle">
-                Zaawansowany system ticketów pozwoli Twoim użytkownikom na kontakt z administracją w uporządkowany sposób.
+                System zgłoszeń (Ticket) przechodzi optymalizację kodu i bazy danych.
             </p>
         </div>
     </div>
 </div>
 
 <div class="settings-card">
-    <div class="card-body" style="text-align: center; padding: 80px 20px;">
-        <i class="fas fa-tools" style="font-size: 5rem; color: var(--accent-green); opacity: 0.15; margin-bottom: 30px;"></i>
-        <h2 style="font-weight: 900; letter-spacing: -1px; color: white;">Pracujemy nad tym!</h2>
-        <p style="color: var(--text-gray); max-width: 500px; margin: 20px auto;">Ten moduł jest częścią nadchodzącej aktualizacji PolskiBot 2.0. Sprawdzaj nasze ogłoszenia na serwerze Support!</p>
-        <button class="btn-sidebar-save" style="width: auto; margin: 30px auto 0; padding: 12px 40px; background: rgba(255,255,255,0.05); color: white; box-shadow: none;" onclick="window.open('https://discord.gg/G5F3WBbZ', '_blank')">DOŁĄCZ DO SUPPORTU</button>
+    <div class="card-body" style="text-align: center; padding: 100px 20px;">
+        <div style="font-size: 6rem; color: #00a8fc; margin-bottom: 40px; animation: maintenance-pulse 2s infinite;">
+            <i class="fas fa-ticket-alt"></i>
+        </div>
+        <h2 style="font-weight: 900; letter-spacing: -1px; color: white; font-size: 2.5rem; margin-bottom: 20px;">MODUŁ W TRAKCIE PRAC</h2>
+        <p style="color: var(--text-gray); max-width: 600px; margin: 0 auto 40px; font-size: 1.1rem; line-height: 1.6;">
+            Wdrażamy zaawansowany system wątków i archiwizacji zgłoszeń. Chcemy, aby obsługa użytkowników na Twoim serwerze była jeszcze szybsza i bardziej przejrzysta.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 20px;">
+            <button class="btn-sidebar-save" style="width: auto; padding: 15px 40px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;" onclick="window.open('https://discord.gg/G5F3WBbZ', '_blank')">
+                <i class="fas fa-rocket"></i> POWIADOM MNIE O AKTUALIZACJI
+            </button>
+        </div>
     </div>
 </div>
+
+<style>
+@keyframes maintenance-pulse {
+    0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(0, 168, 252, 0)); }
+    50% { transform: scale(1.05); opacity: 0.8; filter: drop-shadow(0 0 20px rgba(0, 168, 252, 0.3)); }
+    100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(0, 168, 252, 0)); }
+}
+</style>

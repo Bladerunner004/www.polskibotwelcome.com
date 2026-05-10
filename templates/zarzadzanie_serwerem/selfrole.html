@@ -76,10 +76,8 @@
     .discord-preview { background: #2f3136; border-radius: 8px; padding: 15px; margin-bottom: 25px; border-left: 4px solid #74b816; max-width: 100%; }
     .preview-header { font-weight: 700; color: white; margin-bottom: 5px; }
     .preview-desc { color: #dcddde; font-size: 0.9rem; white-space: pre-wrap; }
-    .preview-image { width: 100%; border-radius: 4px; margin-bottom: 10px; display: none; }
-    .preview-footer { color: #72767d; font-size: 0.75rem; margin-top: 10px; }
-    .preview-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
-    .preview-btn { background: #4f545c; color: white; padding: 6px 16px; border-radius: 3px; font-size: 0.85rem; }
+    .preview-image { width: 100%; border-radius: 4px; margin-top: 10px; display: none; }
+    .preview-thumbnail { position: absolute; top: 15px; right: 15px; width: 60px; height: 60px; border-radius: 4px; object-fit: cover; display: none; }
     .preview-emoji { font-size: 1.2rem; cursor: pointer; }
 </style>
 
@@ -170,18 +168,25 @@
             </div>
             <div class="modal-section">
                 <label class="modal-label">PODGLĄD WIADOMOŚCI (EMBED):</label>
-                <div class="discord-preview" id="sr-preview-box">
-                    <img id="sr-preview-img" class="preview-image" src="" style="width: 100%; border-radius: 4px; margin-bottom: 10px; display: none;">
+                <div class="discord-preview" id="sr-preview-box" style="position: relative;">
+                    <img id="sr-preview-thumbnail" class="preview-thumbnail" src="" style="display: none;">
                     <div class="preview-header" id="sr-preview-title" style="font-weight: 700; color: white; margin-bottom: 5px;">Konfiguracja Selfrole</div>
                     <div class="preview-desc" id="sr-preview-desc" style="color: #dcddde; font-size: 0.9rem; white-space: pre-wrap;">Tutaj pojawi się Twój opis...</div>
+                    <img id="sr-preview-img" class="preview-image" src="" style="display: none;">
                     <div class="preview-actions" id="sr-preview-actions"></div>
-                    <div class="preview-footer">Dzisiaj o 12:00 • PolskiBot</div>
+                    <div class="preview-footer" style="color: #72767d; font-size: 0.75rem; margin-top: 10px;">Dzisiaj o 12:00 • PolskiBot</div>
                 </div>
             </div>
 
-            <div class="modal-section">
-                <label class="modal-label">LINK DO ZDJĘCIA (URL):</label>
-                <input type="text" id="sr-image-url" class="modal-input" placeholder="https://example.com/image.png" oninput="updateSRPreview()">
+            <div class="modal-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label class="modal-label">MINIATURKA (THUMBNAIL):</label>
+                    <input type="text" id="sr-thumbnail-url" class="modal-input" placeholder="URL do małego obrazka" oninput="updateSRPreview()">
+                </div>
+                <div>
+                    <label class="modal-label">GŁÓWNY OBRAZ (LARGE):</label>
+                    <input type="text" id="sr-image-url" class="modal-input" placeholder="URL do dużego obrazka" oninput="updateSRPreview()">
+                </div>
             </div>
 
             <div class="modal-section">
@@ -363,11 +368,21 @@
     };
 
     window.updateSRPreview = function() {
+        const thumbUrl = document.getElementById('sr-thumbnail-url').value;
         const imgUrl = document.getElementById('sr-image-url').value;
         const desc = document.getElementById('sr-description').value;
+        
+        const thumbEl = document.getElementById('sr-preview-thumbnail');
         const imgEl = document.getElementById('sr-preview-img');
         const descEl = document.getElementById('sr-preview-desc');
         const actionCont = document.getElementById('sr-preview-actions');
+
+        if(thumbUrl) {
+            thumbEl.src = thumbUrl;
+            thumbEl.style.display = 'block';
+        } else {
+            thumbEl.style.display = 'none';
+        }
 
         if(imgUrl) {
             imgEl.src = imgUrl;
@@ -407,6 +422,7 @@
             name: name || `Panel ${currentType}`,
             channel_id: document.getElementById('sr-channel').value,
             message_id: document.getElementById('sr-message-id').value,
+            thumbnail_url: document.getElementById('sr-thumbnail-url').value,
             image_url: document.getElementById('sr-image-url').value,
             description: document.getElementById('sr-description').value,
             enabled: document.getElementById('sr-enabled').checked,
@@ -449,6 +465,7 @@
         document.getElementById('sr-name').value = cfg.name;
         document.getElementById('sr-channel').value = cfg.channel_id;
         document.getElementById('sr-message-id').value = cfg.message_id || '';
+        document.getElementById('sr-thumbnail-url').value = cfg.thumbnail_url || '';
         document.getElementById('sr-image-url').value = cfg.image_url || '';
         document.getElementById('sr-description').value = cfg.description || '';
         document.getElementById('sr-enabled').checked = cfg.enabled !== 0;

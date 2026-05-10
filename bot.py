@@ -1725,6 +1725,8 @@ async def handle_send_selfrole(request):
         description=cfg.get('description', ''), 
         color=0x74b816
     )
+    if cfg.get('thumbnail_url'):
+        emb.set_thumbnail(url=cfg['thumbnail_url'])
     if cfg.get('image_url'):
         emb.set_image(url=cfg['image_url'])
     

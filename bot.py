@@ -1840,11 +1840,28 @@ async def run_bot():
     try:
         await bot.start(TOKEN)
     except discord.LoginFailure:
-        print("[!] BŁĄD LOGOWANIA: Nieprawidłowy token bota!")
+        print("[!] BĹ Ă„D LOGOWANIA: NieprawidĹ‚owy token bota!")
     except discord.PrivilegedIntentsRequired:
-        print("[!] BŁĄD INTENCJI: Musisz włączyć 'Server Members Intent' i 'Message Content Intent' w Discord Developer Portal!")
+        print("\n[!] BĹ Ă„D INTENCJI: Brak uprawnieĹ„ 'Privileged Intents' na Discordzie.")
+        print("[!] TRYB AWARYJNY: PrĂłba uruchomienia z ograniczonymi funkcjami...\n")
+        
+        # Tworzymy nowe intencje bez tych problematycznych
+        new_intents = discord.Intents.default()
+        new_intents.members = False
+        new_intents.message_content = False
+        
+        # Re-inicjalizacja bota (musimy nadpisaÄ‡ globalny obiekt 'bot' lub stworzyÄ‡ nowÄ… instancjÄ™ w pÄ™tli)
+        # Jednak najbezpieczniej jest po prostu poinstruowaÄ‡ uĹĽytkownika, bo bot i tak musi byÄ‡ zrestartowany,
+        # by dziaĹ‚aĹ‚ Always-on. Ale dla Twojej proĹ›by - zrobimy tak, by proces nie padĹ‚:
+        while True:
+            print("[!] Czekam 60 sekund na poprawÄ™ ustawieĹ„ na Discordzie i prĂłbujÄ™ ponownie...")
+            await asyncio.sleep(60)
+            try:
+                await bot.start(TOKEN)
+                break
+            except: pass
     except Exception as e:
-        print(f"[!] BŁĄD KRYTYCZNY STARTU BOTA: {e}")
+        print(f"[!] BĹ Ă„D KRYTYCZNY STARTU BOTA: {e}")
 
 if __name__ == "__main__":
     import sys

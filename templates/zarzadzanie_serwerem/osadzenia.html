@@ -267,8 +267,8 @@
         <div class="modal-section">
             <label>EDYCJA WIADOMOŚCI</label>
             <div class="discord-editor-outer">
-                <div id="ge-outer-text" class="outer-text" contenteditable="true" placeholder="Tekst nad embedem..."></div>
-                <div class="discord-embed" id="ge-box">
+                <div id="ge-outer-text" class="outer-text" contenteditable="true" placeholder="Wiadomość nad osadzeniem (opcjonalnie)..."></div>
+                <div class="discord-embed" id="ge-preview" style="border-left-color: #74b816;">
                     <div class="embed-main">
                         <div id="ge-author" class="ee-author" contenteditable="true" placeholder="Autor..."></div>
                         <div id="ge-title" class="ee-title" contenteditable="true" placeholder="Tytuł..."></div>
@@ -309,12 +309,20 @@
                 </label>
             </div>
             <div id="gp-body" class="ux-body" style="display:none;">
-                <div style="margin-bottom: 10px;">
+                <div style="margin-bottom: 15px;">
                     <label>LINK TYTUŁU:</label>
-                    <input type="text" id="g-title-url" class="modal-input" placeholder="Wklej link..." oninput="updatePreviewStyles('g')">
+                    <input type="text" id="g-title-url" class="modal-input" placeholder="Wklej link (np. https://google.com)..." oninput="updatePreviewStyles('g')">
                 </div>
-                <input type="hidden" id="g-color" value="#74b816">
-                <input type="hidden" id="g-link-color" value="#00a8fc">
+                <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label>KOLOR PASKA:</label>
+                        <input type="color" id="g-color" value="#74b816" style="height: 45px; cursor: pointer; padding: 5px;" oninput="updatePreviewStyles('g')">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>KOLOR LINKÓW:</label>
+                        <input type="color" id="g-link-color" value="#00a8fc" style="height: 45px; cursor: pointer; padding: 5px;" oninput="updatePreviewStyles('g')">
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -436,6 +444,16 @@
             titleEl.onclick = null;
             titleEl.title = "";
         }
+
+        // Aktualizacja kolorów (Nowe)
+        const embedColor = getV(p + '-color');
+        const linkColor = getV(p + '-link-color');
+        const embedEl = getE(p + 'e-preview');
+        
+        if (embedEl) {
+            embedEl.style.borderLeftColor = embedColor;
+        }
+        titleEl.style.color = linkColor;
     };
 
     // --- SYSTEM BLOKOWY ZASAD (LOGIKA) ---

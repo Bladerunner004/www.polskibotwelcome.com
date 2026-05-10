@@ -129,7 +129,7 @@
                 <h3><i class="fas fa-fingerprint"></i> Panele z rolami</h3>
                 <p class="card-desc">Uzyskaj role poprzez reakcję pod wiadomością.</p>
             </div>
-            <span id="count-reaction" class="count-pill">0 / 3</span>
+            <span id="count-reaction" class="count-pill">0 / {% if main_settings.premium %}20{% else %}2{% endif %}</span>
         </div>
         <div class="card-body">
             <div id="list-reaction" class="config-list"></div>
@@ -146,7 +146,7 @@
                 <h3><i class="fas fa-mouse-pointer"></i> Panele z przyciskami</h3>
                 <p class="card-desc">Uzyskaj role poprzez klikanie przycisków.</p>
             </div>
-            <span id="count-button" class="count-pill">0 / 3</span>
+            <span id="count-button" class="count-pill">0 / {% if main_settings.premium %}20{% else %}2{% endif %}</span>
         </div>
         <div class="card-body">
             <div id="list-button" class="config-list"></div>
@@ -260,7 +260,7 @@
 
     function renderAll() {
         const types = ['reaction', 'button'];
-        const limits = 3; 
+        const limits = {% if main_settings.premium %}20{% else %}2{% endif %}; 
 
         types.forEach(t => {
             const cont = document.getElementById(`list-${t}`);

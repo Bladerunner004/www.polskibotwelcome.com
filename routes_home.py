@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, session, make_response
+from flask import Blueprint, render_template, session, make_response, send_from_directory
 from dotenv import load_dotenv
 
 # Załadowanie zmiennych środowiskowych
@@ -49,3 +49,7 @@ def privacy():
 @home_bp.route('/tos')
 def tos():
     return render_template('tos.html')
+
+@home_bp.route('/ads.txt')
+def ads_txt():
+    return send_from_directory(os.getcwd(), 'ads.txt')

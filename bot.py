@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import ui
 import datetime
 import asyncio
@@ -9,6 +9,8 @@ import aiohttp
 from dotenv import load_dotenv
 import io
 import re
+import json
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 # Ścieżka do statusu (dla PythonAnywhere)
 STATUS_FILE_PATH = "/home/BLADERUNNER009/AntigravityProjekt/bot_status.json"
@@ -420,7 +422,6 @@ async def create_welcome_image(bg_url, avatar_url, line1, line2, font_name='aria
             bg = Image.new("RGBA", (width, height), (20, 22, 26, 255))
         
         # Zmień rozmiar tła (Crop & Fill zamiast spłaszczania)
-        from PIL import ImageOps
         bg = ImageOps.fit(bg, (width, height), Image.Resampling.LANCZOS)
         
         # 2. POBIERANIE AWATARA
@@ -1391,7 +1392,6 @@ async def check_media_streams():
 
 async def _send_media_notification(guild, channel_id, cfg, stream_title, stream_url, stream_thumb, account, platform):
     """Wewnętrzna funkcja do wysłania ładnego powiadomienia"""
-    from PIL import Image, ImageDraw, ImageFont
     try:
         channel = guild.get_channel(channel_id)
         if not channel: return
@@ -1589,7 +1589,7 @@ async def update_status_file():
                     if "sync_counters" in endpoint:
                         await update_counters(guild)
                     elif "sync_boosters" in endpoint:
-                        await check_all_boosters(guild)
+                        await sync_booster_roles(guild)
                         
                 os.remove(sf) # Usuwamy plik po obsłużeniu
             except Exception as e:
@@ -1599,13 +1599,28 @@ async def update_status_file():
 
 @bot.event
 async def on_ready():
+    bot.add_view(TicketActions())
     if not update_status_file.is_running():
         update_status_file.start()
     if not check_media_streams.is_running():
         check_media_streams.start()
     if not update_counters_loop.is_running():
         update_counters_loop.start()
-    print(f"[OK] Zalogowano jako {bot.user}")
+    
+    try:
+        await bot.tree.sync()
+        print(f"[OK] Zalogowano jako {bot.user} i zsynchronizowano slash commands.")
+    except Exception as e:
+        print(f"[OK] Zalogowano jako {bot.user} (Slash sync error: {e})")
+
+@tasks.loop(minutes=10)
+async def update_counters_loop():
+    """Okresowa aktualizacja wszystkich liczników na serwerach."""
+    for guild in bot.guilds:
+        try:
+            await update_counters(guild)
+        except:
+            pass
 from aiohttp import web
 
 async def handle_latency(request):
@@ -1770,7 +1785,7 @@ async def run_internal_api():
 
 async def run_bot():
     if not TOKEN: 
-        print("❌ Brak tokena w .env")
+        print("[!] Brak tokena w .env")
         return
     
     # Uruchamiamy API w tej samej pętli co bot
@@ -1779,13 +1794,20 @@ async def run_bot():
     try:
         await bot.start(TOKEN)
     except discord.LoginFailure:
-        print("❌ BŁĄD LOGOWANIA: Nieprawidłowy token bota!")
+        print("[!] BŁĄD LOGOWANIA: Nieprawidłowy token bota!")
     except discord.PrivilegedIntentsRequired:
-        print("❌ BŁĄD INTENCJI: Musisz włączyć 'Server Members Intent' i 'Message Content Intent' w Discord Developer Portal!")
+        print("[!] BŁĄD INTENCJI: Musisz włączyć 'Server Members Intent' i 'Message Content Intent' w Discord Developer Portal!")
     except Exception as e:
-        print(f"❌ BŁĄD KRYTYCZNY STARTU BOTA: {e}")
+        print(f"[!] BŁĄD KRYTYCZNY STARTU BOTA: {e}")
 
 if __name__ == "__main__":
+    import sys
+    # Ustawienie kodowania dla Windows, aby uniknąć UnicodeEncodeError
+    if sys.platform == 'win32':
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
     try:
         asyncio.run(run_bot())
     except KeyboardInterrupt:

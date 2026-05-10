@@ -343,13 +343,31 @@ def api_premium_trial(guild_id):
 
 @config_bp.route('/api/<guild_id>/channels')
 def api_channels(guild_id):
-    channels = call_bot_api(f"/guilds/{guild_id}/channels")
-    return jsonify(channels or [])
+    # Na PythonAnywhere nie możemy połączyć się z localhost:5006, 
+    # więc pobieramy dane bezpośrednio z Discorda
+    headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+    resp = requests.get(f"https://discord.com/api/v10/guilds/{guild_id}/channels", headers=headers)
+    if resp.status_code == 200:
+        all_channels = resp.json()
+        channels = [{"id": str(c['id']), "name": c['name']} for c in all_channels if c['type'] == 0]
+        return jsonify(channels)
+    return jsonify([])
 
 @config_bp.route('/api/<guild_id>/roles')
 def api_roles(guild_id):
-    roles = call_bot_api(f"/guilds/{guild_id}/roles")
-    return jsonify(roles or [])
+    headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+    resp = requests.get(f"https://discord.com/api/v10/guilds/{guild_id}/roles", headers=headers)
+    if resp.status_code == 200:
+        all_roles = resp.json()
+        roles = []
+        for r in all_roles:
+            if r['name'] != "@everyone" and not r.get('managed'):
+                color_int = r.get('color', 0)
+                color_hex = f"#{color_int:06x}" if color_int != 0 else "#b5bac1"
+                roles.append({"id": str(r['id']), "name": r['name'], "color": color_hex})
+        return jsonify(roles)
+    return jsonify([])
+
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB

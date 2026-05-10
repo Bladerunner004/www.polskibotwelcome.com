@@ -193,22 +193,18 @@
             <div class="modal-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div>
                     <label class="modal-label">MINIATURKA (THUMBNAIL):</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="sr-thumbnail-url" class="modal-input" placeholder="URL lub prześlij..." oninput="updateSRPreview()">
-                        <button type="button" class="btn-add-role" style="width: 50px; flex-shrink: 0;" onclick="document.getElementById('upload-thumb').click()">
-                            <i class="fas fa-upload"></i>
-                        </button>
-                    </div>
+                    <input type="hidden" id="sr-thumbnail-url">
+                    <button type="button" class="btn-add-role" style="width: 100%; height: 45px;" onclick="document.getElementById('upload-thumb').click()">
+                        <i class="fas fa-image"></i> WGRAJ MINIATURKĘ
+                    </button>
                     <input type="file" id="upload-thumb" style="display: none;" accept="image/*" onchange="handleSRUpload(this, 'sr-thumbnail-url')">
                 </div>
                 <div>
                     <label class="modal-label">GŁÓWNY OBRAZ (LARGE):</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="sr-image-url" class="modal-input" placeholder="URL lub prześlij..." oninput="updateSRPreview()">
-                        <button type="button" class="btn-add-role" style="width: 50px; flex-shrink: 0;" onclick="document.getElementById('upload-large').click()">
-                            <i class="fas fa-upload"></i>
-                        </button>
-                    </div>
+                    <input type="hidden" id="sr-image-url">
+                    <button type="button" class="btn-add-role" style="width: 100%; height: 45px;" onclick="document.getElementById('upload-large').click()">
+                        <i class="fas fa-expand"></i> WGRAJ GŁÓWNY OBRAZ
+                    </button>
                     <input type="file" id="upload-large" style="display: none;" accept="image/*" onchange="handleSRUpload(this, 'sr-image-url')">
                 </div>
             </div>
@@ -515,10 +511,19 @@
         if (!input.files || !input.files[0]) return;
         
         const file = input.files[0];
+        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
+
+        if (isGif && !isPremium) {
+            alert('⚠️ Animowane obrazy (GIF) są dostępne tylko dla serwerów z aktywnym pakietem PREMIUM!');
+            input.value = "";
+            return;
+        }
+
         const formData = new FormData();
         formData.append('file', file);
         
-        const btn = input.previousElementSibling.querySelector('button');
+        const btn = input.previousElementSibling;
         const icon = btn.querySelector('i');
         const originalClass = icon.className;
         
@@ -543,6 +548,7 @@
         } finally {
             icon.className = originalClass;
             btn.disabled = false;
+            input.value = ""; // Reset input
         }
     };
 

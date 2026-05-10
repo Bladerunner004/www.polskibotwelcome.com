@@ -98,6 +98,23 @@ class LinkReviewView(ui.View):
         except: pass
         await interaction.message.delete()
 
+# --- POMOCNICZA FUNKCJA: Pobieranie koloru bota dla serwera ---
+def get_embed_color(guild):
+    """Pobiera kolor embedu z bazy (lub losuje RGB)."""
+    try:
+        from database import get_settings
+        settings = get_settings(str(guild.id))
+        global_color_hex = settings.get('embed_color', '#74b816').lstrip('#')
+        global_rgb = settings.get('rgb_mode', False)
+
+        if global_rgb:
+            # TRYB RGB: Losuj jaskrawy kolor neonowy
+            return discord.Color.from_rgb(random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
+        
+        return int(global_color_hex, 16)
+    except:
+        return 0x74b816
+
 # --- POMOCNICZA FUNKCJA: Czy komenda jest włączona? ---
 async def check_command(ctx, command_name):
     if not ctx.guild:
@@ -189,7 +206,7 @@ async def ticket(ctx, tytul: str, sprawa: str):
         }
     )
     
-    embed = discord.Embed(title=f"📢 {tytul}", description=f"Witaj {ctx.author.mention}!\n\n**Sprawa:** {sprawa}", color=0x74b816)
+    embed = discord.Embed(title=f"📢 {tytul}", description=f"Witaj {ctx.author.mention}!\n\n**Sprawa:** {sprawa}", color=get_embed_color(ctx.guild))
     embed.set_footer(text="Polski Bot • System Zgłoszeń")
     await channel.send(embed=embed, view=TicketActions())
     await reply(ctx, f"✅ Otwarto zgłoszenie: {channel.mention}")
@@ -331,7 +348,7 @@ async def close(ctx):
 @bot.hybrid_command(name="pomoc", description="Lista wszystkich komend bota.")
 async def pomoc(ctx):
     if not await check_command(ctx, "pomoc"): return
-    embed = discord.Embed(title="📖 Lista komend Polski Bot", color=0x74b816)
+    embed = discord.Embed(title="📖 Lista komend Polski Bot", color=get_embed_color(ctx.guild))
     embed.add_field(name="🎟️ Zgłoszenia", value="`/ticket` `/claim` `/close` `/unclaim`", inline=False)
     embed.add_field(name="🛡️ Moderacja", value="`/ban` `/unban` `/kick` `/mute` `/unmute` `/warn` `/warns` `/clear` `/slowmode` `/modinfo` `/temprole` `/votemute` `/massrole`", inline=False)
     embed.add_field(name="📊 Poziomy", value="`/level` `/toplevel` `/exp`", inline=False)
@@ -359,7 +376,7 @@ async def cat(ctx):
     async with aiohttp.ClientSession() as session:
         async with session.get('https://api.thecatapi.com/v1/images/search') as resp:
             data = await resp.json()
-            embed = discord.Embed(title="🐱 Losowy kotek!", color=0x74b816)
+            embed = discord.Embed(title="🐱 Losowy kotek!", color=get_embed_color(ctx.guild))
             embed.set_image(url=data[0]['url'])
             await reply(ctx, embed=embed)
 
@@ -369,7 +386,7 @@ async def meme(ctx):
     async with aiohttp.ClientSession() as session:
         async with session.get('https://meme-api.com/gimme') as resp:
             data = await resp.json()
-            embed = discord.Embed(title=data['title'], color=0x74b816)
+            embed = discord.Embed(title=data['title'], color=get_embed_color(ctx.guild))
             embed.set_image(url=data['url'])
             await reply(ctx, embed=embed)
 
@@ -383,8 +400,9 @@ async def info(ctx):
     embed = discord.Embed(
         title="🤖 Polski Bot",
         description="Zaawansowany bot do zarządzania serwerem.\n\n🌐 [Panel WWW](https://polskibot.pl)\n💬 [Support](https://discord.gg/G5F3WBbZ)",
-        color=0x74b816
+        color=get_embed_color(ctx.guild)
     )
+
     embed.add_field(name="🏠 Serwery", value=f"{len(bot.guilds)}", inline=True)
     embed.add_field(name="⚡ Ping", value=f"{round(bot.latency * 1000)}ms", inline=True)
     await reply(ctx, embed=embed, ephemeral=False)
@@ -539,19 +557,7 @@ async def send_welcome_message(guild: discord.Guild, member: discord.Member, con
         print(f"[DEBUG] Wysyłanie {config_type} (ID: {cfg.get('id')}) na kanał {channel.name}")
         sent_channels.add(ch_id_str)
         
-        # POBIERANIE USTAWIEŃ GLOBALNYCH (Dla koloru)
-        settings = get_settings(str(guild.id))
-        global_color_hex = settings.get('embed_color', '#74b816').lstrip('#')
-        global_rgb = settings.get('rgb_mode', False)
-
-        if global_rgb:
-            # TRYB RGB: Losuj jaskrawy kolor neonowy
-            embed_color = discord.Color.from_rgb(random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
-        else:
-            try:
-                embed_color = int(global_color_hex, 16)
-            except:
-                embed_color = 0x74b816
+        embed_color = get_embed_color(guild)
 
         content = (cfg.get('plain_text') or '')
         for tag, val in tag_map.items(): content = content.replace(tag, val)
@@ -1399,18 +1405,21 @@ async def _send_media_notification(guild, channel_id, cfg, stream_title, stream_
         # Wiadomość ustawiona przez użytkownika z obsługą zmiennych
         message_text = cfg['message'].replace('{account}', f"**{account}**")
         
-        # Kolory w zależności od platformy
-        colors = {
+        # Kolory w zależności od platformy (używamy jako fallback, jeśli nie ustawiono customowego)
+        platform_colors = {
             "youtube": 0xFF0000,
             "twitch": 0x9146FF,
             "kick": 0x53FC18,
             "tiktok": 0x000000
         }
         
+        # Używamy koloru bota jako głównego
+        embed_color = get_embed_color(guild)
+        
         embed = discord.Embed(
             title=f"🔴 {stream_title}",
             url=stream_url,
-            color=colors.get(platform, 0x74b816)
+            color=embed_color
         )
         if stream_thumb:
             embed.set_image(url=stream_thumb)
@@ -1454,14 +1463,17 @@ async def send_log(guild, category, embed):
         
         channel = guild.get_channel(int(channel_id))
         if channel:
+            # Ustawiamy globalny kolor dla logów
+            embed.color = get_embed_color(guild)
             await channel.send(embed=embed)
+
     except Exception as e:
         print(f"❌ [LOGS] Błąd logowania ({category}): {e}")
 
 @bot.event
 async def on_message_delete(message):
     if not message.guild or message.author.bot: return
-    embed = discord.Embed(title="🗑️ Usunięto wiadomość", color=0xff4757, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="🗑️ Usunięto wiadomość", color=get_embed_color(message.guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Autor", value=f"{message.author} ({message.author.id})")
     embed.add_field(name="Kanał", value=message.channel.mention)
     embed.add_field(name="Treść", value=message.content[:1024] or "*Brak treści (np. załącznik)*", inline=False)
@@ -1470,7 +1482,7 @@ async def on_message_delete(message):
 @bot.event
 async def on_message_edit(before, after):
     if not before.guild or before.author.bot or before.content == after.content: return
-    embed = discord.Embed(title="📝 Edytowano wiadomość", color=0x3498db, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="📝 Edytowano wiadomość", color=get_embed_color(before.guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Autor", value=f"{before.author} ({before.author.id})")
     embed.add_field(name="Kanał", value=before.channel.mention)
     embed.add_field(name="Przed", value=before.content[:1024] or "*Puste*", inline=False)
@@ -1479,26 +1491,26 @@ async def on_message_edit(before, after):
 
 @bot.event
 async def on_member_join(member):
-    embed = discord.Embed(title="📥 Użytkownik dołączył", color=0x2ecc71, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="📥 Użytkownik dołączył", color=get_embed_color(member.guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Użytkownik", value=f"{member} ({member.id})")
     embed.set_thumbnail(url=member.display_avatar.url)
     await send_log(member.guild, "join_leave", embed)
 
 @bot.event
 async def on_member_remove(member):
-    embed = discord.Embed(title="📤 Użytkownik opuścił serwer", color=0xe67e22, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="📤 Użytkownik opuścił serwer", color=get_embed_color(member.guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Użytkownik", value=f"{member} ({member.id})")
     await send_log(member.guild, "join_leave", embed)
 
 @bot.event
 async def on_member_ban(guild, user):
-    embed = discord.Embed(title="🔨 Zbanowano użytkownika", color=0xc0392b, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="🔨 Zbanowano użytkownika", color=get_embed_color(guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Użytkownik", value=f"{user} ({user.id})")
     await send_log(guild, "mod_actions", embed)
 
 @bot.event
 async def on_member_unban(guild, user):
-    embed = discord.Embed(title="✅ Odbanowano użytkownika", color=0x2ecc71, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="✅ Odbanowano użytkownika", color=get_embed_color(guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Użytkownik", value=f"{user} ({user.id})")
     await send_log(guild, "mod_actions", embed)
 
@@ -1509,7 +1521,7 @@ async def on_member_update(before, after):
         added = [r.mention for r in after.roles if r not in before.roles]
         removed = [r.mention for r in before.roles if r not in after.roles]
         if added or removed:
-            embed = discord.Embed(title="🛡️ Zmiana ról użytkownika", color=0x9b59b6, timestamp=datetime.datetime.now())
+            embed = discord.Embed(title="🛡️ Zmiana ról użytkownika", color=get_embed_color(before.guild), timestamp=datetime.datetime.now())
             embed.add_field(name="Użytkownik", value=f"{after} ({after.id})")
             if added: embed.add_field(name="Nadano", value=", ".join(added), inline=False)
             if removed: embed.add_field(name="Odebrano", value=", ".join(removed), inline=False)
@@ -1517,21 +1529,21 @@ async def on_member_update(before, after):
 
 @bot.event
 async def on_guild_channel_create(channel):
-    embed = discord.Embed(title="📂 Stworzono kanał", color=0x2ecc71, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="📂 Stworzono kanał", color=get_embed_color(channel.guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Nazwa", value=f"#{channel.name} ({channel.id})")
     embed.add_field(name="Typ", value=str(channel.type))
     await send_log(channel.guild, "guild_updates", embed)
 
 @bot.event
 async def on_guild_channel_delete(channel):
-    embed = discord.Embed(title="🗑️ Usunięto kanał", color=0xff4757, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="🗑️ Usunięto kanał", color=get_embed_color(channel.guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Nazwa", value=f"#{channel.name} ({channel.id})")
     await send_log(channel.guild, "guild_updates", embed)
 
 @bot.event
 async def on_voice_state_update(member, before, after):
     if before.channel != after.channel:
-        embed = discord.Embed(color=0x1abc9c, timestamp=datetime.datetime.now())
+        embed = discord.Embed(color=get_embed_color(after.guild), timestamp=datetime.datetime.now())
         embed.set_author(name=f"{member.display_name} - Voice", icon_url=member.display_avatar.url)
         if before.channel is None:
             embed.title = "🎙️ Połączono z Voice"
@@ -1546,13 +1558,13 @@ async def on_voice_state_update(member, before, after):
 
 @bot.event
 async def on_guild_role_create(role):
-    embed = discord.Embed(title="🛡️ Stworzono nową rolę", color=0x2ecc71, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="🛡️ Stworzono nową rolę", color=get_embed_color(role.guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Nazwa", value=f"{role.name} ({role.id})")
     await send_log(role.guild, "guild_updates", embed)
 
 @bot.event
 async def on_guild_role_delete(role):
-    embed = discord.Embed(title="🗑️ Usunięto rolę", color=0xff4757, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="🗑️ Usunięto rolę", color=get_embed_color(role.guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Nazwa", value=f"{role.name} ({role.id})")
     await send_log(role.guild, "guild_updates", embed)
 
@@ -1723,7 +1735,7 @@ async def handle_send_selfrole(request):
     emb = discord.Embed(
         title=cfg.get('name', 'Panel Ról'), 
         description=cfg.get('description', ''), 
-        color=0x74b816
+        color=get_embed_color(guild)
     )
     if cfg.get('thumbnail_url'):
         emb.set_thumbnail(url=cfg['thumbnail_url'])

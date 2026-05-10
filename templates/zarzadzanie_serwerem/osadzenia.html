@@ -70,6 +70,34 @@
     .outer-text { margin-bottom: 12px; font-size: 0.95rem; outline: none; min-height: 20px; }
     .outer-text[placeholder]:empty:before { content: attr(placeholder); color: #5c5e66; }
 
+    /* EFEKT RGB DLA PASKA */
+    @keyframes rainbow-border {
+        0% { border-left-color: #ff0000; box-shadow: -2px 0 10px rgba(255,0,0,0.3); }
+        20% { border-left-color: #ff00ff; box-shadow: -2px 0 10px rgba(255,0,255,0.3); }
+        40% { border-left-color: #0000ff; box-shadow: -2px 0 10px rgba(0,0,255,0.3); }
+        60% { border-left-color: #00ffff; box-shadow: -2px 0 10px rgba(0,255,255,0.3); }
+        80% { border-left-color: #00ff00; box-shadow: -2px 0 10px rgba(0,255,0,0.3); }
+        100% { border-left-color: #ff0000; box-shadow: -2px 0 10px rgba(255,0,0,0.3); }
+    }
+
+    .discord-embed.rgb-mode {
+        animation: rainbow-border 3s linear infinite;
+    }
+
+    /* EFEKT RGB DLA PASKA */
+    @keyframes rainbow-border {
+        0% { border-left-color: #ff0000; box-shadow: -2px 0 10px rgba(255,0,0,0.3); }
+        20% { border-left-color: #ff00ff; box-shadow: -2px 0 10px rgba(255,0,255,0.3); }
+        40% { border-left-color: #0000ff; box-shadow: -2px 0 10px rgba(0,0,255,0.3); }
+        60% { border-left-color: #00ffff; box-shadow: -2px 0 10px rgba(0,255,255,0.3); }
+        80% { border-left-color: #00ff00; box-shadow: -2px 0 10px rgba(0,255,0,0.3); }
+        100% { border-left-color: #ff0000; box-shadow: -2px 0 10px rgba(255,0,0,0.3); }
+    }
+
+    .discord-embed.rgb-mode {
+        animation: rainbow-border 3s linear infinite;
+    }
+
     .discord-embed { background: var(--discord-embed-bg); border-left: 4px solid var(--bot-color, #74b816); border-radius: 4px; padding: 12px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px; position: relative; }
     .embed-main { grid-column: 1; }
     

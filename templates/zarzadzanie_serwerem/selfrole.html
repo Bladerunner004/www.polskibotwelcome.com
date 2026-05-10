@@ -181,13 +181,26 @@
             <div class="modal-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div>
                     <label class="modal-label">MINIATURKA (THUMBNAIL):</label>
-                    <input type="text" id="sr-thumbnail-url" class="modal-input" placeholder="URL do małego obrazka" oninput="updateSRPreview()">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="sr-thumbnail-url" class="modal-input" placeholder="URL lub prześlij..." oninput="updateSRPreview()">
+                        <button type="button" class="btn-add-role" style="width: 50px; flex-shrink: 0;" onclick="document.getElementById('upload-thumb').click()">
+                            <i class="fas fa-upload"></i>
+                        </button>
+                    </div>
+                    <input type="file" id="upload-thumb" style="display: none;" accept="image/*" onchange="handleSRUpload(this, 'sr-thumbnail-url')">
                 </div>
                 <div>
                     <label class="modal-label">GŁÓWNY OBRAZ (LARGE):</label>
-                    <input type="text" id="sr-image-url" class="modal-input" placeholder="URL do dużego obrazka" oninput="updateSRPreview()">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="sr-image-url" class="modal-input" placeholder="URL lub prześlij..." oninput="updateSRPreview()">
+                        <button type="button" class="btn-add-role" style="width: 50px; flex-shrink: 0;" onclick="document.getElementById('upload-large').click()">
+                            <i class="fas fa-upload"></i>
+                        </button>
+                    </div>
+                    <input type="file" id="upload-large" style="display: none;" accept="image/*" onchange="handleSRUpload(this, 'sr-image-url')">
                 </div>
             </div>
+
 
             <div class="modal-section">
                 <label class="modal-label">TREŚĆ OPISU:</label>
@@ -479,6 +492,42 @@
         }
         updateSRPreview();
     };
+
+    window.handleSRUpload = async function(input, targetId) {
+        if (!input.files || !input.files[0]) return;
+        
+        const file = input.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const btn = input.previousElementSibling.querySelector('button');
+        const icon = btn.querySelector('i');
+        const originalClass = icon.className;
+        
+        icon.className = 'fas fa-spinner fa-spin';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`/api/${guildId}/upload_bg`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById(targetId).value = window.location.origin + data.url;
+                updateSRPreview();
+            } else {
+                alert("Błąd przesyłania: " + data.error);
+            }
+        } catch (e) {
+            console.error("Upload error:", e);
+            alert("Błąd połączenia z serwerem.");
+        } finally {
+            icon.className = originalClass;
+            btn.disabled = false;
+        }
+    };
+
 
     loadAll();
 })();

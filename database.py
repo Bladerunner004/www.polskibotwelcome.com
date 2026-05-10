@@ -2,6 +2,7 @@ import os
 import sqlite3
 import json
 from base import LIMITS_FREE, LIMITS_PREMIUM
+from badwords_list import GLOBAL_BADWORDS
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_NAME = os.path.join(BASE_DIR, "database.db")
@@ -540,7 +541,7 @@ def get_settings(guild_id):
         return {
             "ticket_enabled": True, "moderation_enabled": True, "moderation_confirm": False,
             "automod_antilink": False, "automod_anticaps": False, "automod_antispam": False,
-            "automod_badwords": False, "automod_badwords_list": [],
+            "automod_badwords": False, "automod_badwords_list": GLOBAL_BADWORDS,
             "levels_enabled": True, "prefix": "!", 
             "autorole_mode": 'disabled', "autorole_roles": [], "autorole_human_roles": [], 
             "autorole_bot_roles": [], "autorole_booster_roles": [], "autorole_booster_remove": True,
@@ -618,9 +619,21 @@ def get_audit_logs(guild_id, limit=100):
         return []
 
 def get_prefix(guild_id):
-    """Pobiera prefix dla danego serwera (uĹĽywane przez bota)."""
     settings = get_settings(guild_id)
     return settings.get("prefix", "!")
+
+def reset_to_global_badwords(guild_id):
+    """Przywraca globalnÄ… listÄ™ wulgaryzmĂłw dla serwera."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute("UPDATE settings SET automod_badwords_list = ? WHERE guild_id = ?", (json.dumps(GLOBAL_BADWORDS), str(guild_id)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[DB] BĹ‚Ä…d reset_to_global_badwords: {e}")
+        return False
 
 # =============================================
 # NOWE FUNKCJE â€“ zarzÄ…dzanie komendami per guild

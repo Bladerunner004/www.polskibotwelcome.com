@@ -542,8 +542,8 @@ def get_settings(guild_id):
         return {
             "ticket_enabled": True, "moderation_enabled": True, "moderation_confirm": False,
             "automod_antilink": False, "automod_anticaps": False, "automod_antispam": False,
-            "automod_badwords": False, "automod_badwords_list": GLOBAL_BADWORDS,
-            "levels_enabled": True, "prefix": "!", 
+            "automod_badwords": False, "automod_badwords_list": [], "automod_antiphishing": False,
+            "levels_enabled": True, "prefix": "!", "embed_color": "#74b816", "rgb_mode": False,
             "autorole_mode": 'disabled', "autorole_roles": [], "autorole_human_roles": [], 
             "autorole_bot_roles": [], "autorole_booster_roles": [], "autorole_booster_remove": True,
             "counter_humans_enabled": False, "counter_humans_name": "Humans: {count}", 
@@ -555,7 +555,8 @@ def get_settings(guild_id):
         return {
             "ticket_enabled": True, "moderation_enabled": True, "moderation_confirm": False,
             "automod_antilink": False, "automod_anticaps": False, "automod_antispam": False,
-            "levels_enabled": True, "prefix": "!", 
+            "automod_badwords": False, "automod_badwords_list": [], "automod_antiphishing": False,
+            "levels_enabled": True, "prefix": "!", "embed_color": "#74b816", "rgb_mode": False,
             "autorole_mode": 'disabled', "autorole_roles": [], "autorole_human_roles": [], 
             "autorole_bot_roles": [], "autorole_booster_roles": [], "autorole_booster_remove": True,
             "counter_humans_enabled": False, "counter_humans_name": "Humans: {count}", 

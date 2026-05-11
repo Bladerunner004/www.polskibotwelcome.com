@@ -1,3 +1,10 @@
+import sys
+# Ustawienie kodowania dla Windows, aby uniknąć UnicodeEncodeError przy printowaniu emoji
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 import discord
 from discord.ext import commands, tasks
 from discord import ui
@@ -7,7 +14,6 @@ import os
 import random
 import aiohttp
 from dotenv import load_dotenv
-import io
 import re
 import json
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -102,17 +108,21 @@ class LinkReviewView(ui.View):
 def get_embed_color(guild):
     """Pobiera kolor embedu z bazy (lub losuje RGB)."""
     try:
+        if not guild: return 0x74b816
         from database import get_settings
         settings = get_settings(str(guild.id))
-        global_color_hex = settings.get('embed_color', '#74b816').lstrip('#')
-        global_rgb = settings.get('rgb_mode', False)
-
-        if global_rgb:
-            # TRYB RGB: Losuj jaskrawy kolor neonowy
-            return discord.Color.from_rgb(random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
         
-        return int(global_color_hex, 16)
-    except:
+        # Pierwszeństwo ma tryb RGB
+        if settings.get('rgb_mode'):
+            return discord.Color.from_rgb(
+                random.randint(0, 255), 
+                random.randint(0, 255), 
+                random.randint(0, 255)
+            )
+        
+        color_hex = settings.get('embed_color', '#74b816').replace('#', '')
+        return int(color_hex, 16)
+    except Exception as e:
         return 0x74b816
 
 # --- POMOCNICZA FUNKCJA: Czy komenda jest włączona? ---
@@ -1104,57 +1114,12 @@ async def on_message(message):
                     return
                 except: pass
 
-    # Logowanie aktywności i przetwarzanie komend (Przeniesione z drugiego on_message)
+    # Logowanie aktywności i przetwarzanie komend
     if message.guild:
         log_message_activity(message.guild.id, message.channel.id)
+    
     await bot.process_commands(message)
 
-    # --- ANTY-BADWORDS SYSTEM ---
-    if settings.get("automod_badwords"):
-        custom_list = settings.get("automod_badwords_list", [])
-        if check_badwords(message.content, custom_list):
-            if not message.author.guild_permissions.manage_messages:
-                try:
-                    await message.delete()
-                    await message.channel.send(f"⚠️ {message.author.mention}, Twoja wiadomość zawierała niedozwolone słowa!", delete_after=5)
-                    return
-                except: pass
-
-    # --- ANTY-CAPS SYSTEM ---
-    if settings.get("automod_anticaps"):
-        if len(message.content) > 10:
-            caps_count = sum(1 for c in message.content if c.isupper())
-            if caps_count / len(message.content) > 0.7:
-                if not message.author.guild_permissions.manage_messages:
-                    try:
-                        await message.delete()
-                        await message.channel.send(f"⚠️ {message.author.mention}, nie używaj nadmiernie dużych liter!", delete_after=5)
-                    except: pass
-                    return
-
-    # --- ANTY-SPAM SYSTEM ---
-    if settings.get("automod_antispam"):
-        if not message.author.guild_permissions.manage_messages:
-            key = f"spam_{message.guild.id}_{message.author.id}"
-            now = datetime.datetime.now()
-            
-            # Prosta pamięć podręczna w bot (globalnie lub per guild)
-            if not hasattr(bot, 'spam_cache'): bot.spam_cache = {}
-            
-            user_history = bot.spam_cache.get(key, [])
-            # Zachowaj tylko wiadomości z ostatnich 5 sekund
-            user_history = [t for t in user_history if (now - t).total_seconds() < 5]
-            user_history.append(now)
-            bot.spam_cache[key] = user_history
-            
-            if len(user_history) > 3: # Więcej niż 3 wiadomości w 5 sek
-                try:
-                    await message.delete()
-                    await message.channel.send(f"⚠️ {message.author.mention}, zwolnij! Anty-Spam jest aktywny.", delete_after=5)
-                    return
-                except: pass
-
-    await bot.process_commands(message)
 
 @bot.event
 async def on_interaction(interaction: discord.Interaction):
@@ -1226,44 +1191,64 @@ async def on_interaction(interaction: discord.Interaction):
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    # Obsługa Connect Role
-    if before.channel == after.channel: return
-    
-    configs = get_selfrole_configs(member.guild.id)
-    voice_configs = [c for c in configs if c['type'] == 'voice']
-    if not voice_configs: return
-    
-    for cfg in voice_configs:
-        if not cfg.get('enabled', 1): continue
-        role_id = cfg.get('role_id')
-        if not role_id: continue
-        role = member.guild.get_role(int(role_id))
-        if not role: continue
+    # 1. Obsługa Connect Role (Selfrole)
+    if before.channel != after.channel:
+        configs = get_selfrole_configs(member.guild.id)
+        voice_configs = [c for c in configs if c['type'] == 'voice']
         
-        if after.channel and not before.channel:
-            # Wejście na kanał
-            try: await member.add_roles(role, reason="Connect Role")
-            except: pass
-        elif not after.channel and before.channel:
-            # Wyjście z kanału
-            try: await member.remove_roles(role, reason="Connect Role")
-            except: pass
+        for cfg in voice_configs:
+            if not cfg.get('enabled', 1): continue
+            role_id = cfg.get('role_id')
+            if not role_id: continue
+            role = member.guild.get_role(int(role_id))
+            if not role: continue
+            
+            if after.channel and not before.channel:
+                try: await member.add_roles(role, reason="Connect Role")
+                except: pass
+            elif not after.channel and before.channel:
+                try: await member.remove_roles(role, reason="Connect Role")
+                except: pass
+
+    # 2. Obsługa Logów Voice
+    if before.channel != after.channel:
+        embed = discord.Embed(color=get_embed_color(member.guild), timestamp=datetime.datetime.now())
+        embed.set_author(name=f"{member.display_name} - Voice", icon_url=member.display_avatar.url)
+        if before.channel is None:
+            embed.title = "🎙️ Połączono z Voice"
+            embed.description = f"Użytkownik dołączył do {after.channel.mention}"
+        elif after.channel is None:
+            embed.title = "🔇 Rozłączono z Voice"
+            embed.description = f"Użytkownik opuścił {before.channel.mention}"
+        else:
+            embed.title = "🔄 Zmiana kanału Voice"
+            embed.description = f"Przeniesiono z {before.channel.mention} do {after.channel.mention}"
+        await send_log(member.guild, "voice_activity", embed)
+
 
 
 @bot.event
 async def on_ready():
+    # Rejestracja stałych widoków (Persistent Views)
     bot.add_view(TicketActions())
-    print(f"[OK] Zalogowano jako {bot.user}")
-    from PIL import Image, ImageDraw, ImageFont
+    
+    # Synchronizacja komend slash
     try:
         await bot.tree.sync()
-        print("[OK] Komendy slash zsynchronizowane.")
+        print(f"[OK] Zalogowano jako {bot.user} i zsynchronizowano slash commands.")
     except Exception as e:
-        print("[OK] Komendy slash zsynchronizowane.")
+        print(f"[OK] Zalogowano jako {bot.user} (Slash sync error: {e})")
     
-    # Uruchomienie zadań w tle
+    # Uruchomienie zadań w tle (pętle)
     if not check_media_streams.is_running():
         check_media_streams.start()
+    
+    if not update_counters_loop.is_running():
+        update_counters_loop.start()
+
+    if not update_status_file.is_running():
+        update_status_file.start()
+
 
 # --- SYSTEM POWIADOMIEŃ O MEDIACH (YOUTUBE, TWITCH, TIKTOK, KICK) ---
 from discord.ext import tasks
@@ -1572,21 +1557,6 @@ async def on_guild_channel_delete(channel):
     embed.add_field(name="Nazwa", value=f"#{channel.name} ({channel.id})")
     await send_log(channel.guild, "guild_updates", embed)
 
-@bot.event
-async def on_voice_state_update(member, before, after):
-    if before.channel != after.channel:
-        embed = discord.Embed(color=get_embed_color(after.guild), timestamp=datetime.datetime.now())
-        embed.set_author(name=f"{member.display_name} - Voice", icon_url=member.display_avatar.url)
-        if before.channel is None:
-            embed.title = "🎙️ Połączono z Voice"
-            embed.description = f"Użytkownik dołączył do {after.channel.mention}"
-        elif after.channel is None:
-            embed.title = "🔇 Rozłączono z Voice"
-            embed.description = f"Użytkownik opuścił {before.channel.mention}"
-        else:
-            embed.title = "🔄 Zmiana kanału Voice"
-            embed.description = f"Przeniesiono z {before.channel.mention} do {after.channel.mention}"
-        await send_log(member.guild, "voice_activity", embed)
 
 @bot.event
 async def on_guild_role_create(role):
@@ -1677,21 +1647,6 @@ async def update_status_file():
                 if os.path.exists(sf): os.remove(sf)
     except: pass
 
-@bot.event
-async def on_ready():
-    bot.add_view(TicketActions())
-    if not update_status_file.is_running():
-        update_status_file.start()
-    if not check_media_streams.is_running():
-        check_media_streams.start()
-    if not update_counters_loop.is_running():
-        update_counters_loop.start()
-    
-    try:
-        await bot.tree.sync()
-        print(f"[OK] Zalogowano jako {bot.user} i zsynchronizowano slash commands.")
-    except Exception as e:
-        print(f"[OK] Zalogowano jako {bot.user} (Slash sync error: {e})")
 
 @tasks.loop(minutes=10)
 async def update_counters_loop():
@@ -1858,6 +1813,14 @@ async def handle_send_selfrole(request):
     return web.json_response({'success': True})
 
 async def run_internal_api():
+    # Próba zwolnienia portu 5006 przed startem (tylko lokalnie)
+    if sys.platform == 'win32':
+        try:
+            import os
+            # Zabijamy procesy na porcie 5006, aby uniknąć [Errno 10048]
+            os.system('for /f "tokens=5" %a in (\'netstat -aon ^| findstr :5006\') do taskkill /f /pid %a')
+        except: pass
+
     app = web.Application()
     app.add_routes([
         web.get('/latency', handle_latency),

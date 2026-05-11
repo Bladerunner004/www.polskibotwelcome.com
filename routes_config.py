@@ -36,7 +36,12 @@ def call_bot_api(endpoint, method="GET", data=None):
     # Zawsze przy POST tworzymy sygnał plikowy (dla PythonAnywhere)
     if method == "POST":
         try:
-            guild_id = endpoint.split('/')[2] if '/guilds/' in endpoint else None
+            guild_id = None
+            if '/guilds/' in endpoint:
+                guild_id = endpoint.split('/')[2]
+            elif data and isinstance(data, dict):
+                guild_id = data.get('guild_id') or data.get('server_id')
+            
             if guild_id:
                 with open(f"sync_needed_{guild_id}.json", "w") as f:
                     json.dump({"endpoint": endpoint, "time": time.time(), "data": data}, f)

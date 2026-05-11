@@ -2,8 +2,10 @@ import sys
 # Ustawienie kodowania dla Windows, aby uniknąć UnicodeEncodeError przy printowaniu emoji
 if sys.platform == 'win32':
     import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+    try: sys.stdout.reconfigure(encoding='utf-8')
+    except: pass
+    try: sys.stderr.reconfigure(encoding='utf-8')
+    except: pass
 
 import discord
 from discord.ext import commands, tasks
@@ -1842,47 +1844,63 @@ async def run_internal_api():
         print(f"[API] Błąd uruchamiania serwera komunikacji na porcie 5006: {e}")
 
 
+def update_emergency_status(msg):
+    """Zapisuje krytyczny bĹ‚Ä…d do pliku statusu, aby dashboard mĂłgĹ‚ go wyĹ›wietliÄ‡."""
+    try:
+        import json
+        import time
+        status = {
+            "latency": 0,
+            "last_seen": time.time(),
+            "status": "error",
+            "error_msg": msg
+        }
+        with open(STATUS_FILE_PATH, "w") as f:
+            json.dump(status, f)
+    except: pass
+
+
 async def run_bot():
     if not TOKEN: 
         print("[!] Brak tokena w .env")
+        update_emergency_status("Brak tokena DISCORD_BOT_TOKEN w pliku .env")
         return
     
-    # Uruchamiamy API w tej samej pętli co bot
+    # Uruchamiamy API w tle
     asyncio.create_task(run_internal_api())
     
     try:
+        print("[SYSTEM] PrĂłba poĹ‚Ä…czenia z Discordem...")
         await bot.start(TOKEN)
     except discord.LoginFailure:
-        print("[!] BĹ Ă„D LOGOWANIA: NieprawidĹ‚owy token bota!")
+        msg = "BĹ Ă„D LOGOWANIA: NieprawidĹ‚owy token bota!"
+        print(f"[!] {msg}")
+        update_emergency_status(msg)
     except discord.PrivilegedIntentsRequired:
-        print("\n[!] BĹ Ă„D INTENCJI: Brak uprawnieĹ„ 'Privileged Intents' na Discordzie.")
-        print("[!] TRYB AWARYJNY: PrĂłba uruchomienia z ograniczonymi funkcjami...\n")
+        msg = "BĹ Ă„D INTENCJI: Musisz wĹ‚Ä…czyÄ‡ 'Server Members Intent' oraz 'Message Content Intent' w Discord Developer Portal!"
+        print("\n" + "="*50)
+        print(f" [!] {msg}")
+        print("="*50 + "\n")
+        update_emergency_status(msg)
         
-        # Tworzymy nowe intencje bez tych problematycznych
-        new_intents = discord.Intents.default()
-        new_intents.members = False
-        new_intents.message_content = False
-        
-        # Re-inicjalizacja bota (musimy nadpisaÄ‡ globalny obiekt 'bot' lub stworzyÄ‡ nowÄ… instancjÄ™ w pÄ™tli)
-        # Jednak najbezpieczniej jest po prostu poinstruowaÄ‡ uĹĽytkownika, bo bot i tak musi byÄ‡ zrestartowany,
-        # by dziaĹ‚aĹ‚ Always-on. Ale dla Twojej proĹ›by - zrobimy tak, by proces nie padĹ‚:
+        # W trybie awaryjnym czekamy, aby proces nie padĹ‚ i API dziaĹ‚aĹ‚o
         while True:
-            print("[!] Czekam 60 sekund na poprawÄ™ ustawieĹ„ na Discordzie i prĂłbujÄ™ ponownie...")
-            await asyncio.sleep(60)
-            try:
-                await bot.start(TOKEN)
-                break
-            except: pass
+            await asyncio.sleep(30)
+            update_emergency_status(msg)
     except Exception as e:
-        print(f"[!] BĹ Ă„D KRYTYCZNY STARTU BOTA: {e}")
+        msg = f"BĹ Ă„D KRYTYCZNY: {e}"
+        print(f"[!] {msg}")
+        update_emergency_status(msg)
 
 if __name__ == "__main__":
     import sys
     # Ustawienie kodowania dla Windows, aby uniknąć UnicodeEncodeError
     if sys.platform == 'win32':
         import io
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+        try: sys.stdout.reconfigure(encoding='utf-8')
+        except: pass
+        try: sys.stderr.reconfigure(encoding='utf-8')
+        except: pass
 
     try:
         asyncio.run(run_bot())

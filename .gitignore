@@ -4,4 +4,6 @@ __pycache__/
 *.pyc
 .venv/
 bot_error.log
+bot_status.json
+scratch/
 # static/uploads/ (odkomentuj jeśli chcesz ignorować customowe uploady)

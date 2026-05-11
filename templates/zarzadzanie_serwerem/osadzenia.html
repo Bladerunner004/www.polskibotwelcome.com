@@ -339,7 +339,6 @@
         </div>
 
         <button type="button" class="btn-save" onclick="saveConfig('general')">ZAPISZ KONFIGURACJĘ</button>
-        <button type="button" class="btn-save" id="g-btn-send" style="background: linear-gradient(135deg, #00a8fc, #0078b1); margin-top: 10px; display: none;" onclick="sendEmbed('general')">WYŚLIJ NA DISCORDA</button>
         <button type="button" onclick="closeModal('general')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px; font-weight:bold;">ANULUJ</button>
     </div>
 </div>
@@ -406,7 +405,6 @@
         <input type="hidden" id="r-link-color" value="#00a8fc">
 
         <button type="button" class="btn-save" onclick="saveConfig('rules')">ZAPISZ KONFIGURACJĘ</button>
-        <button type="button" class="btn-save" id="r-btn-send" style="background: linear-gradient(135deg, #00a8fc, #0078b1); margin-top: 10px; display: none;" onclick="sendEmbed('rules')">WYŚLIJ NA DISCORDA</button>
         <button type="button" onclick="closeModal('rules')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px; font-weight:bold;">ANULUJ</button>
     </div>
 </div>
@@ -770,19 +768,9 @@
 
         renderLists(window.localEmbedConfigs);
         closeModal(type);
-        console.log("Osadzenie zapisane lokalnie:", config);
-    };
-
-    window.sendEmbed = async (type) => {
-        if (!editingId) return;
-        const btn = getE(type === 'rules' ? 'r-btn-send' : 'g-btn-send');
-        btn.innerText = 'WYSYŁANIE...'; btn.disabled = true;
-        try {
-            const res = await fetch(`${API}/embeds/${editingId}/send`, { method: 'POST' });
-            if ((await res.json()).success) alert('✅ Wysłano!');
-            else alert('❌ Błąd wysyłki.');
-        } catch(e) { alert('❌ Błąd połączenia.'); }
-        btn.innerText = 'WYŚLIJ NA DISCORDA'; btn.disabled = false;
+        
+        // AUTOMATYCZNA SYNCHRONIZACJA Z SERWEREM I BOTEM
+        if (window.syncAllEmbeds) window.syncAllEmbeds();
     };
 
     window.deleteEmbed = (id, e) => {
@@ -847,7 +835,21 @@
         getE('embed-count-hero').textContent = `${gCount + rCount} aktywnych`;
     }
 
-        window.getEmbedData = () => window.localEmbedConfigs;
+    window.getEmbedData = () => window.localEmbedConfigs;
+
+    window.syncAllEmbeds = async () => {
+        try {
+            const data = window.getEmbedData();
+            await fetch(`${API}/embeds_sync`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ configs: data })
+            });
+            console.log("✅ Osadzenia zsynchronizowane z botem.");
+        } catch (err) {
+            console.error("❌ Błąd synchronizacji osadzeń:", err);
+        }
+    };
 
     loadEmbeds();
 })();

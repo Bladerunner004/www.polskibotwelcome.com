@@ -514,9 +514,20 @@ def api_delete_media(guild_id, config_id):
 
 @config_bp.route('/api/<guild_id>/embeds_sync', methods=['POST'])
 def api_embeds_sync(guild_id):
-    from database import sync_embed_configs
+    from database import sync_embed_configs, get_embed_configs
     data = request.json
     ok = sync_embed_configs(guild_id, data)
+    
+    if ok:
+        # Powiadamiamy bota o wszystkich włączonych embedach
+        configs = get_embed_configs(guild_id)
+        for cfg in configs:
+            if cfg.get('enabled', 1):
+                call_bot_api("/send_embed", method="POST", data={
+                    'guild_id': guild_id,
+                    'config_id': cfg['id']
+                })
+                
     return jsonify({'success': ok})
 
 @config_bp.route('/api/<guild_id>/embeds', methods=['GET', 'POST'])

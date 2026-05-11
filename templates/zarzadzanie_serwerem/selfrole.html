@@ -503,6 +503,23 @@
 
         renderAll();
         closeSelfroleModal();
+        
+        // AUTOMATYCZNA SYNCHRONIZACJA Z SERWEREM I BOTEM
+        if (window.syncAllSelfrole) window.syncAllSelfrole();
+    };
+
+    window.syncAllSelfrole = async () => {
+        try {
+            const data = { configs: window.localSelfroleConfigs };
+            await fetch(`/api/${guildId}/selfrole/sync`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            console.log("✅ Selfrole zsynchronizowane z botem.");
+        } catch (err) {
+            console.error("❌ Błąd synchronizacji selfrole:", err);
+        }
     };
 
     window.editSelfrole = async function(id) {

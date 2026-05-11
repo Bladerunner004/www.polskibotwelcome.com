@@ -1715,9 +1715,10 @@ async def handle_send_embed(request):
     guild_id = data.get('guild_id')
     config_id = data.get('config_id')
     
-    from database import get_embed_configs
+    from database import get_embed_configs, DB_NAME
+    import sqlite3
     configs = get_embed_configs(guild_id)
-    cfg = next((c for c in configs if c['id'] == config_id), None)
+    cfg = next((c for c in configs if str(c['id']) == str(config_id)), None)
     if not cfg: return web.json_response({'success': False, 'error': 'Nie znaleziono configu'}, status=404)
     
     guild = bot.get_guild(int(guild_id))
@@ -1726,10 +1727,9 @@ async def handle_send_embed(request):
     channel = guild.get_channel(int(cfg['channel_id']))
     if not channel: return web.json_response({'success': False, 'error': 'Brak kanału'}, status=404)
 
-    # Budowanie Embedów (skrócona wersja logiczna, bot ma dostęp do discord.py)
     import discord
     
-    # Dynamiczny kolor: jeśli cfg['color'] jest puste, użyj get_embed_color(guild)
+    # Kolorystyka
     custom_color = cfg.get('color')
     if custom_color and custom_color.strip():
         try:
@@ -1739,11 +1739,67 @@ async def handle_send_embed(request):
     else:
         embed_color = get_embed_color(guild)
 
-    emb = discord.Embed(title=cfg.get('title', ''), description=cfg.get('description', ''), color=embed_color)
-    if cfg.get('footer'): emb.set_footer(text=cfg['footer'])
-    if cfg.get('image_url'): emb.set_image(url=cfg['image_url'])
+    # Budowanie listy EmbedĂłw
+    embeds = []
     
-    await channel.send(embed=emb)
+    if cfg.get('category') == 'rules':
+        try:
+            # PrĂłbujemy sparsowaÄ‡ bloki zasad
+            blocks = json.loads(cfg.get('description', '[]'))
+            if isinstance(blocks, list) and len(blocks) > 0:
+                for i, block in enumerate(blocks):
+                    eb = discord.Embed(description=block.get('text', ''), color=embed_color)
+                    if i == 0:
+                        eb.title = cfg.get('name', 'Regulamin')
+                        if cfg.get('author'): eb.set_author(name=cfg['author'], url=cfg.get('author_url'))
+                    if block.get('image'):
+                        eb.set_image(url=block['image'])
+                    if i == len(blocks) - 1:
+                        if cfg.get('footer'): eb.set_footer(text=cfg['footer'])
+                        if cfg.get('timestamp'): eb.timestamp = datetime.datetime.now()
+                    embeds.append(eb)
+            else:
+                # Fallback jeĹ›li JSON jest pusty lub nie jest listÄ…
+                e = discord.Embed(title=cfg.get('name', 'Regulamin'), description=cfg.get('description', ''), color=embed_color)
+                embeds.append(e)
+        except:
+            # Fallback jeĹ›li to nie JSON
+            e = discord.Embed(title=cfg.get('name', 'Regulamin'), description=cfg.get('description', ''), color=embed_color)
+            embeds.append(e)
+    else:
+        # Standardowy embed
+        e = discord.Embed(title=cfg.get('title', ''), description=cfg.get('description', ''), color=embed_color)
+        if cfg.get('footer'): e.set_footer(text=cfg['footer'])
+        if cfg.get('image_url'): e.set_image(url=cfg['image_url'])
+        if cfg.get('thumbnail_url'): e.set_thumbnail(url=cfg['thumbnail_url'])
+        if cfg.get('author'): e.set_author(name=cfg['author'], url=cfg.get('author_url'))
+        if cfg.get('title_url'): e.url = cfg['title_url']
+        if cfg.get('timestamp'): e.timestamp = datetime.datetime.now()
+        embeds.append(e)
+
+    msg = None
+    last_msg_id = cfg.get('last_message_id')
+    
+    if last_msg_id:
+        try:
+            old_msg = await channel.fetch_message(int(last_msg_id))
+            await old_msg.edit(embeds=embeds)
+            msg = old_msg
+        except: pass
+
+    if not msg:
+        msg = await channel.send(embeds=embeds)
+        try:
+            conn = sqlite3.connect(DB_NAME)
+            conn.cursor().execute("UPDATE embed_configs SET last_message_id = ? WHERE id = ?", (str(msg.id), config_id))
+            conn.commit()
+            conn.close()
+        except: pass
+        
+    if cfg.get('category') == 'rules' and cfg.get('reaction_emoji'):
+        try: await msg.add_reaction(cfg['reaction_emoji'])
+        except: pass
+
     return web.json_response({'success': True})
 
 async def send_selfrole_panel(channel, cfg):
@@ -1753,7 +1809,7 @@ async def send_selfrole_panel(channel, cfg):
     
     # Budowanie Embedu
     emb = discord.Embed(
-        title=cfg.get('name', 'Panel Ról'), 
+        title=cfg.get('name', 'Panel RĂłl'), 
         description=cfg.get('description', ''), 
         color=get_embed_color(channel.guild)
     )
@@ -1763,17 +1819,31 @@ async def send_selfrole_panel(channel, cfg):
         emb.set_image(url=cfg['image_url'])
     
     roles_data = json.loads(cfg.get('roles_json', '[]'))
+    msg = None
+    existing_msg_id = cfg.get('message_id')
     
+    # PrĂłba edycji istniejÄ…cej wiadomoĹ›ci
+    if existing_msg_id:
+        try:
+            msg = await channel.fetch_message(int(existing_msg_id))
+        except: pass
+
     if cfg['type'] == 'reaction':
-        msg = await channel.send(embed=emb)
-        # Zapisujemy message_id w bazie (dla obsługi reakcji)
-        from database import DB_NAME
-        import sqlite3
-        conn = sqlite3.connect(DB_NAME)
-        conn.cursor().execute("UPDATE self_role_configs SET message_id = ? WHERE id = ?", (str(msg.id), cfg['id']))
-        conn.commit()
-        conn.close()
+        if msg:
+            await msg.edit(embed=emb)
+        else:
+            msg = await channel.send(embed=emb)
+            # Zapisujemy message_id w bazie
+            from database import DB_NAME
+            import sqlite3
+            try:
+                conn = sqlite3.connect(DB_NAME)
+                conn.cursor().execute("UPDATE self_role_configs SET message_id = ? WHERE id = ?", (str(msg.id), cfg['id']))
+                conn.commit()
+                conn.close()
+            except: pass
         
+        # Aktualizacja reakcji
         for r in roles_data:
             try: await msg.add_reaction(r['emoji'])
             except: pass
@@ -1791,7 +1861,18 @@ async def send_selfrole_panel(channel, cfg):
                     )
                     self.add_item(btn)
         
-        await channel.send(embed=emb, view=RoleView())
+        if msg:
+            await msg.edit(embed=emb, view=RoleView())
+        else:
+            msg = await channel.send(embed=emb, view=RoleView())
+            from database import DB_NAME
+            import sqlite3
+            try:
+                conn = sqlite3.connect(DB_NAME)
+                conn.cursor().execute("UPDATE self_role_configs SET message_id = ? WHERE id = ?", (str(msg.id), cfg['id']))
+                conn.commit()
+                conn.close()
+            except: pass
 
 async def handle_send_selfrole(request):
     data = await request.json()

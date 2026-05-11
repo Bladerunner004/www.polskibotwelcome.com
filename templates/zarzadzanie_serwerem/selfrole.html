@@ -407,11 +407,18 @@
             thumbEl.style.display = 'none';
         }
 
-        const rgbMode = {{ 1 if main_settings.rgb_mode else 0 }};
-        const previewEl = document.querySelector('.discord-preview');
+        const rgbMode = {% if main_settings.rgb_mode %}true{% else %}false{% endif %};
+        const globalColor = "{{ main_settings.embed_color or '#74b816' }}";
+        const previewEl = document.getElementById('sr-preview-box');
+        
         if (previewEl) {
-            if (rgbMode) previewEl.classList.add('rgb-mode');
-            else previewEl.classList.remove('rgb-mode');
+            if (rgbMode) {
+                previewEl.classList.add('rgb-mode');
+                previewEl.style.borderLeftColor = ''; // Resetujemy, by animacja działała
+            } else {
+                previewEl.classList.remove('rgb-mode');
+                previewEl.style.borderLeftColor = globalColor;
+            }
         }
 
         if(imgUrl) {

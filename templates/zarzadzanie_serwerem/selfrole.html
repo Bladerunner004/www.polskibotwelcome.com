@@ -407,8 +407,8 @@
             thumbEl.style.display = 'none';
         }
 
-        const rgbMode = {% if main_settings.rgb_mode %}true{% else %}false{% endif %};
-        const globalColor = "{{ main_settings.embed_color or '#74b816' }}";
+        const rgbMode = window.mainSettings.rgb_mode;
+        const globalColor = window.mainSettings.embed_color;
         const previewEl = document.getElementById('sr-preview-box');
         
         if (previewEl) {

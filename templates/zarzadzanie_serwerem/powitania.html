@@ -500,8 +500,8 @@
     };
 
     window.updateEmbedColor = () => {
-        const globalColor = '{{ main_settings.embed_color or "#74b816" }}';
-        const globalRGB = {{ 1 if main_settings.rgb_mode else 0 }};
+        const globalColor = window.mainSettings.embed_color;
+        const globalRGB = window.mainSettings.rgb_mode;
         const embed = document.getElementById('embed-box');
         
         if (globalRGB) {

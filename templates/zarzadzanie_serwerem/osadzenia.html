@@ -458,8 +458,8 @@
         }
 
         // Aktualizacja kolorów (Nowe)
-        const globalColor = "{{ main_settings.embed_color or '#74b816' }}";
-        const globalRgb = {% if main_settings.rgb_mode %}true{% else %}false{% endif %};
+        const globalColor = window.mainSettings.embed_color;
+        const globalRgb = window.mainSettings.rgb_mode;
         
         let embedColor = isPersonalized ? getV(p + '-color') : globalColor;
         let linkColor = isPersonalized ? getV(p + '-link-color') : globalColor;
@@ -516,7 +516,7 @@
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
         
-        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const isPremium = window.mainSettings.premium;
         const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
         if (isGif && !isPremium) {
             alert('⚠️ Animowane obrazy (GIF) są dostępne tylko dla serwerów z aktywnym pakietem PREMIUM!');
@@ -547,7 +547,7 @@
         if (!input.files || !input.files[0]) return;
         
         const file = input.files[0];
-        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const isPremium = window.mainSettings.premium;
         const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
 
         if (isGif && !isPremium) {

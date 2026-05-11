@@ -496,6 +496,7 @@
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
             
             try {
+                const API = `/api/{{ guild.id }}`;
                 const prefix = document.getElementById('prefix-input-field')?.value || '!';
                 const language = document.getElementById('language-select')?.value || 'pl';
                 const embedColor = document.getElementById('global-embed-color')?.value || '#74b816';
@@ -540,17 +541,17 @@
                 // 2. Moduł: Powitania
                 if (window.getWelcomeData) {
                     const welcomeData = window.getWelcomeData();
-                    await fetch(`/api/{{ guild.id }}/welcome_sync`, {
+                    await fetch(`${API}/welcome_sync`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(welcomeData)
                     });
                 }
 
-                // 3. Moduł: Osadzenia (Embedy)
+                // 3. Moduł: Osadzenia (w tym Zasady)
                 if (window.getEmbedData) {
                     const embedData = window.getEmbedData();
-                    await fetch(`/api/{{ guild.id }}/embeds_sync`, {
+                    await fetch(`${API}/embeds_sync`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ configs: embedData })
@@ -560,7 +561,7 @@
                 // 3.5 Moduł: Selfrole
                 if (window.getSelfroleData) {
                     const selfroleData = window.getSelfroleData();
-                    await fetch(`/api/{{ guild.id }}/selfrole/sync`, {
+                    await fetch(`${API}/selfrole/sync`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(selfroleData)

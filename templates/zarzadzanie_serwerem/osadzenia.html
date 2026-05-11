@@ -706,7 +706,6 @@
 
             getE(p + 'p-toggle').checked = !!cfg.title_url;
             togglePersonalizacja(p);
-            getE(p + '-btn-send').style.display = 'block';
             getE('modal-general').classList.add('active');
         }
     };
@@ -739,10 +738,12 @@
         const hasPersonalization = !isRules && getE(p + 'p-toggle');
         const isPersonalized = hasPersonalization ? getE(p + 'p-toggle').checked : false;
 
+        const oldCfg = window.localEmbedConfigs.find(c => c.id === editingId);
         const config = {
             id: editingId || Date.now(),
             category: type,
             name: name,
+            last_message_id: oldCfg ? oldCfg.last_message_id : '',
             channel_id: getV(p + '-channel'),
             author: isRules ? '' : getT(p + 'e-author'),
             author_url: isRules ? '' : (isPersonalized ? (getV(p + '-author-url') || '') : ''),

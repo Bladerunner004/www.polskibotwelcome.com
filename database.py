@@ -878,8 +878,8 @@ def sync_embed_configs(guild_id, data):
         for cfg in configs:
             c.execute('''
                 INSERT INTO embed_configs 
-                    (guild_id, category, name, channel_id, author, author_url, title, title_url, description, footer, color, link_color, thumbnail_url, image_url, reaction_emoji, reaction_role_id, timestamp, enabled)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (guild_id, category, name, channel_id, author, author_url, title, title_url, description, footer, color, link_color, thumbnail_url, image_url, reaction_emoji, reaction_role_id, timestamp, enabled, last_message_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 str(guild_id), cfg.get('category', 'general'), cfg.get('name', ''),
                 cfg.get('channel_id', ''), cfg.get('author', ''), cfg.get('author_url', ''),
@@ -888,11 +888,22 @@ def sync_embed_configs(guild_id, data):
                 cfg.get('thumbnail_url', ''), cfg.get('image_url', ''),
                 cfg.get('reaction_emoji', ''), cfg.get('reaction_role_id', ''),
                 1 if cfg.get('timestamp') else 0,
-                1 if cfg.get('enabled', True) else 0
+                1 if cfg.get('enabled', True) else 0,
+                cfg.get('last_message_id', '')
             ))
             
         conn.commit()
         conn.close()
+        
+        # Tworzymy sygnaĹ‚ synchronizacji dla bota
+        try:
+            import json
+            import time
+            filename = f"sync_needed_{guild_id}_{int(time.time()*1000)}.json"
+            with open(filename, "w") as f:
+                json.dump({"endpoint": "/send_embed_all", "guild_id": guild_id}, f)
+        except: pass
+
         return True
     except Exception as e:
         print(f"âťŚ BĹ‚Ä…d sync_embed_configs: {e}")
@@ -974,12 +985,12 @@ def sync_selfrole_configs(guild_id, data):
         configs = data.get('configs', [])
         for cfg in configs:
             c.execute('''
-                INSERT INTO self_role_configs (guild_id, type, name, channel_id, message_id, role_id, roles_json, enabled, image_url, thumbnail_url, description)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO self_role_configs (guild_id, type, name, channel_id, message_id, roles_json, enabled, image_url, thumbnail_url, description)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 str(guild_id), cfg.get('type', 'reaction'), cfg.get('name', ''),
                 cfg.get('channel_id', ''), cfg.get('message_id', ''),
-                cfg.get('role_id', ''), cfg.get('roles_json', '[]'),
+                cfg.get('roles_json', '[]'),
                 1 if cfg.get('enabled', True) else 0,
                 cfg.get('image_url', ''), cfg.get('thumbnail_url', ''),
                 cfg.get('description', '')
@@ -987,6 +998,16 @@ def sync_selfrole_configs(guild_id, data):
 
         conn.commit()
         conn.close()
+
+        # Tworzymy sygnaĹ‚ synchronizacji dla bota
+        try:
+            import json
+            import time
+            filename = f"sync_needed_{guild_id}_{int(time.time()*1000)}.json"
+            with open(filename, "w") as f:
+                json.dump({"endpoint": "/send_selfrole_all", "guild_id": guild_id}, f)
+        except: pass
+
         return True
     except Exception as e:
         print(f"âťŚ BĹ‚Ä…d synchronizacji self_role_configs: {e}")

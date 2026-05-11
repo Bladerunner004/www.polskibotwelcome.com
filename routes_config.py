@@ -43,7 +43,10 @@ def call_bot_api(endpoint, method="GET", data=None):
                 guild_id = data.get('guild_id') or data.get('server_id')
             
             if guild_id:
-                with open(f"sync_needed_{guild_id}.json", "w") as f:
+                filename = f"sync_needed_{guild_id}_{int(time.time()*1000)}.json"
+                filepath = os.path.join(os.getcwd(), filename)
+                print(f"[DASHBOARD] Tworzenie sygnalu synchronizacji: {filepath}")
+                with open(filepath, "w") as f:
                     json.dump({"endpoint": endpoint, "time": time.time(), "data": data}, f)
         except: pass
 

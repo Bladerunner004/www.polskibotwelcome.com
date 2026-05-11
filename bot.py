@@ -1608,46 +1608,37 @@ async def update_status_file():
                         await update_counters(guild)
                     elif "sync_boosters" in endpoint:
                         await sync_booster_roles(guild)
-                    elif "send_embed" in endpoint:
-                        # Emulacja handle_send_embed
-                        config_id = payload.get('config_id')
+                    elif "send_embed_all" in endpoint:
+                        # PeĹ‚na synchronizacja embedĂłw
                         from database import get_embed_configs
                         configs = get_embed_configs(guild_id)
-                        cfg = next((c for c in configs if c['id'] == config_id), None)
-                        if cfg:
-                            channel = guild.get_channel(int(cfg['channel_id']))
-                            if channel:
-                                # Dynamiczny kolor
-                                custom_color = cfg.get('color')
-                                embed_color = int(custom_color.replace('#', ''), 16) if custom_color and custom_color.strip() else get_embed_color(guild)
-                                emb = discord.Embed(title=cfg.get('title', ''), description=cfg.get('description', ''), color=embed_color)
-                                if cfg.get('footer'): emb.set_footer(text=cfg['footer'])
-                                if cfg.get('image_url'): emb.set_image(url=cfg['image_url'])
-                                if cfg.get('thumbnail_url'): emb.set_thumbnail(url=cfg['thumbnail_url'])
-                                if cfg.get('author'): emb.set_author(name=cfg['author'], icon_url=cfg.get('author_url'))
-                                await channel.send(embed=emb)
-                    elif "send_selfrole" in endpoint:
-                        # Emulacja handle_send_selfrole
-                        config_id = payload.get('config_id')
+                        for cfg in configs:
+                            if cfg.get('enabled', 1):
+                                # Dynamicznie tworzymy FakeRequest, aby handle_send_embed zadziaĹ‚aĹ‚o
+                                class FakeReq:
+                                    async def json(self): return {'guild_id': guild_id, 'config_id': cfg['id']}
+                                await handle_send_embed(FakeReq())
+                    elif "send_selfrole_all" in endpoint:
+                        # PeĹ‚na synchronizacja selfrole
                         from database import get_selfrole_configs
                         configs = get_selfrole_configs(guild_id)
-                        cfg = next((c for c in configs if str(c['id']) == str(config_id)), None)
-                        if cfg:
-                            channel = guild.get_channel(int(cfg['channel_id']))
-                            if channel:
-                                await send_selfrole_panel(channel, cfg) # Potrzebujemy tej funkcji pomocniczej
-                    elif "test_welcome" in endpoint:
-                        # Emulacja handle_test_welcome
-                        config_id = payload.get('config_id')
-                        type = payload.get('type')
-                        member = guild.members[0] if guild.members else bot.user
-                        await send_welcome_message(guild, member, type, target_id=config_id)
+                        for cfg in configs:
+                            if cfg.get('enabled', 1):
+                                class FakeReq:
+                                    async def json(self): return {'guild_id': guild_id, 'config_id': cfg['id']}
+                                await handle_send_selfrole(FakeReq())
+                    elif "send_embed" in endpoint:
+                        # ... (stare, ale zostawiamy dla kompatybilnoĹ›ci)
+                        class FakeRequest:
+                            async def json(self): return payload
+                        await handle_send_embed(FakeRequest())
                         
                 os.remove(sf) # Usuwamy plik po obsłużeniu
             except Exception as e:
                 print(f"[SYNC ERROR] {sf}: {e}")
                 if os.path.exists(sf): os.remove(sf)
-    except: pass
+    except Exception as e:
+        print(f"[STATUS ERROR] {e}")
 
 
 @tasks.loop(minutes=10)
@@ -1714,6 +1705,7 @@ async def handle_send_embed(request):
     data = await request.json()
     guild_id = data.get('guild_id')
     config_id = data.get('config_id')
+    print(f"[API] Proba wyslania embedu: guild={guild_id}, config={config_id}")
     
     from database import get_embed_configs, DB_NAME
     import sqlite3
@@ -1940,6 +1932,13 @@ def update_emergency_status(msg):
             json.dump(status, f)
     except: pass
 
+
+@bot.event
+async def on_ready():
+    print(f"[SYSTEM] Zalogowano jako {bot.user}")
+    update_status_file.start()
+    update_counters_loop.start()
+    print("[SYSTEM] Zadania tĹ‚a uruchomione.")
 
 async def run_bot():
     if not TOKEN: 

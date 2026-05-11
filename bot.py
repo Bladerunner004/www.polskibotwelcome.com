@@ -1630,10 +1630,46 @@ async def update_status_file():
                 
                 if guild:
                     endpoint = data.get('endpoint', '')
+                    payload = data.get('data', {})
+
                     if "sync_counters" in endpoint:
                         await update_counters(guild)
                     elif "sync_boosters" in endpoint:
                         await sync_booster_roles(guild)
+                    elif "send_embed" in endpoint:
+                        # Emulacja handle_send_embed
+                        config_id = payload.get('config_id')
+                        from database import get_embed_configs
+                        configs = get_embed_configs(guild_id)
+                        cfg = next((c for c in configs if c['id'] == config_id), None)
+                        if cfg:
+                            channel = guild.get_channel(int(cfg['channel_id']))
+                            if channel:
+                                # Dynamiczny kolor
+                                custom_color = cfg.get('color')
+                                embed_color = int(custom_color.replace('#', ''), 16) if custom_color and custom_color.strip() else get_embed_color(guild)
+                                emb = discord.Embed(title=cfg.get('title', ''), description=cfg.get('description', ''), color=embed_color)
+                                if cfg.get('footer'): emb.set_footer(text=cfg['footer'])
+                                if cfg.get('image_url'): emb.set_image(url=cfg['image_url'])
+                                if cfg.get('thumbnail_url'): emb.set_thumbnail(url=cfg['thumbnail_url'])
+                                if cfg.get('author'): emb.set_author(name=cfg['author'], icon_url=cfg.get('author_url'))
+                                await channel.send(embed=emb)
+                    elif "send_selfrole" in endpoint:
+                        # Emulacja handle_send_selfrole
+                        config_id = payload.get('config_id')
+                        from database import get_selfrole_configs
+                        configs = get_selfrole_configs(guild_id)
+                        cfg = next((c for c in configs if str(c['id']) == str(config_id)), None)
+                        if cfg:
+                            channel = guild.get_channel(int(cfg['channel_id']))
+                            if channel:
+                                await send_selfrole_panel(channel, cfg) # Potrzebujemy tej funkcji pomocniczej
+                    elif "test_welcome" in endpoint:
+                        # Emulacja handle_test_welcome
+                        config_id = payload.get('config_id')
+                        type = payload.get('type')
+                        member = guild.members[0] if guild.members else bot.user
+                        await send_welcome_message(guild, member, type, target_id=config_id)
                         
                 os.remove(sf) # Usuwamy plik po obsłużeniu
             except Exception as e:
@@ -1753,23 +1789,7 @@ async def handle_send_embed(request):
     await channel.send(embed=emb)
     return web.json_response({'success': True})
 
-async def handle_send_selfrole(request):
-    data = await request.json()
-    guild_id = data.get('guild_id')
-    config_id = data.get('config_id')
-    
-    from database import get_selfrole_configs
-    configs = get_selfrole_configs(guild_id)
-    # Znajdź konfigurację po ID (może być int lub str w zależności od bazy)
-    cfg = next((c for c in configs if str(c['id']) == str(config_id)), None)
-    if not cfg: return web.json_response({'success': False, 'error': 'Nie znaleziono configu'}, status=404)
-    
-    guild = bot.get_guild(int(guild_id))
-    if not guild: return web.json_response({'success': False, 'error': 'Bot poza serwerem'}, status=404)
-    
-    channel = guild.get_channel(int(cfg['channel_id']))
-    if not channel: return web.json_response({'success': False, 'error': 'Brak kanału'}, status=404)
-
+async def send_selfrole_panel(channel, cfg):
     import json
     import discord
     from discord import ui
@@ -1778,7 +1798,7 @@ async def handle_send_selfrole(request):
     emb = discord.Embed(
         title=cfg.get('name', 'Panel Ról'), 
         description=cfg.get('description', ''), 
-        color=get_embed_color(guild)
+        color=get_embed_color(channel.guild)
     )
     if cfg.get('thumbnail_url'):
         emb.set_thumbnail(url=cfg['thumbnail_url'])
@@ -1815,6 +1835,25 @@ async def handle_send_selfrole(request):
                     self.add_item(btn)
         
         await channel.send(embed=emb, view=RoleView())
+
+async def handle_send_selfrole(request):
+    data = await request.json()
+    guild_id = data.get('guild_id')
+    config_id = data.get('config_id')
+    
+    from database import get_selfrole_configs
+    configs = get_selfrole_configs(guild_id)
+    cfg = next((c for c in configs if str(c['id']) == str(config_id)), None)
+    if not cfg: return web.json_response({'success': False, 'error': 'Nie znaleziono configu'}, status=404)
+    
+    guild = bot.get_guild(int(guild_id))
+    if not guild: return web.json_response({'success': False, 'error': 'Bot poza serwerem'}, status=404)
+    
+    channel = guild.get_channel(int(cfg['channel_id']))
+    if not channel: return web.json_response({'success': False, 'error': 'Brak kanału'}, status=404)
+
+    await send_selfrole_panel(channel, cfg)
+    return web.json_response({'success': True})
         
     return web.json_response({'success': True})
 

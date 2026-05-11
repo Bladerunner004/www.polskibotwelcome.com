@@ -513,7 +513,7 @@ def get_settings(guild_id):
                            'counter_humans_enabled', 'counter_bots_enabled', 'counter_bans_enabled',
                            'counter_humans_thousands', 'counter_bots_thousands', 'counter_bans_thousands',
                            'autorole_booster_remove', 'logs_join_leave', 'logs_mod_actions',
-                           'logs_role_updates', 'logs_voice_activity', 'logs_guild_updates', 'logs_msg_updates']
+                           'logs_role_updates', 'logs_voice_activity', 'logs_guild_updates', 'logs_msg_updates', 'rgb_mode']
             for field in bool_fields:
                 if field in res:
                     res[field] = (res[field] == 1)
@@ -573,8 +573,8 @@ def save_settings(guild_id, ticket, moderation, levels, prefix="!", language="pl
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
         c.execute('''
-            INSERT INTO settings (guild_id, ticket_enabled, moderation_enabled, levels_enabled, prefix, language, embed_color, rgb_mode, moderation_confirm, automod_antilink, automod_anticaps, automod_antispam, automod_badwords, automod_badwords_list)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO settings (guild_id, ticket_enabled, moderation_enabled, levels_enabled, prefix, language, embed_color, rgb_mode, moderation_confirm, automod_antilink, automod_anticaps, automod_antispam, automod_badwords, automod_badwords_list, automod_antiphishing)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(guild_id) DO UPDATE SET
                 ticket_enabled=excluded.ticket_enabled,
                 moderation_enabled=excluded.moderation_enabled,

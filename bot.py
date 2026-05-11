@@ -1735,7 +1735,18 @@ async def handle_send_embed(request):
 
     # Budowanie Embedów (skrócona wersja logiczna, bot ma dostęp do discord.py)
     import discord
-    emb = discord.Embed(title=cfg.get('title', ''), description=cfg.get('description', ''), color=int(cfg.get('color', '#74b816').replace('#', ''), 16))
+    
+    # Dynamiczny kolor: jeśli cfg['color'] jest puste, użyj get_embed_color(guild)
+    custom_color = cfg.get('color')
+    if custom_color and custom_color.strip():
+        try:
+            embed_color = int(custom_color.replace('#', ''), 16)
+        except:
+            embed_color = get_embed_color(guild)
+    else:
+        embed_color = get_embed_color(guild)
+
+    emb = discord.Embed(title=cfg.get('title', ''), description=cfg.get('description', ''), color=embed_color)
     if cfg.get('footer'): emb.set_footer(text=cfg['footer'])
     if cfg.get('image_url'): emb.set_image(url=cfg['image_url'])
     

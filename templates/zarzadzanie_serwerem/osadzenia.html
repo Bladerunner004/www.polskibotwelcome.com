@@ -458,12 +458,22 @@
         }
 
         // Aktualizacja kolorów (Nowe)
-        const embedColor = getV(p + '-color');
-        const linkColor = getV(p + '-link-color');
+        const globalColor = "{{ main_settings.embed_color or '#74b816' }}";
+        const globalRgb = {% if main_settings.rgb_mode %}true{% else %}false{% endif %};
+        
+        let embedColor = isPersonalized ? getV(p + '-color') : globalColor;
+        let linkColor = isPersonalized ? getV(p + '-link-color') : globalColor;
+        
         const embedEl = getE(p + 'e-preview');
         
         if (embedEl) {
-            embedEl.style.borderLeftColor = embedColor;
+            // Obsługa RGB dla podglądu
+            if (globalRgb && !isPersonalized) {
+                embedEl.classList.add('rgb-mode');
+            } else {
+                embedEl.classList.remove('rgb-mode');
+                embedEl.style.borderLeftColor = embedColor;
+            }
         }
         titleEl.style.color = linkColor;
     };
@@ -742,8 +752,8 @@
             title_url: isRules ? '' : (isPersonalized ? getV(p + '-title-url') : ''),
             description: finalDesc,
             footer: isRules ? '' : getT(p + 'e-footer'),
-            color: getV(p + '-color'),
-            link_color: getV(p + '-link-color'),
+            color: isPersonalized ? getV(p + '-color') : '',
+            link_color: isPersonalized ? getV(p + '-link-color') : '',
             thumbnail_url: isRules ? '' : getV(p + '-thumb-url'),
             image_url: isRules ? '' : getV(p + '-large-url'),
             reaction_emoji: isRules ? getV('r-reaction-emoji') : '',

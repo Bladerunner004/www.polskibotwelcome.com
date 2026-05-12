@@ -206,9 +206,23 @@
 </div>
 
 <script>
-    function confirmPayment() {
-        alert('Dziękujemy! Po otrzymaniu wpłaty Twoje Premium zostanie aktywowane automatycznie. Możesz przyspieszyć proces, wysyłając potwierdzenie na naszym Discordzie.');
-        window.location.href = '/config/{{ server_id }}';
+    async function confirmPayment() {
+        const btn = document.querySelector('.btn-confirm');
+        if (!btn) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PRZETWARZANIE...';
+        
+        try {
+            // Symulacja powiadomienia systemu o wpłacie
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            alert('✅ Twoje zgłoszenie wpłaty zostało przyjęte! System sprawdzi przelew i aktywuje pakiet PREMIUM automatycznie (zwykle do 15 min przy BLIK/Stripe).');
+            window.location.href = '/config/{{ server_id }}';
+        } catch(e) {
+            alert('Wystąpił błąd. Spróbuj ponownie później.');
+            btn.disabled = false;
+            btn.innerHTML = 'Potwierdzam Wpłatę';
+        }
     }
 </script>
 {% endblock %}

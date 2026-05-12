@@ -515,26 +515,19 @@
                 }
 
                 const rgbSwitch = document.getElementById('global-rgb-switch');
-                if (rgbSwitch) {
-                    rgbSwitch.addEventListener('change', (e) => {
-                        if (!e.target.checked) {
-                            const newColor = document.getElementById('global-embed-color').value;
-                            document.documentElement.style.setProperty('--bot-color', newColor);
-                        }
-                    });
-                }
+                const rgbMode = rgbSwitch?.checked ? 1 : 0;
                 
                 const cmdCbs = document.querySelectorAll('.command-checkbox:checked');
                 const enabledCmds = Array.from(cmdCbs).map(cb => cb.value);
                 
                 // Nowe: Pobieranie ustawień moderacji i AutoMod
-                const modEnabled = document.getElementById('mod-enabled-switch')?.checked;
-                const modConfirm = document.getElementById('mod-confirm-switch')?.checked;
-                const amAntilink = document.getElementById('automod-antilink-switch')?.checked;
-                const amAnticaps = document.getElementById('automod-anticaps-switch')?.checked;
-                const amAntispam = document.getElementById('automod-antispam-switch')?.checked;
-                const amBadwords = document.getElementById('automod-badwords-switch')?.checked;
-                const amAntiphishing = document.getElementById('automod-antiphishing-switch')?.checked;
+                const modEnabled = document.getElementById('mod-enabled-switch')?.checked ? 1 : 0;
+                const modConfirm = document.getElementById('mod-confirm-switch')?.checked ? 1 : 0;
+                const amAntilink = document.getElementById('automod-antilink-switch')?.checked ? 1 : 0;
+                const amAnticaps = document.getElementById('automod-anticaps-switch')?.checked ? 1 : 0;
+                const amAntispam = document.getElementById('automod-antispam-switch')?.checked ? 1 : 0;
+                const amBadwords = document.getElementById('automod-badwords-switch')?.checked ? 1 : 0;
+                const amAntiphishing = document.getElementById('automod-antiphishing-switch')?.checked ? 1 : 0;
                 
                 // 1. Zapisywanie ustawień głównych (Prefix + Komendy + Język + Kolor + Moderacja + AutoMod)
                 await fetch(`/config/{{ guild.id }}`, {

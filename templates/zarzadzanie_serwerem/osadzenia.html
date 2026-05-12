@@ -835,10 +835,10 @@
     window.syncAllEmbeds = async function() {
         try {
             const configs = window.localEmbedConfigs;
-            const response = await fetch(`${API}/embeds_sync`, {
+            const response = await fetch(API + '/embeds_sync', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ configs })
+                body: JSON.stringify({ configs: configs })
             });
             if (response.ok) {
                 console.log("✅ Osadzenia zsynchronizowane z botem.");

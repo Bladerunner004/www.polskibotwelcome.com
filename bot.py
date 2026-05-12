@@ -1169,7 +1169,10 @@ async def on_message(message):
 
     # --- ANTY-BADWORDS SYSTEM ---
     if settings.get("automod_badwords"):
-        custom_list = json.loads(settings.get("automod_badwords_list", "[]"))
+        try:
+            custom_list = json.loads(settings.get("automod_badwords_list", "[]"))
+        except:
+            custom_list = []
         if check_badwords(message.content, custom_list):
             if not message.author.guild_permissions.manage_messages:
                 try:
@@ -1824,8 +1827,12 @@ async def handle_send_embed(request):
     
     if cfg.get('category') == 'rules':
         try:
-            # PrĂłbujemy sparsowaÄ‡ bloki zasad
-            blocks = json.loads(cfg.get('description', '[]'))
+            # Próbujemy sparsować bloki zasad
+            try:
+                blocks = json.loads(cfg.get('description', '[]'))
+            except:
+                blocks = []
+                
             if isinstance(blocks, list) and len(blocks) > 0:
                 for i, block in enumerate(blocks):
                     eb = discord.Embed(description=block.get('text', ''), color=embed_color)
@@ -1898,7 +1905,11 @@ async def send_selfrole_panel(channel, cfg):
     if cfg.get('image_url'):
         emb.set_image(url=cfg['image_url'])
     
-    roles_data = json.loads(cfg.get('roles_json', '[]'))
+    try:
+        roles_data = json.loads(cfg.get('roles_json', '[]'))
+    except:
+        roles_data = []
+        
     msg = None
     existing_msg_id = cfg.get('message_id')
     

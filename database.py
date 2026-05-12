@@ -989,44 +989,13 @@ def get_embed_configs(guild_id):
         return []
 
 def sync_embed_configs(guild_id, data):
-    """Synchronizuje caĹ‚Ä… listÄ™ embedĂłw dla serwera."""
+    """Synchronizuje całą listę embedów dla serwera (bez usuwania wszystkiego)."""
     try:
-        conn = sqlite3.connect(DB_NAME, timeout=10)
-        c = conn.cursor()
-        
-        # Usuwamy stare
-        c.execute('DELETE FROM embed_configs WHERE guild_id=?', (str(guild_id),))
-        
         configs = data.get('configs', [])
         for cfg in configs:
-            c.execute('''
-                INSERT INTO embed_configs 
-                    (guild_id, category, name, channel_id, author, author_url, title, title_url, description, footer, color, link_color, thumbnail_url, image_url, reaction_emoji, reaction_role_id, timestamp, enabled, last_message_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                str(guild_id), cfg.get('category', 'general'), cfg.get('name', ''),
-                cfg.get('channel_id', ''), cfg.get('author', ''), cfg.get('author_url', ''),
-                cfg.get('title', ''), cfg.get('title_url', ''), cfg.get('description', ''), 
-                cfg.get('footer', ''), cfg.get('color', '#74b816'), cfg.get('link_color', '#00a8fc'),
-                cfg.get('thumbnail_url', ''), cfg.get('image_url', ''),
-                cfg.get('reaction_emoji', ''), cfg.get('reaction_role_id', ''),
-                1 if cfg.get('timestamp') else 0,
-                1 if cfg.get('enabled', True) else 0,
-                cfg.get('last_message_id', '')
-            ))
-            
-        conn.commit()
-        conn.close()
+            save_embed_config(guild_id, cfg, cfg.get('id'))
         
-        # Tworzymy sygnaĹ‚ synchronizacji dla bota
-        try:
-            import json
-            import time
-            filename = f"sync_needed_{guild_id}_{int(time.time()*1000)}.json"
-            with open(filename, "w") as f:
-                json.dump({"endpoint": "/send_embed_all", "guild_id": guild_id}, f)
-        except: pass
-
+        # Tworzymy sygnał synchronizacji dla bota (opcjonalnie)
         return True
     except Exception as e:
         print(f"âťŚ BĹ‚Ä…d sync_embed_configs: {e}")
@@ -1099,42 +1068,51 @@ def get_selfrole_configs(guild_id):
         return []
 
 def sync_selfrole_configs(guild_id, data):
-    """Synchronizuje listÄ™ Selfrole."""
+    """Synchronizuje całą listę Selfrole dla serwera (bez usuwania wszystkiego)."""
+    try:
+        configs = data.get('configs', [])
+        for cfg in configs:
+            save_selfrole_config(guild_id, cfg, cfg.get('id'))
+        return True
+    except Exception as e:
+        print(f"❌ Błąd synchronizacji self_role_configs: {e}")
+        return False
+
+def save_selfrole_config(guild_id, data, config_id=None):
+    """Zapisuje lub aktualizuje pojedynczą konfigurację Selfrole."""
     try:
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
-        c.execute('DELETE FROM self_role_configs WHERE guild_id=?', (str(guild_id),))
         
-        configs = data.get('configs', [])
-        for cfg in configs:
-            c.execute('''
-                INSERT INTO self_role_configs (guild_id, type, name, channel_id, message_id, roles_json, enabled, image_url, thumbnail_url, description)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                str(guild_id), cfg.get('type', 'reaction'), cfg.get('name', ''),
-                cfg.get('channel_id', ''), cfg.get('message_id', ''),
-                cfg.get('roles_json', '[]'),
-                1 if cfg.get('enabled', True) else 0,
-                cfg.get('image_url', ''), cfg.get('thumbnail_url', ''),
-                cfg.get('description', '')
-            ))
+        roles_json = data.get('roles_json', '[]')
+        if not isinstance(roles_json, str):
+            import json
+            roles_json = json.dumps(roles_json)
 
+        if config_id:
+            c.execute('''UPDATE self_role_configs SET 
+                         type=?, name=?, channel_id=?, message_id=?, roles_json=?, enabled=?, image_url=?, thumbnail_url=?, description=? 
+                         WHERE id=? AND guild_id=?''',
+                      (data.get('type', 'reaction'), data.get('name', ''), data.get('channel_id', ''), 
+                       data.get('message_id', ''), roles_json, 1 if data.get('enabled') else 0,
+                       data.get('image_url', ''), data.get('thumbnail_url', ''), data.get('description', ''),
+                       config_id, str(guild_id)))
+            new_id = config_id
+        else:
+            c.execute('''INSERT INTO self_role_configs (guild_id, type, name, channel_id, message_id, roles_json, enabled, image_url, thumbnail_url, description)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                      (str(guild_id), data.get('type', 'reaction'), data.get('name', ''),
+                       data.get('channel_id', ''), data.get('message_id', ''),
+                       roles_json, 1 if data.get('enabled') else 0,
+                       data.get('image_url', ''), data.get('thumbnail_url', ''), data.get('description', '')))
+            new_id = c.lastrowid
+            
         conn.commit()
         conn.close()
-
-        # Tworzymy sygnaĹ‚ synchronizacji dla bota
-        try:
-            import json
-            import time
-            filename = f"sync_needed_{guild_id}_{int(time.time()*1000)}.json"
-            with open(filename, "w") as f:
-                json.dump({"endpoint": "/send_selfrole_all", "guild_id": guild_id}, f)
-        except: pass
-
-        return True
+        return new_id
     except Exception as e:
-        print(f"âťŚ BĹ‚Ä…d synchronizacji self_role_configs: {e}")
-        return False
+        print(f"❌ Błąd zapisu selfrole_config: {e}")
+        return None
 
 def is_premium(guild_id):
     """Sprawdza, czy serwer posiada status Premium."""

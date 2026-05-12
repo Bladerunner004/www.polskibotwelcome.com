@@ -433,7 +433,9 @@
             </div>
         </div>
 
-        <button type="button" class="btn-save" onclick="saveWelcomeConfig()">ZAPISZ KONFIGURACJĘ</button>
+        <button type="button" class="btn-save" onclick="saveWelcomeConfig(true)">ZAPISZ I WYŚLIJ TEST</button>
+        <button type="button" onclick="saveWelcomeConfig(false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:12px; border-radius:12px; cursor:pointer; margin-top:8px; font-weight:bold;">TYLKO ZAPISZ</button>
+        <button type="button" onclick="closeWelcomeModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:12px; font-weight:bold;">ANULUJ</button>
     </div>
 </div>
 
@@ -658,7 +660,7 @@
 
     window.closeWelcomeModal = () => document.getElementById('modal-welcome').classList.remove('active');
 
-    window.saveWelcomeConfig = async function() {
+    window.saveWelcomeConfig = async function(shouldTest) {
         const channelSelect = document.getElementById('m-channel');
         const selectedOption = channelSelect.options[channelSelect.selectedIndex];
         
@@ -695,7 +697,13 @@
             });
             const data = await res.json();
             if (data.success) {
-                // Odświeżamy dane z serwera po zapisie
+                if (shouldTest) {
+                    // Wywołanie testu dla konkretnego ID
+                    const finalId = data.id || editingId;
+                    if (finalId) {
+                        await fetch(`${API_URL}/welcome/${finalId}/test`, { method: 'POST' });
+                    }
+                }
                 await loadAllWelcomeConfigs();
                 closeWelcomeModal();
             } else {

@@ -3,9 +3,8 @@ import uuid
 import requests
 import json
 import time
-import os
-import json
-import datetime
+import sqlite3
+from datetime import datetime, timedelta
 
 # Ścieżka do statusu (dla PythonAnywhere)
 STATUS_FILE_PATH = "/home/BLADERUNNER009/AntigravityProjekt/bot_status.json"
@@ -331,7 +330,7 @@ def api_premium_trial(guild_id):
     
     expiry_date = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d %H:%M')
     start_date = datetime.now().isoformat()
-    
+
     try:
         conn = sqlite3.connect(DB_NAME)
         c = conn.cursor()
@@ -539,15 +538,15 @@ def api_embeds(guild_id):
     if request.method == 'GET':
         configs = get_embed_configs(guild_id)
         return jsonify(configs)
-
-    # POST - Zapisywanie jednej konfiguracji
+    
     data = request.json
     config_id = data.get('id')
-    
+    # Jeśli id jest długie (timestamp z frontendu), traktujemy jako NOWY
+    if config_id and len(str(config_id)) > 10:
+        config_id = None
+        
     new_id = save_embed_config(guild_id, data, config_id)
-    
     if new_id:
-        # Powiadamiamy bota o nowym embedzie
         call_bot_api("/send_embed", method="POST", data={
             'guild_id': guild_id,
             'config_id': config_id or new_id
@@ -558,11 +557,28 @@ def api_embeds(guild_id):
 
 
 # --- SELFROLE ---
-@config_bp.route('/api/<guild_id>/selfrole', methods=['GET'])
-def api_get_selfrole(guild_id):
-    from database import get_selfrole_configs
-    configs = get_selfrole_configs(guild_id)
-    return jsonify(configs)
+@config_bp.route('/api/<guild_id>/selfrole', methods=['GET', 'POST'])
+def api_selfrole(guild_id):
+    from database import get_selfrole_configs, save_selfrole_config
+    if request.method == 'GET':
+        configs = get_selfrole_configs(guild_id)
+        return jsonify(configs)
+    
+    data = request.json
+    config_id = data.get('id')
+    # Jeśli id jest długie (timestamp z frontendu), traktujemy jako NOWY
+    if config_id and len(str(config_id)) > 10:
+        config_id = None
+        
+    new_id = save_selfrole_config(guild_id, data, config_id)
+    if new_id:
+        # Powiadamiamy bota o zmianach
+        call_bot_api("/send_selfrole", method="POST", data={
+            'guild_id': guild_id,
+            'config_id': config_id or new_id
+        })
+        return jsonify({'success': True, 'id': new_id})
+    return jsonify({'success': False, 'error': 'Błąd zapisu'}), 500
 
 @config_bp.route('/api/<guild_id>/selfrole/sync', methods=['POST'])
 def api_sync_selfrole(guild_id):
@@ -581,6 +597,21 @@ def api_sync_selfrole(guild_id):
                 })
                 
     return jsonify({'success': ok})
+
+@config_bp.route('/api/<guild_id>/selfrole/<int:config_id>', methods=['DELETE'])
+def api_delete_selfrole(guild_id, config_id):
+    # Potrzebujemy funkcji w database.py
+    from database import delete_selfrole_config
+    ok = delete_selfrole_config(guild_id, config_id)
+    return jsonify({'success': ok})
+
+@config_bp.route('/api/<guild_id>/selfrole/<int:config_id>/sync', methods=['POST'])
+def api_sync_single_selfrole(guild_id, config_id):
+    call_bot_api("/send_selfrole", method="POST", data={
+        'guild_id': guild_id,
+        'config_id': config_id
+    })
+    return jsonify({'success': True})
 
 @config_bp.route('/api/<guild_id>/activity', methods=['GET'])
 def api_get_activity(guild_id):

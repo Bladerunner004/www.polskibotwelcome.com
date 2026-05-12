@@ -337,9 +337,9 @@
                 </div>
             </div>
         </div>
-
-        <button type="button" class="btn-save" onclick="saveConfig('general')">ZAPISZ KONFIGURACJĘ</button>
-        <button type="button" onclick="closeModal('general')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px; font-weight:bold;">ANULUJ</button>
+                    <button type="button" class="btn-save" onclick="saveConfig('general', true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
+                    <button type="button" onclick="saveConfig('general', false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px; border-radius:10px; cursor:pointer; margin-top:8px; font-weight:bold;">TYLKO ZAPISZ</button>
+                    <button type="button" onclick="closeModal('general')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:12px; font-weight:bold;">ANULUJ</button>
     </div>
 </div>
 
@@ -404,8 +404,9 @@
         <input type="hidden" id="r-color" value="#74b816">
         <input type="hidden" id="r-link-color" value="#00a8fc">
 
-        <button type="button" class="btn-save" onclick="saveConfig('rules')">ZAPISZ KONFIGURACJĘ</button>
-        <button type="button" onclick="closeModal('rules')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px; font-weight:bold;">ANULUJ</button>
+        <button type="button" class="btn-save" onclick="saveConfig('rules', true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
+        <button type="button" onclick="saveConfig('rules', false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px; border-radius:10px; cursor:pointer; margin-top:8px; font-weight:bold;">TYLKO ZAPISZ</button>
+        <button type="button" onclick="closeModal('rules')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:12px; font-weight:bold;">ANULUJ</button>
     </div>
 </div>
 
@@ -757,24 +758,42 @@
         };
 
         if (editingId) {
-            const idx = window.localEmbedConfigs.findIndex(c => c.id === editingId);
-            if (idx !== -1) window.localEmbedConfigs[idx] = config;
-        } else {
-            window.localEmbedConfigs.push(config);
+            config.id = editingId;
         }
 
-        renderLists(window.localEmbedConfigs);
-        closeModal(type);
-        
-        // AUTOMATYCZNA SYNCHRONIZACJA Z SERWEREM I BOTEM
-        if (window.syncAllEmbeds) window.syncAllEmbeds();
+        try {
+            const res = await fetch(`${API}/embeds`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (shouldSync) {
+                    // Wywołanie synchronizacji konkretnego embeda
+                    await fetch(`${API}/embeds/${data.id || config.id}/sync`, { method: 'POST' });
+                }
+                loadEmbeds();
+                closeModal(type);
+            } else {
+                alert('Błąd zapisu: ' + (data.error || 'Nieznany błąd'));
+            }
+        } catch(e) {
+            alert('Błąd komunikacji z serwerem');
+        }
     };
 
-    window.deleteEmbed = (id, e) => {
+    window.deleteEmbed = async (id, e) => {
         e.stopPropagation();
-        if (confirm('Usunąć tę konfigurację z listy?')) { 
-            window.localEmbedConfigs = window.localEmbedConfigs.filter(c => c.id !== id);
-            renderLists(window.localEmbedConfigs);
+        if (!confirm('Czy na pewno chcesz usunąć tę konfigurację trwale z bazy danych?')) return;
+        
+        try {
+            const res = await fetch(`${API}/embeds/${id}`, { method: 'DELETE' });
+            if ((await res.json()).success) {
+                loadEmbeds();
+            }
+        } catch(e) {
+            alert('Błąd podczas usuwania');
         }
     };
 
@@ -831,22 +850,6 @@
         getE('rules-count').textContent = `${rCount} / ${rulesLimit}`;
         getE('embed-count-hero').textContent = `${gCount + rCount} aktywnych`;
     }
-
-    window.syncAllEmbeds = async function() {
-        try {
-            const configs = window.localEmbedConfigs;
-            const response = await fetch(API + '/embeds_sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ configs: configs })
-            });
-            if (response.ok) {
-                console.log("✅ Osadzenia zsynchronizowane z botem.");
-            }
-        } catch (err) {
-            console.error("❌ Błąd synchronizacji osadzeń:", err);
-        }
-    };
 
     window.getEmbedData = () => {
         return window.localEmbedConfigs;

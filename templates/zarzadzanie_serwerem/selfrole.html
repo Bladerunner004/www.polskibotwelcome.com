@@ -235,7 +235,9 @@
 
 
 
-        <button type="button" class="btn-save-modal" onclick="saveSelfroleLocal()">ZAPISZ KONFIGURACJĘ</button>
+        <button type="button" class="btn-save-modal" onclick="saveSelfroleLocal(true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
+        <button type="button" onclick="saveSelfroleLocal(false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:12px; border-radius:12px; cursor:pointer; margin-top:8px; font-weight:bold;">TYLKO ZAPISZ</button>
+        <button type="button" onclick="closeSRModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:12px; font-weight:bold;">ANULUJ</button>
     </div>
 </div>
 
@@ -466,10 +468,10 @@
         }
     };
 
-    window.saveSelfroleLocal = function() {
+    window.saveSelfroleLocal = async function(shouldSync) {
         const name = document.getElementById('sr-name').value;
         const config = {
-            id: editingId || Date.now(),
+            id: editingId,
             type: currentType,
             name: name || `Panel ${currentType}`,
             channel_id: document.getElementById('sr-channel').value,
@@ -487,25 +489,42 @@
                 const val = row.querySelector('.sr-emoji').value;
                 const roleId = row.querySelector('.sr-role').value;
                 if(val && roleId) {
-                    if(currentType === 'reaction') config.roles_json.push({ emoji: val, role_id: roleId });
-                    else config.roles_json.push({ label: val, role_id: roleId });
+                    config.roles_json.push({ emoji: val, role_id: roleId, label: row.querySelector('.sr-label') ? row.querySelector('.sr-label').value : '' });
                 }
             });
-            config.roles_json = JSON.stringify(config.roles_json);
         }
 
-        if(editingId) {
-            const idx = window.localSelfroleConfigs.findIndex(c => c.id === editingId);
-            if(idx !== -1) window.localSelfroleConfigs[idx] = config;
-        } else {
-            window.localSelfroleConfigs.push(config);
+        try {
+            const res = await fetch(`${API}/selfrole`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (shouldSync) {
+                    await fetch(`${API}/selfrole/${data.id || config.id}/sync`, { method: 'POST' });
+                }
+                loadAll();
+                closeSRModal();
+            } else {
+                alert('Błąd zapisu: ' + (data.error || 'Nieznany błąd'));
+            }
+        } catch(e) {
+            alert('Błąd komunikacji z serwerem');
         }
+    };
 
-        renderAll();
-        closeSelfroleModal();
-        
-        // AUTOMATYCZNA SYNCHRONIZACJA Z SERWEREM I BOTEM
-        if (window.syncAllSelfrole) window.syncAllSelfrole();
+    window.deleteSelfrole = async function(id) {
+        if (!confirm('Czy na pewno chcesz usunąć ten panel trwale?')) return;
+        try {
+            const res = await fetch(`${API}/selfrole/${id}`, { method: 'DELETE' });
+            if ((await res.json()).success) {
+                loadAll();
+            }
+        } catch(e) {
+            alert('Błąd usuwania');
+        }
     };
 
     window.syncAllSelfrole = async () => {

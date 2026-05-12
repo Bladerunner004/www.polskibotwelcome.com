@@ -1733,6 +1733,10 @@ async def update_status_file():
                         class FakeRequest:
                             async def json(self): return payload
                         await handle_send_selfrole(FakeRequest())
+                    elif "test_welcome" in endpoint:
+                        class FakeRequest:
+                            async def json(self): return payload
+                        await handle_test_welcome(FakeRequest())
                         
                 os.remove(sf) # Usuwamy plik po obsłużeniu
             except Exception as e:

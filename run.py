@@ -67,19 +67,28 @@ def start_bot_background():
     import subprocess
     import sys
     
+    # Wybór właściwego interpretera Python (virtualenv ma pierwszeństwo na PythonAnywhere)
+    venv_python = os.path.expanduser("~/.virtualenvs/venv_bot/bin/python")
+    bot_dir = os.path.dirname(os.path.abspath(__file__))
+    python_exe = venv_python if os.path.exists(venv_python) else sys.executable
+    
     # Próba zajęcia portu 5005 - jeśli się uda, to ten worker odpala proces bota
     try:
         lock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         lock_socket.bind(('127.0.0.1', 5005))
         # Nie zamykamy gniazda - trzymamy je jako blokadę (Single Instance)
         
-        print("[SYSTEM] Uruchamiam proces bota w tle...")
-        with open("bot_error.log", "a") as f:
-            f.write(f"\n--- START BOT {datetime.datetime.now()} ---\n")
-            subprocess.Popen([sys.executable, "bot.py"], 
-                             stdout=f, 
-                             stderr=f,
-                             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0)
+        print(f"[SYSTEM] Uruchamiam proces bota w tle... (Python: {python_exe})")
+        log_path = os.path.join(bot_dir, "bot_error.log")
+        with open(log_path, "a") as f:
+            f.write(f"\n--- START BOT {datetime.datetime.now()} (Python: {python_exe}) ---\n")
+            subprocess.Popen(
+                [python_exe, os.path.join(bot_dir, "bot.py")],
+                stdout=f,
+                stderr=f,
+                cwd=bot_dir,
+                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+            )
     except socket.error:
         # Bot już prawdopodobnie działa w innym procesie
         pass

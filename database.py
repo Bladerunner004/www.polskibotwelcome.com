@@ -1114,6 +1114,19 @@ def save_selfrole_config(guild_id, data, config_id=None):
         print(f"❌ Błąd zapisu selfrole_config: {e}")
         return None
 
+def delete_selfrole_config(guild_id, config_id):
+    """Usuwa konfigurację Selfrole."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('DELETE FROM self_role_configs WHERE id=? AND guild_id=?', (config_id, str(guild_id)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Błąd usuwania selfrole_config: {e}")
+        return False
+
 def is_premium(guild_id):
     """Sprawdza, czy serwer posiada status Premium."""
     settings = get_settings(guild_id)

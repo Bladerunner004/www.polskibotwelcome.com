@@ -680,6 +680,14 @@ def api_delete_embed(guild_id, config_id):
     ok = delete_embed_config(guild_id, config_id)
     return jsonify({'success': ok})
 
+@config_bp.route('/api/<guild_id>/embeds/<int:config_id>/sync', methods=['POST'])
+def api_sync_single_embed(guild_id, config_id):
+    call_bot_api("/send_embed", method="POST", data={
+        'guild_id': guild_id,
+        'config_id': config_id
+    })
+    return jsonify({'success': True})
+
 @config_bp.route('/api/<guild_id>/logs', methods=['POST'])
 def api_save_logs(guild_id):
     import sqlite3

@@ -707,7 +707,7 @@
         }
     };
 
-    window.saveConfig = function(type) {
+    window.saveConfig = async function(type, shouldSync) {
         const p = type === 'rules' ? 'r' : 'g';
         let name = getV(p + '-name');
         

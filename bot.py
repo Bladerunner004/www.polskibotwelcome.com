@@ -1688,8 +1688,13 @@ async def update_status_file():
                 with open(sf, "r") as f:
                     data = json.load(f)
                 
-                guild_id = sf.replace("sync_needed_", "").replace(".json", "")
-                guild = bot.get_guild(int(guild_id))
+                parts = sf.split('_')
+                guild_id = parts[2] if len(parts) >= 3 else parts[-1].replace(".json", "")
+                
+                try:
+                    guild = bot.get_guild(int(guild_id))
+                except ValueError:
+                    guild = None
                 
                 if guild:
                     endpoint = data.get('endpoint', '')
@@ -1718,11 +1723,15 @@ async def update_status_file():
                                 class FakeReq:
                                     async def json(self): return {'guild_id': guild_id, 'config_id': cfg['id']}
                                 await handle_send_selfrole(FakeReq())
-                    elif "send_embed" in endpoint:
+                    elif "send_embed" in endpoint and "all" not in endpoint:
                         # ... (stare, ale zostawiamy dla kompatybilnoĹ›ci)
                         class FakeRequest:
                             async def json(self): return payload
                         await handle_send_embed(FakeRequest())
+                    elif "send_selfrole" in endpoint and "all" not in endpoint:
+                        class FakeRequest:
+                            async def json(self): return payload
+                        await handle_send_selfrole(FakeRequest())
                         
                 os.remove(sf) # Usuwamy plik po obsłużeniu
             except Exception as e:

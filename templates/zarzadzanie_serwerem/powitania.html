@@ -735,5 +735,8 @@
 
     // Start
     loadAllWelcomeConfigs();
+    window.getWelcomeData = () => {
+        return window.localWelcomeConfigs;
+    };
 })();
 </script>

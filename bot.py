@@ -226,11 +226,6 @@ async def ticket(ctx, tytul: str, sprawa: str):
     await channel.send(embed=embed, view=TicketActions())
     await reply(ctx, f"✅ Otwarto zgłoszenie: {channel.mention}")
 
-@bot.hybrid_command(name="level", description="Sprawdź swój poziom.")
-async def level(ctx, uzytkownik: discord.Member = None):
-    if not await check_command(ctx, "level"): return
-    uzytkownik = uzytkownik or ctx.author
-    await reply(ctx, f"📊 {uzytkownik.display_name} posiada obecnie **1 Level**.")
 
 @bot.hybrid_command(name="ban", description="Zbanuj użytkownika.")
 @commands.has_permissions(ban_members=True)

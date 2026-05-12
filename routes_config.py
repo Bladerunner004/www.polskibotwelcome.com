@@ -81,6 +81,61 @@ def api_bot_latency():
         return jsonify(data)
     return jsonify({'latency': 0})
 
+@config_bp.route('/api/debug/sync')
+def api_debug_sync():
+    """Endpoint diagnostyczny - pokazuje stan systemu synchronizacji."""
+    import glob
+    import time
+    
+    sync_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Znajdź pliki sync
+    sync_files = glob.glob(os.path.join(sync_dir, "sync_needed_*.json"))
+    sync_info = []
+    for sf in sync_files:
+        try:
+            with open(sf, 'r') as f:
+                content = json.load(f)
+            sync_info.append({
+                "file": os.path.basename(sf),
+                "age_seconds": round(time.time() - os.path.getmtime(sf), 1),
+                "content": content
+            })
+        except Exception as e:
+            sync_info.append({"file": os.path.basename(sf), "error": str(e)})
+    
+    # Status bota
+    bot_status = None
+    bot_age = None
+    try:
+        if os.path.exists(STATUS_FILE_PATH):
+            with open(STATUS_FILE_PATH, 'r') as f:
+                bot_status = json.load(f)
+            bot_age = round(time.time() - bot_status.get('last_seen', 0), 1)
+    except Exception as e:
+        bot_status = {"error": str(e)}
+    
+    # Ostatnie logi błędów bota
+    bot_log_tail = []
+    log_path = os.path.join(sync_dir, "bot_error.log")
+    try:
+        if os.path.exists(log_path):
+            with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+                lines = f.readlines()
+                bot_log_tail = lines[-30:]  # ostatnie 30 linii
+    except Exception as e:
+        bot_log_tail = [f"Błąd odczytu logu: {e}"]
+    
+    return jsonify({
+        "sync_dir": sync_dir,
+        "status_file_path": STATUS_FILE_PATH,
+        "status_file_exists": os.path.exists(STATUS_FILE_PATH),
+        "bot_status": bot_status,
+        "bot_last_seen_seconds_ago": bot_age,
+        "pending_sync_files": sync_info,
+        "bot_log_tail": bot_log_tail
+    })
+
 @config_bp.route('/config/<server_id>', methods=['GET', 'POST'])
 def config(server_id):
     if 'user' not in session or server_id == 'None':

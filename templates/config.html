@@ -504,7 +504,25 @@
                 const prefix = document.getElementById('prefix-input-field')?.value || '!';
                 const language = document.getElementById('language-select')?.value || 'pl';
                 const embedColor = document.getElementById('global-embed-color')?.value || '#74b816';
-                const rgbMode = document.getElementById('global-rgb-switch')?.checked ? 1 : 0;
+                
+                // Listener dla zmiany koloru głównego
+                const colorPicker = document.getElementById('global-embed-color');
+                if (colorPicker) {
+                    colorPicker.addEventListener('input', (e) => {
+                        const newColor = e.target.value;
+                        document.documentElement.style.setProperty('--bot-color', newColor);
+                    });
+                }
+
+                const rgbSwitch = document.getElementById('global-rgb-switch');
+                if (rgbSwitch) {
+                    rgbSwitch.addEventListener('change', (e) => {
+                        if (!e.target.checked) {
+                            const newColor = document.getElementById('global-embed-color').value;
+                            document.documentElement.style.setProperty('--bot-color', newColor);
+                        }
+                    });
+                }
                 
                 const cmdCbs = document.querySelectorAll('.command-checkbox:checked');
                 const enabledCmds = Array.from(cmdCbs).map(cb => cb.value);

@@ -289,6 +289,26 @@ def init_db():
                         enabled INTEGER DEFAULT 0
                     )''')
 
+    # Tabela OstrzeĹĽeĹ„ (Warnings)
+    cursor.execute('''CREATE TABLE IF NOT EXISTS user_warnings (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        guild_id TEXT NOT NULL,
+                        user_id TEXT NOT NULL,
+                        moderator_id TEXT,
+                        reason TEXT,
+                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )''')
+
+    # Tabela PoziomĂłw (Levels)
+    cursor.execute('''CREATE TABLE IF NOT EXISTS user_levels (
+                        guild_id TEXT NOT NULL,
+                        user_id TEXT NOT NULL,
+                        xp INTEGER DEFAULT 0,
+                        level INTEGER DEFAULT 1,
+                        last_msg_at REAL DEFAULT 0,
+                        PRIMARY KEY(guild_id, user_id)
+                    )''')
+
     conn.commit()
     conn.close()
     print("[DB] Baza danych zostaĹ‚a zsynchronizowana.")
@@ -358,6 +378,109 @@ def get_custom_bot(guild_id):
             return {'token': row[0], 'bot_name': row[1], 'status': row[2], 'enabled': bool(row[3])}
         return None
     except: return None
+
+# --- MODERACJA: OSTRZEĹ»ENIA ---
+
+def add_warning(guild_id, user_id, moderator_id, reason):
+    """Dodaje ostrzeĹĽenie uĹĽytkownikowi."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('INSERT INTO user_warnings (guild_id, user_id, moderator_id, reason) VALUES (?, ?, ?, ?)',
+                  (str(guild_id), str(user_id), str(moderator_id), reason))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"âťŚ [DB] BĹ‚Ä…d add_warning: {e}")
+        return False
+
+def get_warnings(guild_id, user_id):
+    """Pobiera listÄ™ ostrzeĹĽeĹ„ uĹĽytkownika."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('SELECT id, moderator_id, reason, timestamp FROM user_warnings WHERE guild_id=? AND user_id=? ORDER BY timestamp DESC',
+                  (str(guild_id), str(user_id)))
+        rows = c.fetchall()
+        conn.close()
+        return [ {'id': r[0], 'moderator_id': r[1], 'reason': r[2], 'timestamp': r[3]} for r in rows ]
+    except: return []
+
+def clear_warnings(guild_id, user_id):
+    """Usuwa wszystkie ostrzeĹĽenia uĹĽytkownika."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('DELETE FROM user_warnings WHERE guild_id=? AND user_id=?', (str(guild_id), str(user_id)))
+        conn.commit()
+        conn.close()
+        return True
+    except: return False
+
+# --- SYSTEM POZIOMĂ“W ---
+
+def get_user_level(guild_id, user_id):
+    """Pobiera dane o poziomie uĹĽytkownika."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('SELECT xp, level, last_msg_at FROM user_levels WHERE guild_id=? AND user_id=?',
+                  (str(guild_id), str(user_id)))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return {'xp': row[0], 'level': row[1], 'last_msg_at': row[2]}
+        return {'xp': 0, 'level': 1, 'last_msg_at': 0}
+    except: return {'xp': 0, 'level': 1, 'last_msg_at': 0}
+
+def add_xp(guild_id, user_id, amount):
+    """Dodaje XP uĹĽytkownikowi i sprawdza awans."""
+    import time
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        
+        # Pobierz obecny stan
+        c.execute('SELECT xp, level FROM user_levels WHERE guild_id=? AND user_id=?', (str(guild_id), str(user_id)))
+        row = c.fetchone()
+        
+        if not row:
+            new_xp = amount
+            new_level = 1
+            c.execute('INSERT INTO user_levels (guild_id, user_id, xp, level, last_msg_at) VALUES (?, ?, ?, ?, ?)',
+                      (str(guild_id), str(user_id), new_xp, new_level, time.time()))
+        else:
+            curr_xp, curr_level = row
+            new_xp = curr_xp + amount
+            # Prosty wzĂłr na poziom: level = floor(sqrt(xp/100)) + 1
+            import math
+            new_level = math.floor(math.sqrt(new_xp / 100)) + 1
+            
+            c.execute('UPDATE user_levels SET xp=?, level=?, last_msg_at=? WHERE guild_id=? AND user_id=?',
+                      (new_xp, new_level, time.time(), str(guild_id), str(user_id)))
+            
+        conn.commit()
+        conn.close()
+        
+        if row and new_level > row[1]:
+            return True, new_level # Awans!
+        return False, new_level
+    except Exception as e:
+        print(f"âťŚ [DB] BĹ‚Ä…d add_xp: {e}")
+        return False, 1
+
+def get_top_levels(guild_id, limit=10):
+    """Pobiera ranking poziomĂłw."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('SELECT user_id, xp, level FROM user_levels WHERE guild_id=? ORDER BY xp DESC LIMIT ?',
+                  (str(guild_id), limit))
+        rows = c.fetchall()
+        conn.close()
+        return [ {'user_id': r[0], 'xp': r[1], 'level': r[2]} for r in rows ]
+    except: return []
 
 def save_custom_bot(guild_id, token, bot_name, enabled):
     """Zapisuje konfiguracjÄ™ wĹ‚asnego bota."""

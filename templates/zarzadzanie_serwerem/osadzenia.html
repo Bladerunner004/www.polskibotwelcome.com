@@ -418,8 +418,6 @@
     // Lokalny bufor osadzeń
     window.localEmbedConfigs = [];
 
-    window.getEmbedData = () => window.localEmbedConfigs;
-
     // --- HELPERY ---
     const getE = id => document.getElementById(id);
     const getT = id => getE(id).innerText;
@@ -614,7 +612,6 @@
     window.openGeneralModal = async () => {
         editingId = null;
         resetModal('g');
-        getE('g-btn-send').style.display = 'none';
         await loadSelects('g');
         getE('modal-general').classList.add('active');
     };
@@ -622,7 +619,6 @@
     window.openRulesModal = async () => {
         editingId = null;
         resetModal('r');
-        getE('r-btn-send').style.display = 'none';
         await loadSelects('r');
         getE('modal-rules').classList.add('active');
     };
@@ -836,17 +832,17 @@
         getE('embed-count-hero').textContent = `${gCount + rCount} aktywnych`;
     }
 
-    window.getEmbedData = () => window.localEmbedConfigs;
-
-    window.syncAllEmbeds = async () => {
+    window.syncAllEmbeds = async function() {
         try {
-            const data = window.getEmbedData();
-            await fetch(`${API}/embeds_sync`, {
+            const configs = window.localEmbedConfigs;
+            const response = await fetch(`${API}/embeds_sync`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ configs: data })
+                body: JSON.stringify({ configs })
             });
-            console.log("✅ Osadzenia zsynchronizowane z botem.");
+            if (response.ok) {
+                console.log("✅ Osadzenia zsynchronizowane z botem.");
+            }
         } catch (err) {
             console.error("❌ Błąd synchronizacji osadzeń:", err);
         }
@@ -855,4 +851,3 @@
     loadEmbeds();
 })();
 </script>
-

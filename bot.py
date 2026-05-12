@@ -243,6 +243,8 @@ async def ban(ctx, uzytkownik: discord.Member, *, powod: str = "Brak"):
     
     try:
         await uzytkownik.ban(reason=powod)
+        from database import add_audit_log
+        add_audit_log(ctx.guild.id, "Moderacja", ctx.author.name, ctx.author.id, "BAN", f"Zbanowano {uzytkownik.name} (PowĂłd: {powod})")
         await reply(ctx, f"🔨 Zbanowano {uzytkownik.mention}. Powód: {powod}")
     except Exception as e:
         await reply(ctx, f"❌ Błąd podczas banowania: {e}")
@@ -261,6 +263,8 @@ async def kick(ctx, uzytkownik: discord.Member, *, powod: str = "Brak"):
         
     try:
         await uzytkownik.kick(reason=powod)
+        from database import add_audit_log
+        add_audit_log(ctx.guild.id, "Moderacja", ctx.author.name, ctx.author.id, "KICK", f"Wyrzucono {uzytkownik.name} (PowĂłd: {powod})")
         await reply(ctx, f"👢 Wyrzucono {uzytkownik.mention}. Powód: {powod}")
     except Exception as e:
         await reply(ctx, f"❌ Błąd podczas wyrzucania: {e}")
@@ -270,8 +274,13 @@ async def kick(ctx, uzytkownik: discord.Member, *, powod: str = "Brak"):
 async def mute(ctx, uzytkownik: discord.Member, minuty: int, *, powod: str = "Brak"):
     if not await check_command(ctx, "mute"): return
     duration = datetime.timedelta(minutes=minuty)
-    await uzytkownik.timeout(duration, reason=powod)
-    await reply(ctx, f"🔇 Wyciszono {uzytkownik.mention} na {minuty} min.")
+    try:
+        await uzytkownik.timeout(duration, reason=powod)
+        from database import add_audit_log
+        add_audit_log(ctx.guild.id, "Moderacja", ctx.author.name, ctx.author.id, "MUTE", f"Wyciszono {uzytkownik.name} na {minuty} min (PowĂłd: {powod})")
+        await reply(ctx, f"🔇 Wyciszono {uzytkownik.mention} na {minuty} min.")
+    except Exception as e:
+        await reply(ctx, f"❌ BĹ‚Ä…d: {e}")
 
 @bot.hybrid_command(name="unmute", description="Odwycisz użytkownika.")
 @commands.has_permissions(moderate_members=True)
@@ -292,13 +301,36 @@ async def unban(ctx, id_uzytkownika: str):
 @commands.has_permissions(kick_members=True)
 async def warn(ctx, uzytkownik: discord.Member, *, powod: str = "Brak"):
     if not await check_command(ctx, "warn"): return
+    from database import add_warning, add_audit_log
+    add_warning(ctx.guild.id, uzytkownik.id, ctx.author.id, powod)
+    add_audit_log(ctx.guild.id, "Moderacja", ctx.author.name, ctx.author.id, "WARN", f"OstrzeĹĽono {uzytkownik.name} (PowĂłd: {powod})")
     await reply(ctx, f"⚠️ Ostrzeżono {uzytkownik.mention}. Powód: {powod}")
 
 @bot.hybrid_command(name="warns", description="Sprawdź ostrzeżenia użytkownika.")
 async def warns(ctx, uzytkownik: discord.Member = None):
     if not await check_command(ctx, "warns"): return
     uzytkownik = uzytkownik or ctx.author
-    await reply(ctx, f"📋 {uzytkownik.display_name} posiada obecnie **0** ostrzeżeń.")
+    from database import get_warnings
+    warnings = get_warnings(ctx.guild.id, uzytkownik.id)
+    
+    if not warnings:
+        return await reply(ctx, f"📋 {uzytkownik.display_name} nie posiada żadnych ostrzeżeń.")
+    
+    embed = discord.Embed(title=f"📋 Ostrzeżenia: {uzytkownik.display_name}", color=get_embed_color(ctx.guild))
+    for i, w in enumerate(warnings, 1):
+        mod = ctx.guild.get_member(int(w['moderator_id']))
+        mod_name = mod.name if mod else "Nieznany"
+        embed.add_field(name=f"#{i} | Moderator: {mod_name}", value=f"**Powód:** {w['reason']}\n**Data:** {w['timestamp']}", inline=False)
+    
+    await reply(ctx, embed=embed)
+
+@bot.hybrid_command(name="clearwarns", description="Usuń wszystkie ostrzeżenia użytkownika.")
+@commands.has_permissions(kick_members=True)
+async def clearwarns(ctx, uzytkownik: discord.Member):
+    if not await check_command(ctx, "warn"): return # UĹĽywamy tego samego uprawnienia co warn
+    from database import clear_warnings
+    clear_warnings(ctx.guild.id, uzytkownik.id)
+    await reply(ctx, f"✅ Usunięto wszystkie ostrzeżenia użytkownika {uzytkownik.mention}.")
 
 @bot.hybrid_command(name="slowmode", description="Ustaw slowmode na kanale.")
 @commands.has_permissions(manage_channels=True)
@@ -307,15 +339,34 @@ async def slowmode(ctx, sekundy: int):
     await ctx.channel.edit(slowmode_delay=sekundy)
     await reply(ctx, f"🐢 Ustawiono slowmode na **{sekundy}s**.")
 
+@bot.hybrid_command(name="level", description="Sprawdź swój obecny poziom.")
+async def level(ctx, uzytkownik: discord.Member = None):
+    if not await check_command(ctx, "level"): return
+    uzytkownik = uzytkownik or ctx.author
+    from database import get_user_level
+    data = get_user_level(ctx.guild.id, uzytkownik.id)
+    await reply(ctx, f"📊 {uzytkownik.display_name} posiada obecnie **{data['level']} Level**.")
+
 @bot.hybrid_command(name="toplevel", description="Zobacz ranking poziomów.")
 async def toplevel(ctx):
     if not await check_command(ctx, "toplevel"): return
-    await reply(ctx, "🏆 **Ranking Poziomów:**\n1. " + ctx.author.name + " - 1 LVL")
+    from database import get_top_levels
+    top = get_top_levels(ctx.guild.id)
+    if not top: return await reply(ctx, "🏆 Ranking jest jeszcze pusty.")
+    
+    embed = discord.Embed(title="🏆 Ranking Poziomów", color=get_embed_color(ctx.guild))
+    for i, user in enumerate(top, 1):
+        member = ctx.guild.get_member(int(user['user_id']))
+        name = member.display_name if member else "Nieznany"
+        embed.add_field(name=f"{i}. {name}", value=f"Level: **{user['level']}** | XP: **{user['xp']}**", inline=False)
+    await reply(ctx, embed=embed)
 
 @bot.hybrid_command(name="exp", description="Sprawdź ile masz punktów doświadczenia.")
 async def exp(ctx):
     if not await check_command(ctx, "exp"): return
-    await reply(ctx, f"✨ Masz obecnie **0 EXP**.")
+    from database import get_user_level
+    data = get_user_level(ctx.guild.id, ctx.author.id)
+    await reply(ctx, f"✨ Masz obecnie **{data['xp']} XP**.")
 
 @bot.hybrid_command(name="modinfo", description="Informacje o moderatorze.")
 async def modinfo(ctx, moderator: discord.Member):
@@ -1114,6 +1165,43 @@ async def on_message(message):
                     ph_embed.set_footer(text="Polski Bot • Bezpieczeństwo")
                     await message.channel.send(embed=ph_embed, delete_after=15)
                     return
+                except: pass
+
+    # --- ANTY-BADWORDS SYSTEM ---
+    if settings.get("automod_badwords"):
+        custom_list = json.loads(settings.get("automod_badwords_list", "[]"))
+        if check_badwords(message.content, custom_list):
+            if not message.author.guild_permissions.manage_messages:
+                try:
+                    await message.delete()
+                    await message.channel.send(f"⚠️ {message.author.mention}, nie używaj brzydkich słów!", delete_after=5)
+                    return
+                except: pass
+
+    # --- ANTY-CAPS SYSTEM ---
+    if settings.get("automod_anticaps"):
+        if len(message.content) > 10:
+            caps_count = sum(1 for c in message.content if c.isupper())
+            if caps_count / len(message.content) > 0.7:
+                if not message.author.guild_permissions.manage_messages:
+                    try:
+                        await message.delete()
+                        await message.channel.send(f"⚠️ {message.author.mention}, nie krzycz! (Wyłącz CAPS LOCK)", delete_after=5)
+                        return
+                    except: pass
+
+    # --- LEVELING SYSTEM (XP GAIN) ---
+    if settings.get("levels_enabled", 1):
+        from database import get_user_level, add_xp
+        user_data = get_user_level(message.guild.id, message.author.id)
+        # Cooldown 60s
+        import time
+        if time.time() - user_data['last_msg_at'] > 60:
+            xp_gain = random.randint(15, 25)
+            leveled_up, new_lvl = add_xp(message.guild.id, message.author.id, xp_gain)
+            if leveled_up:
+                try:
+                    await message.channel.send(f"🎉 Gratulacje {message.author.mention}! Awansowałeś na **{new_lvl} Poziom**!")
                 except: pass
 
     # Logowanie aktywności i przetwarzanie komend

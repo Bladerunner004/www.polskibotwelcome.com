@@ -27,12 +27,8 @@ def call_bot_api(endpoint, method="GET", data=None):
     import time
     import json
     import os
-    
-    # Jeśli bot był offline w ciągu ostatnich 5 sekund, nie próbuj ponownie (oszczędność czasu ładowania)
-    if time.time() - _bot_offline_cache < 5:
-        return None
 
-    # Zawsze przy POST tworzymy sygnał plikowy (dla PythonAnywhere)
+    # Zawsze przy POST tworzymy sygnał plikowy (dla PythonAnywhere) - PRZED sprawdzeniem cache!
     if method == "POST":
         try:
             guild_id = None
@@ -40,15 +36,20 @@ def call_bot_api(endpoint, method="GET", data=None):
                 guild_id = endpoint.split('/')[2]
             elif data and isinstance(data, dict):
                 guild_id = data.get('guild_id') or data.get('server_id')
-            
+
             if guild_id:
-                    sync_dir = os.path.dirname(os.path.abspath(__file__))
-                    filename = f"sync_needed_{guild_id}_{int(time.time()*1000)}.json"
-                    filepath = os.path.join(sync_dir, filename)
-                    print(f"[DASHBOARD] Tworzenie sygnalu synchronizacji: {filepath}")
-                    with open(filepath, "w") as f:
-                        json.dump({"endpoint": endpoint, "time": time.time(), "data": data}, f)
-        except: pass
+                sync_dir = os.path.dirname(os.path.abspath(__file__))
+                filename = f"sync_needed_{guild_id}_{int(time.time()*1000)}.json"
+                filepath = os.path.join(sync_dir, filename)
+                print(f"[DASHBOARD] Tworzenie sygnalu synchronizacji: {filepath}")
+                with open(filepath, "w") as f:
+                    json.dump({"endpoint": endpoint, "time": time.time(), "data": data}, f)
+        except Exception as e:
+            print(f"[DASHBOARD] Blad tworzenia pliku sync: {e}")
+
+    # Jeśli bot był offline w ciągu ostatnich 5 sekund, nie próbuj HTTP (ale sync plik już jest)
+    if time.time() - _bot_offline_cache < 5:
+        return None
 
     try:
         url = f"{BOT_API_URL}{endpoint}"
@@ -56,12 +57,13 @@ def call_bot_api(endpoint, method="GET", data=None):
             resp = requests.get(url, timeout=1.5)
         else:
             resp = requests.post(url, json=data, timeout=1.5)
-        
+
         if resp.status_code == 200:
             return resp.json()
     except Exception as e:
         _bot_offline_cache = time.time()
     return None
+
 
 @config_bp.route('/api/bot/latency')
 def api_bot_latency():

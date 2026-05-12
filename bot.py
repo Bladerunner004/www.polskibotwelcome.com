@@ -25,6 +25,9 @@ STATUS_FILE_PATH = "/home/BLADERUNNER009/AntigravityProjekt/bot_status.json"
 if not os.path.exists("/home/BLADERUNNER009"):
     STATUS_FILE_PATH = "bot_status.json" # Fallback lokalny
 
+# Katalog synchronizacji (musi być ten sam co w routes_config.py)
+SYNC_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # --- GLOBALNA LISTA ZAKAZANYCH SŁÓW (Wulgaryzmy, Rasizm, Toksyczność) ---
 GLOBAL_BADWORDS = [
     "kurwa", "chuj", "pizda", "jebac", "pierdol", "cwel", "pedal", "czarnuch", "nigger", "huj", 
@@ -1682,7 +1685,7 @@ async def update_status_file():
             json.dump(status, f)
             
         # 2. Sprawdzanie czy są oczekujące synchronizacje (POST z dashboardu)
-        sync_files = glob.glob("sync_needed_*.json")
+        sync_files = glob.glob(os.path.join(SYNC_DIR, "sync_needed_*.json"))
         for sf in sync_files:
             try:
                 with open(sf, "r") as f:

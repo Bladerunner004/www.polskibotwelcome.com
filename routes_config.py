@@ -460,30 +460,34 @@ def api_save_counter(guild_id):
         
     return jsonify({'success': True})
 
+@config_bp.route('/api/<guild_id>/role_counters', methods=['POST'])
+def api_save_role_counter(guild_id):
+    from database import save_role_counter
+    data = request.json
+    config_id = data.get('id')
+    new_id = save_role_counter(guild_id, data, config_id)
+    return jsonify({'success': True, 'id': new_id})
+
+@config_bp.route('/api/<guild_id>/role_counters/<int:config_id>', methods=['DELETE'])
+def api_delete_role_counter(guild_id, config_id):
+    from database import delete_role_counter
+    ok = delete_role_counter(guild_id, config_id)
+    return jsonify({'success': ok})
+
 @config_bp.route('/api/<guild_id>/role_counters/sync', methods=['POST'])
 def api_sync_role_counters(guild_id):
-    from database import sync_role_counters, get_role_counters
+    from database import sync_role_counters
     data = request.json
     configs = data.get('configs', [])
-    
-    # KROK 1: Wykrycie "osieroconych" kanałów, zanim wyczyścimy bazę
-    old_configs = get_role_counters(guild_id)
-    new_ids = [str(c.get('id')) for c in configs]
-    orphans = []
-    
-    for oc in old_configs:
-        ch_id = str(oc.get('channel_id'))
-        # Jeśli starego ID licznika nie ma na nowej liście i posiadał kanał
-        if str(oc['id']) not in new_ids and ch_id and ch_id.strip() and ch_id != "None":
-            orphans.append(ch_id)
-            
-    # KROK 2: Synchronizacja bazy danych
     if sync_role_counters(guild_id, configs):
-        # Aktualizacja liczników przez API bota
         call_bot_api(f"/guilds/{guild_id}/sync_counters", method="POST")
         return jsonify({'success': True})
-    
-    return jsonify({'success': False, 'error': 'Błąd synchronizacji ról'}), 400
+    return jsonify({'success': False}), 400
+
+@config_bp.route('/api/<guild_id>/role_counters/<int:config_id>/sync', methods=['POST'])
+def api_sync_single_role_counter(guild_id, config_id):
+    call_bot_api(f"/guilds/{guild_id}/sync_counters", method="POST")
+    return jsonify({'success': True})
 
 # --- MEDIA / SOCIAL MEDIA ---
 @config_bp.route('/api/<guild_id>/media', methods=['GET', 'POST'])
@@ -513,6 +517,14 @@ def api_delete_media(guild_id, config_id):
     from database import delete_media_config
     ok = delete_media_config(guild_id, config_id)
     return jsonify({'success': ok})
+
+@config_bp.route('/api/<guild_id>/media/item', methods=['POST'])
+def api_save_media_item(guild_id):
+    from database import save_media_config
+    data = request.json
+    config_id = data.get('id')
+    new_id = save_media_config(guild_id, data, config_id)
+    return jsonify({'success': True, 'id': new_id})
 
 @config_bp.route('/api/<guild_id>/embeds_sync', methods=['POST'])
 def api_embeds_sync(guild_id):

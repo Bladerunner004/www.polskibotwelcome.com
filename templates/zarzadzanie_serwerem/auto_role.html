@@ -599,6 +599,10 @@
 
     // ===== SAVE =====
     window.saveAutoRoleSettings = async function() {
+        var btn = document.querySelector('.save-btn-floating') || document.querySelector('.save-btn') || { innerHTML: '' };
+        var originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Zapisywanie...';
+
         var data = {
             human_roles: Array.from(selected.human),
             bot_roles: Array.from(selected.bot),
@@ -606,12 +610,30 @@
             booster_remove: document.getElementById('autorole-booster-remove').checked
         };
 
-        await fetch('/api/' + guildId + '/autorole', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+        try {
+            const res = await fetch('/api/' + guildId + '/autorole', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if ((await res.json()).success) {
+                btn.innerHTML = '<i class="fas fa-check"></i> Zapisano!';
+                setTimeout(() => { btn.innerHTML = originalText; }, 3000);
+            }
+        } catch(e) {
+            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Błąd';
+            setTimeout(() => { btn.innerHTML = originalText; }, 3000);
+        }
     };
+
+    // Dodajemy przycisk zapisu bezpośrednio w widoku autorole
+    const heroStats = document.querySelector('.ar-hero-stats');
+    if (heroStats) {
+        const saveDiv = document.createElement('div');
+        saveDiv.style.marginTop = '20px';
+        saveDiv.innerHTML = '<button type="button" class="btn-save" onclick="saveAutoRoleSettings()" style="padding: 12px 30px; width: auto; background: var(--accent-green); color: black; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 10px;"><i class="fas fa-save"></i> ZAPISZ USTAWIENIA AUTO-ROLE</button>';
+        heroStats.parentNode.appendChild(saveDiv);
+    }
 
     // ===== INIT =====
     console.log('[AutoRole] Załadowano ' + allRoles.length + ' ról z serwera');

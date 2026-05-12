@@ -282,44 +282,42 @@
         renderMediaConfigsForPlatform();
     };
 
-    window.saveMediaLocal = () => {
-        // Pobieramy dane z DOM dla aktualnej platformy i aktualizujemy localMediaConfigs
+    window.saveMediaLocal = async function() {
+        // Pobieramy dane z DOM dla aktualnej platformy
         const items = document.querySelectorAll('.media-config-item');
         const platformConfigs = localMediaConfigs.filter(c => c.platform === currentPlatform);
         
-        items.forEach((item, i) => {
-            if (platformConfigs[i]) {
-                platformConfigs[i].account_id = item.querySelector('.m-account-id').value;
-                platformConfigs[i].discord_channel_id = item.querySelector('.m-discord-channel').value;
-                platformConfigs[i].message = item.querySelector('.m-message').value;
-                platformConfigs[i].enabled = item.querySelector('.m-enabled').checked;
-            }
-        });
+        let allOk = true;
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const cfg = platformConfigs[i];
+            const data = {
+                id: cfg ? cfg.id : null,
+                platform: currentPlatform,
+                account_id: item.querySelector('.m-account-id').value,
+                discord_channel_id: item.querySelector('.m-discord-channel').value,
+                message: item.querySelector('.m-message').value,
+                enabled: item.querySelector('.m-enabled').checked
+            };
+
+            const res = await fetch(`/api/${guildId}/media/item`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!(await res.json()).success) allOk = false;
+        }
         
-        updatePlatformCounts();
-        closeMediaModal();
-        console.log("Zapisano media lokalnie");
+        if (allOk) {
+            alert('Zapisano pomyślnie!');
+            location.reload();
+        } else {
+            alert('Wystąpił błąd podczas zapisu niektórych elementów.');
+        }
     };
 
     window.saveMediaSettings = async () => {
-        const btn = document.querySelector('.save-btn-floating') || document.querySelector('.save-btn') || { innerHTML: '' };
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Zapisywanie...';
-
-        try {
-            await fetch(`/api/${guildId}/media`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ configs: localMediaConfigs })
-            });
-            
-            btn.innerHTML = '<i class="fas fa-check"></i> Zapisano!';
-            setTimeout(() => { btn.innerHTML = originalText; }, 3000);
-        } catch (error) {
-            console.error('Błąd zapisu:', error);
-            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Błąd zapisu';
-            setTimeout(() => { btn.innerHTML = originalText; }, 3000);
-        }
+        // Ta funkcja jest teraz wyłączona na rzecz zapisu granularnego w modalach
     };
 
     loadMediaConfigs();

@@ -1147,7 +1147,100 @@ def get_media_configs(guild_id):
         conn.close()
         return [dict(row) for row in rows]
     except Exception as e:
-        print(f"âťŚ BĹ‚Ä…d odczytu media_configs: {e}")
+        print(f"❌ Błąd odczytu media_configs: {e}")
+        return []
+
+def get_role_counters(guild_id):
+    """Pobiera wszystkie liczniki ról dla serwera."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT * FROM role_counters WHERE guild_id=?', (str(guild_id),))
+        rows = c.fetchall()
+        conn.close()
+        
+        results = []
+        for row in rows:
+            d = dict(row)
+            try:
+                import json
+                d['roles'] = json.loads(d.get('roles_json', '[]'))
+            except:
+                d['roles'] = []
+            results.append(d)
+        return results
+    except Exception as e:
+        print(f"❌ Błąd odczytu role_counters: {e}")
+        return []
+
+def sync_role_counters(guild_id, configs):
+    """Synchronizuje listę liczników ról (bez usuwania wszystkiego)."""
+    try:
+        for cfg in configs:
+            save_role_counter(guild_id, cfg, cfg.get('id'))
+        return True
+    except Exception as e:
+        print(f"❌ Błąd synchronizacji role_counters: {e}")
+        return False
+
+def save_role_counter(guild_id, data, config_id=None):
+    """Zapisuje lub aktualizuje pojedynczy licznik ról."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        
+        roles_json = data.get('roles_json') or data.get('roles', [])
+        if not isinstance(roles_json, str):
+            import json
+            roles_json = json.dumps(roles_json)
+            
+        if config_id and str(config_id).isdigit():
+            c.execute('''UPDATE role_counters SET 
+                         name=?, roles_json=?, enabled=? 
+                         WHERE id=? AND guild_id=?''',
+                      (data.get('name'), roles_json, 1 if data.get('enabled') else 0,
+                       config_id, str(guild_id)))
+            new_id = config_id
+        else:
+            c.execute('''INSERT INTO role_counters (guild_id, name, roles_json, enabled)
+                         VALUES (?, ?, ?, ?)''',
+                      (str(guild_id), data.get('name'), roles_json, 
+                       1 if data.get('enabled') else 0))
+            new_id = c.lastrowid
+            
+        conn.commit()
+        conn.close()
+        return new_id
+    except Exception as e:
+        print(f"❌ Błąd zapisu role_counter: {e}")
+        return None
+
+def delete_role_counter(guild_id, config_id):
+    """Usuwa pojedynczy licznik ról."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('DELETE FROM role_counters WHERE id=? AND guild_id=?', (config_id, str(guild_id)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Błąd usuwania role_counter: {e}")
+        return False
+
+def get_media_configs(guild_id):
+    """Pobiera wszystkie konfiguracje mediów dla serwera."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT * FROM media_configs WHERE guild_id=?', (str(guild_id),))
+        rows = c.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        print(f"❌ Błąd odczytu media_configs: {e}")
         return []
 
 def sync_media_configs(guild_id, configs):

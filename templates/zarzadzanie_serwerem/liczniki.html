@@ -378,6 +378,7 @@
                 <input type="checkbox" id="counter-humans-thousands" {% if main_settings.counter_humans_thousands %}checked{% endif %}>
                 Zaokrąglanie dużych liczb do tysięcy
             </label>
+            <button type="button" class="btn-save" onclick="saveSingleCounter('humans')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
         </div>
     </div>
 
@@ -407,6 +408,7 @@
                 <input type="checkbox" id="counter-bots-thousands" {% if main_settings.counter_bots_thousands %}checked{% endif %}>
                 Zaokrąglanie dużych liczb do tysięcy
             </label>
+            <button type="button" class="btn-save" onclick="saveSingleCounter('bots')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
         </div>
     </div>
 
@@ -431,6 +433,7 @@
             </div>
             <input type="text" id="counter-bans-name-input" class="modal-select" 
                    placeholder="Bans: {count}" value="{{ main_settings.counter_bans_name }}">
+            <button type="button" class="btn-save" onclick="saveSingleCounter('bans')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
         </div>
     </div>
 
@@ -517,7 +520,8 @@
                     </div>
                 </div>
 
-                <button type="button" class="btn-save" onclick="saveCurrentRoleCounter()">Zapisz konfigurację licznika</button>
+                <button type="button" class="btn-save" onclick="saveCurrentRoleCounter(true)">Zapisz i Wyślij na Discord</button>
+                <button type="button" onclick="saveCurrentRoleCounter(false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:12px; border-radius:12px; cursor:pointer; margin-top:8px; font-weight:bold;">Tylko Zapisz</button>
             </div>
         </div>
     </div>
@@ -651,7 +655,7 @@
         document.getElementById('role-modal').classList.remove('active');
     }
 
-    function saveCurrentRoleCounter() {
+    window.saveCurrentRoleCounter = async function(shouldSync) {
         const name = document.getElementById('modal-name-input').value;
         const selectedRoles = Array.from(document.querySelectorAll('.role-cb'))
                                    .filter(cb => cb.checked)
@@ -662,31 +666,56 @@
             return;
         }
 
-        const newCounter = {
-            id: currentEditingId || Date.now(),
+        const payload = {
+            id: currentEditingId,
             name: name,
-            mode: 'white',
             roles: selectedRoles,
             enabled: document.getElementById('modal-enabled').checked
         };
 
-        const limit = roleLimit;
-        if (currentEditingId) {
-            stagedRoleCounters = stagedRoleCounters.map(c => c.id == currentEditingId ? newCounter : c);
-        } else {
-            if (stagedRoleCounters.length >= limit) return;
-            stagedRoleCounters.push(newCounter);
-        }
-        
-        renderRoleCounters();
-        closeRoleModal();
+        try {
+            const res = await fetch(`/api/{{ server_id }}/role_counters`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (shouldSync) {
+                    await fetch(`/api/{{ server_id }}/role_counters/${data.id || currentEditingId}/sync`, { method: 'POST' });
+                }
+                location.reload(); // Najbezpieczniej odświeżyć przy licznikach
+            }
+        } catch(e) { alert('Błąd zapisu'); }
     }
 
-    function deleteRoleCounter(id) {
-        if (!confirm('Czy na pewno chcesz usunąć ten licznik?')) return;
-        stagedRoleCounters = stagedRoleCounters.filter(c => c.id != id);
-        renderRoleCounters();
-    }
+    window.deleteRoleCounter = async function(id) {
+        if (!confirm('Czy na pewno chcesz usunąć ten licznik trwale?')) return;
+        try {
+            const res = await fetch(`/api/{{ server_id }}/role_counters/${id}`, { method: 'DELETE' });
+            if ((await res.json()).success) {
+                location.reload();
+            }
+        } catch(e) { alert('Błąd usuwania'); }
+    };
+
+    window.saveSingleCounter = async function(type) {
+        const enabled = document.getElementById(`counter-${type}-enabled`).checked;
+        const name = document.getElementById(`counter-${type}-name-input`).value;
+        const thousandsEl = document.getElementById(`counter-${type}-thousands`);
+        const thousands = thousandsEl ? thousandsEl.checked : false;
+
+        try {
+            const res = await fetch(`/api/{{ server_id }}/counter`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, enabled, name, thousands })
+            });
+            if ((await res.json()).success) {
+                alert('Zapisano i wysłano sygnał do bota!');
+            }
+        } catch(e) { alert('Błąd zapisu'); }
+    };
 
     // --- GLOBALNY ZAPIS ---
     window.saveCounterSettings = async function() {

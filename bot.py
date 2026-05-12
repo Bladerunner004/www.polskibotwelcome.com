@@ -1686,39 +1686,43 @@ async def update_status_file():
             
         # 2. Sprawdzanie czy są oczekujące synchronizacje (POST z dashboardu)
         sync_files = glob.glob(os.path.join(SYNC_DIR, "sync_needed_*.json"))
+        if sync_files:
+            print(f"[SYNC] Znaleziono {len(sync_files)} plików synchronizacji w {SYNC_DIR}")
         for sf in sync_files:
             try:
                 with open(sf, "r") as f:
                     data = json.load(f)
                 
-                parts = sf.split('_')
+                parts = os.path.basename(sf).split('_')
                 guild_id = parts[2] if len(parts) >= 3 else parts[-1].replace(".json", "")
+                print(f"[SYNC] Plik: {os.path.basename(sf)}, guild_id='{guild_id}', endpoint='{data.get('endpoint', 'BRAK')}'")
                 
                 try:
                     guild = bot.get_guild(int(guild_id))
                 except ValueError:
                     guild = None
+                    print(f"[SYNC] BLAD: Nie mozna skonwertowac guild_id='{guild_id}' na int")
                 
-                if guild:
+                if not guild:
+                    print(f"[SYNC] BLAD: Bot nie jest na serwerze guild_id={guild_id} (bot jest na: {[g.id for g in bot.guilds]})")
+                else:
                     endpoint = data.get('endpoint', '')
                     payload = data.get('data', {})
+                    print(f"[SYNC] Obslugiwanie: {endpoint}, payload={payload}")
 
                     if "sync_counters" in endpoint:
                         await update_counters(guild)
                     elif "sync_boosters" in endpoint:
                         await sync_booster_roles(guild)
                     elif "send_embed_all" in endpoint:
-                        # PeĹ‚na synchronizacja embedĂłw
                         from database import get_embed_configs
                         configs = get_embed_configs(guild_id)
                         for cfg in configs:
                             if cfg.get('enabled', 1):
-                                # Dynamicznie tworzymy FakeRequest, aby handle_send_embed zadziaĹ‚aĹ‚o
                                 class FakeReq:
                                     async def json(self): return {'guild_id': guild_id, 'config_id': cfg['id']}
                                 await handle_send_embed(FakeReq())
                     elif "send_selfrole_all" in endpoint:
-                        # PeĹ‚na synchronizacja selfrole
                         from database import get_selfrole_configs
                         configs = get_selfrole_configs(guild_id)
                         for cfg in configs:
@@ -1727,7 +1731,6 @@ async def update_status_file():
                                     async def json(self): return {'guild_id': guild_id, 'config_id': cfg['id']}
                                 await handle_send_selfrole(FakeReq())
                     elif "send_embed" in endpoint and "all" not in endpoint:
-                        # ... (stare, ale zostawiamy dla kompatybilnoĹ›ci)
                         class FakeRequest:
                             async def json(self): return payload
                         await handle_send_embed(FakeRequest())

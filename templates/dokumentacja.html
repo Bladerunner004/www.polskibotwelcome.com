@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POLSKIBOT - Pełna Dokumentacja i Poradniki</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2295179399299010" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg: #030406;
+            --bg-card: #0a0b10;
+            --accent: #74b816;
+            --accent-glow: rgba(116, 184, 22, 0.4);
+            --text: #ffffff;
+            --text-dim: #949ba4;
+            --border: rgba(255, 255, 255, 0.08);
+            --font: 'Outfit', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font);
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ── NAVBAR ── */
+        .nav {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10%;
+            background: rgba(3, 4, 6, 0.9);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0; width: 100%; z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+        .logo { font-weight: 900; font-size: 1.5rem; letter-spacing: 1px; color: white; text-decoration: none; }
+        .logo span { color: var(--accent); }
+
+        /* ── CONTENT ── */
+        .content-wrapper {
+            margin-top: 120px;
+            padding: 0 10%;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 50px;
+            margin-bottom: 100px;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .sidebar h3 {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: var(--text);
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: 0.3s;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .sidebar a:hover {
+            background: rgba(116, 184, 22, 0.1);
+            color: var(--accent);
+        }
+
+        .main-content {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .main-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .main-content h2 {
+            font-size: 1.8rem;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            color: #fff;
+        }
+
+        .main-content p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        .main-content ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+            color: var(--text-dim);
+        }
+
+        .main-content li {
+            margin-bottom: 10px;
+        }
+
+        .main-content strong {
+            color: #fff;
+        }
+
+        .doc-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: relative;
+                top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <a href="/" class="logo">POLSKI<span>BOT</span></a>
+        <div style="display: flex; gap: 30px;">
+            <a href="/dokumentacja" style="color: var(--accent); text-decoration: none; font-weight: 700; font-size: 0.9rem;">DOKUMENTACJA</a>
+            <a href="https://discord.gg/G5F3WBbZ" target="_blank" style="color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem;">SUPPORT</a>
+        </div>
+    </nav>
+
+    <div class="content-wrapper">
+        <aside class="sidebar">
+            <h3>Spis Treści</h3>
+            <a href="#wprowadzenie">1. Wprowadzenie</a>
+            <a href="#automod">2. System Auto-Mod</a>
+            <a href="#powitania">3. Powitania i Pożegnania</a>
+            <a href="#osadzenia">4. Kreator Osadzeń (Embeds)</a>
+            <a href="#selfrole">5. Role za Reakcje (Selfrole)</a>
+            <a href="#logi">6. Logi Serwerowe</a>
+            <a href="#tickety">7. System Ticketów</a>
+        </aside>
+
+        <main class="main-content">
+            <h1>Pełna Dokumentacja i Poradniki</h1>
+            <p>Witaj w oficjalnej dokumentacji PolskiBot. Znajdziesz tutaj szczegółowe opisy wszystkich funkcji naszego elitarnego bota Discord, a także poradniki krok po kroku, które pomogą Ci skonfigurować go do perfekcji. Poniższy przewodnik jest stale aktualizowany, aby zapewnić najwyższą jakość wsparcia dla administratorów serwerów Discord.</p>
+
+            <section id="wprowadzenie">
+                <h2>1. Wprowadzenie do PolskiBot</h2>
+                <div class="doc-box">
+                    <p>PolskiBot to zaawansowane narzędzie stworzone z myślą o profesjonalnych społecznościach na platformie Discord. Naszym celem od zawsze było dostarczenie panelu zarządzania, który jest nie tylko potężny, ale również intuicyjny i wizualnie dopracowany.</p>
+                    <p>Dzięki PolskiBot zyskujesz pełną kontrolę nad swoim serwerem z poziomu nowoczesnego interfejsu webowego. Każda wprowadzona zmiana w panelu natychmiast synchronizuje się z serwerem, minimalizując opóźnienia i gwarantując stabilność, nawet na serwerach z tysiącami aktywnych użytkowników.</p>
+                </div>
+            </section>
+
+            <section id="automod">
+                <h2>2. Zaawansowany System Auto-Mod</h2>
+                <p>Ochrona społeczności przed spamem, raidami i toksycznym zachowaniem to klucz do utrzymania zdrowego serwera. PolskiBot oferuje pancerne mechanizmy zabezpieczeń, które działają w czasie rzeczywistym i automatycznie pacyfikują zagrożenia, zanim te zdążą wyrządzić szkody.</p>
+                <ul>
+                    <li><strong>Filtr Anty-Link:</strong> Bot automatycznie analizuje każdą wysłaną wiadomość pod kątem zawartości linków. Możesz skonfigurować go tak, aby ignorował określone kanały (np. do promocji) i nadawał ostrzeżenia (Warny) lub wyciszenia (Timeouts) w przypadku złamania regulaminu. Domyślnie bot usuwa wszystkie nieautoryzowane zaproszenia na inne serwery Discord.</li>
+                    <li><strong>Ochrona Anty-Spam:</strong> System monitoruje częstotliwość wysyłanych wiadomości przez każdego członka. Jeśli użytkownik przekroczy dozwolony limit (np. 5 wiadomości w ciągu 3 sekund), bot natychmiast blokuje jego możliwość pisania i informuje moderację o incydencie.</li>
+                    <li><strong>Zabezpieczenie przed Phishingiem:</strong> Nowoczesne oszustwa wymagają nowoczesnych rozwiązań. Auto-Mod sprawdza podejrzane adresy URL znane z kradzieży kont, oszustw na darmowe subskrypcje Nitro czy ataków phishingowych.</li>
+                    <li><strong>Filtr Wulgaryzmów (Badwords):</strong> Oparta na dynamicznej bazie danych czarna lista słów blokuje nieodpowiednie treści. Możesz dostosować czułość filtra i przypisać mu automatyczne akcje, takie jak kasowanie wiadomości.</li>
+                </ul>
+            </section>
+
+            <section id="powitania">
+                <h2>3. Powitania i Pożegnania</h2>
+                <p>Pierwsze wrażenie robi się tylko raz. Moduł powitań w PolskiBot pozwala przywitać nowych użytkowników w niezwykle stylowy sposób, używając spersonalizowanych kart z grafikami (bannerami).</p>
+                <div class="doc-box">
+                    <p><strong>Jak skonfigurować idealne powitanie?</strong></p>
+                    <p>Przejdź do zakładki "Zarządzanie Serwerem" w panelu i wybierz "Powitania/Pożegnania". Masz możliwość wyboru kanału docelowego. Następnie możesz załadować własne tło w formacie JPG, PNG lub dla użytkowników Premium - jako animację GIF. Wykorzystując dostępne zmienne, np. <code>{nick}</code>, bot automatycznie wygeneruje przepiękną kartę z nazwą wchodzącego użytkownika i jego avatarem, nakładając odpowiedni profil gradientu oraz kolory czcionek wybrane w palecie personalizacji.</p>
+                </div>
+            </section>
+
+            <section id="osadzenia">
+                <h2>4. Kreator Osadzeń (Embeds) i Regulaminów</h2>
+                <p>Nikt nie lubi czytać suchych i nudnych wiadomości tekstowych. Osadzenia (Embeds) to najlepszy sposób na strukturyzację i poprawę wizualnego aspektu ogłoszeń, regulaminów czy przypomnień na serwerze Discord.</p>
+                <p>Kreator osadzeń w PolskiBot pozwala na tworzenie zaawansowanych struktur wiadomości poprzez panel webowy, omijając niewygodne edytowanie komendami w czacie. Do każdego osadzenia możesz z łatwością podpiąć duży obraz (Image), małą miniaturkę w rogu (Thumbnail) oraz ustawić indywidualny kolor bocznego paska z wykorzystaniem kodu HEX lub palety RGB.</p>
+                <p>Dodatkowo wprowadziliśmy funkcję **Dynamicznych Regulaminów**. Umożliwia ona tworzenie struktur złożonych z bloków tekstu poprzetykanych estetycznymi grafikami przerywającymi (tzw. dividerami). Na końcu każdego regulaminu bot może automatycznie podpiąć system "Akceptacji", gdzie użytkownik po kliknięciu reakcji otrzymuje przypisaną mu rolę zweryfikowanego członka serwera.</p>
+            </section>
+
+            <section id="selfrole">
+                <h2>5. Role za Reakcje (Selfrole)</h2>
+                <p>Usprawnij przypisywanie ról poprzez automatyzację procesu, pozwalając członkom na samodzielny wybór swoich ról, co odciąża administrację. System ról za reakcję (Selfrole) jest kluczowy dla personalizacji użytkownika na nowoczesnych serwerach Discord.</p>
+                <ul>
+                    <li>Konfiguracja odbywa się przez bardzo intuicyjny kreator. Określasz wiadomość (Embed), dodajesz opisy ról, a następnie przypinasz konkretne ikony (Emoji) do istniejących ról na serwerze.</li>
+                    <li>Moduł działa natychmiastowo. Gdy użytkownik kliknie wybrane Emoji pod opublikowaną wiadomością, bot niemal bez opóźnień aktualizuje jego uprawnienia. Kliknięcie ponowne skutkuje odebraniem roli (tzw. przełącznik).</li>
+                    <li>System obsługuje wiele typów, od tradycyjnych reakcji dodawanych pod wiadomością, po nowoczesne "Przyciski Akcji" (Buttons) oraz menu wyboru (Select Menus) z najnowszych API Discorda.</li>
+                </ul>
+            </section>
+
+            <section id="logi">
+                <h2>6. Konfiguracja Logów Serwerowych</h2>
+                <p>Wiedza o tym, co się dzieje na serwerze, jest fundamentem sprawnego zarządzania. PolskiBot dysponuje szczegółowym modułem logowania aktywności użytkowników, pozwalającym na śledzenie setek różnych typów zdarzeń z niespotykaną dokładnością.</p>
+                <div class="doc-box">
+                    <p>Za pomocą panelu logów decydujesz, które kanały na serwerze (najczęściej prywatne kanały tylko dla administracji) będą otrzymywały strumień raportów z określonych kategorii:</p>
+                    <p><strong>Logi Użytkowników:</strong> Śledzą wejścia, wyjścia, zmiany pseudonimów oraz ról i awatarów użytkowników.</p>
+                    <p><strong>Logi Kanałów:</strong> Rejestrują procesy tworzenia, usuwania i aktualizowania ustawień kanałów tekstowych oraz głosowych.</p>
+                    <p><strong>Logi Wiadomości:</strong> Rejestrują treść edytowanych wiadomości i przesyłają zawartość skasowanych, co znacząco utrudnia spamerom zacieranie śladów.</p>
+                </div>
+            </section>
+
+            <section id="tickety">
+                <h2>7. Obsługa i Konfiguracja Systemu Ticketów</h2>
+                <p>PolskiBot przenosi profesjonalną obsługę klienta i użytkownika na platformę Discord poprzez zintegrowany system zgłoszeń (Ticket System). Użytkownik potrzebujący pomocy może otworzyć prywatny kanał rozmowy z wyznaczoną grupą administracyjną. Ten sposób wsparcia ułatwia zarządzanie tysiącami zapytań dziennie, zapewniając transparentność rozwiązań.</p>
+                <p>Nasz panel webowy umożliwia przypisanie odpowiednich ról uprawnionych do odpowiedzi (support-team), edycję pierwszych wiadomości wysyłanych przez bota w takich kanałach, a także konfigurację kategoryzacji spraw i automatycznych protokołów archiwizujących rozmowy po zakończeniu zgłoszenia. Archiwizowane transkrypcje mogą być odsyłane do specjalnego, chronionego kanału zapasowego.</p>
+            </section>
+
+        </main>
+    </div>
+
+    <div style="text-align: center; padding: 50px; color: var(--text-dim); font-size: 0.8rem; border-top: 1px solid var(--border); margin: 0 10%;">
+        <div style="margin-bottom: 15px; display: flex; justify-content: center; gap: 25px;">
+            <a href="/privacy" style="color: var(--text-dim); text-decoration: none; transition: 0.3s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">POLITYKA PRYWATNOŚCI</a>
+            <a href="/tos" style="color: var(--text-dim); text-decoration: none; transition: 0.3s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">REGULAMIN USŁUG</a>
+            <a href="/dokumentacja" style="color: var(--accent); text-decoration: none; font-weight: bold;">DOKUMENTACJA (WIKI)</a>
+        </div>
+        &copy; 2026 <strong>POLSKIBOT</strong>. Zaprojektowane dla profesjonalnych społeczności przez wybitnych deweloperów.
+    </div>
+
+</body>
+</html>

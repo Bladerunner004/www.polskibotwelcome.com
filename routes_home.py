@@ -50,6 +50,10 @@ def privacy():
 def tos():
     return render_template('tos.html')
 
+@home_bp.route('/dokumentacja')
+def dokumentacja():
+    return render_template('dokumentacja.html')
+
 @home_bp.route('/ads.txt')
 def ads_txt():
     return send_from_directory(os.getcwd(), 'ads.txt')

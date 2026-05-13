@@ -28,16 +28,14 @@ if not os.path.exists("/home/BLADERUNNER009"):
 # Katalog synchronizacji (musi być ten sam co w routes_config.py)
 SYNC_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# --- GLOBALNA LISTA ZAKAZANYCH SŁÓW (Wulgaryzmy, Rasizm, Toksyczność) ---
-GLOBAL_BADWORDS = [
-    "kurwa", "chuj", "pizda", "jebac", "pierdol", "cwel", "pedal", "czarnuch", "nigger", "huj", 
-    "suka", "dziwka", "kutas", "fiut", "szmata", "frajer", "zjeb", "debil", "idiota", "cipa",
-    "skurwysyn", "pierdole", "jebie", "pizdziel", "kutasie", "fiucie", "pedale", "cwelu",
-    "k.u.r.w.a", "k_u_r_w_a", "k u r w a", "kurw@", "k0rwa", "j3bac", "jeb@c", "p3dal",
-    "faggot", "retard", "nigga", "bitch", "slut", "whore", "asshole", "dick", "pussy",
-    "spierdalaj", "zamknij sie", "morda", "konfident", "pedaly", "jebane", "pierdolone",
-    "cipsko", "ruchanie", "ruchac", "stuleja", "zjebie", "ryj", "suczo", "kurew"
-]
+# --- KONFIGURACJA URL (dla obrazkĂłw) ---
+BASE_URL = "https://BLADERUNNER009.pythonanywhere.com"
+
+def fix_url(url):
+    if not url: return url
+    if url.startswith('/static/'):
+        return f"{BASE_URL}{url}"
+    return url
 
 def check_badwords(text, custom_words=None):
     text = text.lower()
@@ -1862,7 +1860,7 @@ async def handle_send_embed(request):
                         eb.title = cfg.get('name', 'Regulamin')
                         if cfg.get('author'): eb.set_author(name=cfg['author'], url=cfg.get('author_url'))
                     if block.get('image'):
-                        eb.set_image(url=block['image'])
+                        eb.set_image(url=fix_url(block['image']))
                     if i == len(blocks) - 1:
                         if cfg.get('footer'): eb.set_footer(text=cfg['footer'])
                         if cfg.get('timestamp'): eb.timestamp = datetime.datetime.now()
@@ -1879,8 +1877,8 @@ async def handle_send_embed(request):
         # Standardowy embed
         e = discord.Embed(title=cfg.get('title', ''), description=cfg.get('description', ''), color=embed_color)
         if cfg.get('footer'): e.set_footer(text=cfg['footer'])
-        if cfg.get('image_url'): e.set_image(url=cfg['image_url'])
-        if cfg.get('thumbnail_url'): e.set_thumbnail(url=cfg['thumbnail_url'])
+        if cfg.get('image_url'): e.set_image(url=fix_url(cfg['image_url']))
+        if cfg.get('thumbnail_url'): e.set_thumbnail(url=fix_url(cfg['thumbnail_url']))
         if cfg.get('author'): e.set_author(name=cfg['author'], url=cfg.get('author_url'))
         if cfg.get('title_url'): e.url = cfg['title_url']
         if cfg.get('timestamp'): e.timestamp = datetime.datetime.now()

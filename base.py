@@ -49,7 +49,7 @@ def get_user_avatar(user):
 
 
 # --- STYLE I STAŁE ---
-GLOBAL_STYLE = \"\"\"
+GLOBAL_STYLE = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
     :root {
@@ -64,7 +64,7 @@ GLOBAL_STYLE = \"\"\"
         padding: 0; 
     }
 </style>
-\"\"\"
+"""
 
 config = {
     "CLIENT_ID": CLIENT_ID,

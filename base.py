@@ -90,3 +90,4 @@ LIMITS_PREMIUM = {
     "embed_configs": 50,
     "media_configs": 10
 }
+# Ostateczna poprawka linku i stylu

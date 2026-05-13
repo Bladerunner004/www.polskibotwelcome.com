@@ -20,7 +20,7 @@ DISCORD_INVITE_URL = (
 )
 
 
-DISCORD_LINK = "https://discord.gg/G5F3WBbZ"
+DISCORD_LINK = "https://discord.gg/RunF9ehW6"
 
 # --- FUNKCJE GENERUJĄCE ---
 

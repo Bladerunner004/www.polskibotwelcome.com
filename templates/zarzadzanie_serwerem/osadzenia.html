@@ -488,7 +488,7 @@
         const blockId = Date.now() + Math.random();
         const div = document.createElement('div');
         div.className = 'rule-block-editor';
-        div.style = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); border-radius: 12px; padding: 15px; position: relative;';
+        div.style = 'margin-bottom: 15px; position: relative;';
         div.dataset.id = blockId;
         
         div.innerHTML = `
@@ -496,14 +496,15 @@
                 <span style="font-size: 0.7rem; font-weight: 800; color: var(--accent-green);">BLOK ZASAD</span>
                 <i class="fas fa-times" style="color: #ff4444; cursor: pointer;" onclick="removeRuleBlock('${blockId}')"></i>
             </div>
-            
-            <div class="ee-large-img" id="rb-img-${blockId}" style="height: 120px; margin-top: 0; background-image: ${imgUrl ? `url('${imgUrl}')` : 'none'};" onclick="triggerBlockUpload('${blockId}')">
-                <i class="fas fa-image" style="display: ${imgUrl ? 'none' : 'block'};"></i>
+            <div class="discord-embed" style="border-left-color: #74b816;">
+                <div class="ee-large-img" id="rb-img-${blockId}" style="height: 120px; margin-top: 0; background-image: ${imgUrl ? `url('${imgUrl}')` : 'none'};" onclick="triggerBlockUpload('${blockId}')">
+                    <i class="fas fa-image" style="display: ${imgUrl ? 'none' : 'block'};"></i>
+                </div>
+                <input type="file" id="rb-input-${blockId}" hidden accept="image/*" onchange="uploadBlockImage('${blockId}')">
+                <input type="hidden" id="rb-url-${blockId}" value="${imgUrl}">
+                
+                <div class="ee-desc" id="rb-text-${blockId}" contenteditable="true" placeholder="Opis do tego bloku..." style="margin-top: 15px; min-height: 40px; outline: none;">${text}</div>
             </div>
-            <input type="file" id="rb-input-${blockId}" hidden accept="image/*" onchange="uploadBlockImage('${blockId}')">
-            <input type="hidden" id="rb-url-${blockId}" value="${imgUrl}">
-            
-            <div class="modal-input" id="rb-text-${blockId}" contenteditable="true" placeholder="Opis do tego bloku..." style="margin-top: 10px; min-height: 40px;">${text}</div>
         `;
         container.appendChild(div);
     };
@@ -750,7 +751,7 @@
             last_message_id: oldCfg ? oldCfg.last_message_id : '',
             channel_id: getV(p + '-channel'),
             author: isRules ? '' : getT(p + 'e-author'),
-            author_url: isRules ? '' : (isPersonalized ? (getV(p + '-author-url') || '') : ''),
+            author_url: isRules ? '' : (isPersonalized ? (getE(p + '-author-url') ? getV(p + '-author-url') : '') : ''),
             title: isRules ? '' : title,
             title_url: isRules ? '' : (isPersonalized ? getV(p + '-title-url') : ''),
             description: finalDesc,

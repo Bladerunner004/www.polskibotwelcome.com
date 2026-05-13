@@ -335,6 +335,13 @@
                         <input type="color" id="g-link-color" value="{{ main_settings.embed_color or '#00a8fc' }}" style="height: 45px; cursor: pointer; padding: 5px;" oninput="updatePreviewStyles('g')">
                     </div>
                 </div>
+                <div style="margin-top: 10px;">
+                    <label class="toggle-row" style="justify-content: flex-start; gap: 10px;">
+                        <input type="checkbox" id="g-timestamp">
+                        <div class="toggle-switch"></div>
+                        <span style="font-size: 0.8rem; color: var(--text-gray);">POKAŻ CZAS (TIMESTAMP)</span>
+                    </label>
+                </div>
             </div>
         </div>
                     <button type="button" class="btn-save" onclick="saveConfig('general', true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
@@ -754,6 +761,8 @@
             image_url: isRules ? '' : getV(p + '-large-url'),
             reaction_emoji: isRules ? getV('r-reaction-emoji') : '',
             reaction_role_id: isRules ? getV('r-reaction-role') : '',
+            timestamp: getE(p + '-timestamp') ? (getE(p + '-timestamp').checked ? 1 : 0) : 0,
+            outer_text: getE(p + 'e-outer-text') ? getT(p + 'e-outer-text') : '',
             enabled: getE(p + '-enabled').checked
         };
 

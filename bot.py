@@ -1821,8 +1821,16 @@ async def handle_send_embed(request):
     guild = bot.get_guild(int(guild_id))
     if not guild: return web.json_response({'success': False, 'error': 'Bot poza serwerem'}, status=404)
     
-    channel = guild.get_channel(int(cfg['channel_id']))
-    if not channel: return web.json_response({'success': False, 'error': 'Brak kanału'}, status=404)
+    channel_id = cfg.get('channel_id')
+    if not channel_id or str(channel_id).strip() == "" or str(channel_id) == "None":
+        return web.json_response({'success': False, 'error': 'Brak wybranego kanału'}, status=400)
+        
+    try:
+        channel = guild.get_channel(int(channel_id))
+    except (ValueError, TypeError):
+        return web.json_response({'success': False, 'error': 'Nieprawidłowy ID kanału'}, status=400)
+        
+    if not channel: return web.json_response({'success': False, 'error': 'Nie znaleziono kanału na serwerze'}, status=404)
 
     import discord
     
@@ -1881,15 +1889,18 @@ async def handle_send_embed(request):
     msg = None
     last_msg_id = cfg.get('last_message_id')
     
+    outer_text = cfg.get('outer_text')
+    content_val = outer_text if outer_text and outer_text.strip() else None
+
     if last_msg_id:
         try:
             old_msg = await channel.fetch_message(int(last_msg_id))
-            await old_msg.edit(embeds=embeds)
+            await old_msg.edit(content=content_val, embeds=embeds)
             msg = old_msg
         except: pass
 
     if not msg:
-        msg = await channel.send(embeds=embeds)
+        msg = await channel.send(content=content_val, embeds=embeds)
         try:
             conn = sqlite3.connect(DB_NAME)
             conn.cursor().execute("UPDATE embed_configs SET last_message_id = ? WHERE id = ?", (str(msg.id), config_id))

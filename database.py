@@ -177,7 +177,8 @@ def init_db():
             title_url TEXT DEFAULT '',
             author_url TEXT DEFAULT '',
             link_color TEXT DEFAULT '#00a8fc',
-            timestamp INTEGER DEFAULT 0
+            timestamp INTEGER DEFAULT 0,
+            outer_text TEXT DEFAULT ''
         )''')
     
     # Migracja dla embed_configs
@@ -189,7 +190,8 @@ def init_db():
         ("reaction_emoji", "TEXT DEFAULT ''"),
         ("reaction_role_id", "TEXT DEFAULT ''"),
         ("last_message_id", "TEXT DEFAULT ''"),
-        ("enabled", "INTEGER DEFAULT 1")
+        ("enabled", "INTEGER DEFAULT 1"),
+        ("outer_text", "TEXT DEFAULT ''")
     ]
     for col_name, col_type in embed_columns:
         try:
@@ -979,10 +981,10 @@ def get_embed_configs(guild_id):
     try:
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
-        c.execute('SELECT id, name, channel_id, author, title, description, footer, color, image_url, thumbnail_url, title_url, author_url, link_color, category, reaction_emoji, reaction_role_id, last_message_id, timestamp, enabled FROM embed_configs WHERE guild_id=?', (str(guild_id),))
+        c.execute('SELECT id, name, channel_id, author, title, description, footer, color, image_url, thumbnail_url, title_url, author_url, link_color, category, reaction_emoji, reaction_role_id, last_message_id, timestamp, enabled, outer_text FROM embed_configs WHERE guild_id=?', (str(guild_id),))
         rows = c.fetchall()
         conn.close()
-        keys = ['id', 'name', 'channel_id', 'author', 'title', 'description', 'footer', 'color', 'image_url', 'thumbnail_url', 'title_url', 'author_url', 'link_color', 'category', 'reaction_emoji', 'reaction_role_id', 'last_message_id', 'timestamp', 'enabled']
+        keys = ['id', 'name', 'channel_id', 'author', 'title', 'description', 'footer', 'color', 'image_url', 'thumbnail_url', 'title_url', 'author_url', 'link_color', 'category', 'reaction_emoji', 'reaction_role_id', 'last_message_id', 'timestamp', 'enabled', 'outer_text']
         return [dict(zip(keys, r)) for r in rows]
     except Exception as e:
         print(f"âťŚ BĹ‚Ä…d odczytu embed_configs: {e}")
@@ -1007,13 +1009,13 @@ def save_embed_config(guild_id, data, config_id=None):
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
         if config_id:
-            c.execute('''UPDATE embed_configs SET name=?, channel_id=?, author=?, title=?, description=?, footer=?, color=?, image_url=?, thumbnail_url=?, title_url=?, author_url=?, link_color=?, category=?, reaction_emoji=?, reaction_role_id=?, last_message_id=?, timestamp=? 
+            c.execute('''UPDATE embed_configs SET name=?, channel_id=?, author=?, title=?, description=?, footer=?, color=?, image_url=?, thumbnail_url=?, title_url=?, author_url=?, link_color=?, category=?, reaction_emoji=?, reaction_role_id=?, last_message_id=?, timestamp=?, outer_text=? 
                          WHERE id=? AND guild_id=?''',
                       (data.get('name', 'Nowe Osadzenie'), data.get('channel_id', ''), data.get('author', ''), data.get('title', ''), 
                        data.get('description', ''), data.get('footer', ''), data.get('color', '#74b816'), data.get('image_url', ''),
                        data.get('thumbnail_url', ''), data.get('title_url', ''), data.get('author_url', ''), data.get('link_color', '#00a8fc'),
                        data.get('category', 'general'), data.get('reaction_emoji', ''), data.get('reaction_role_id', ''), data.get('last_message_id', ''),
-                       1 if data.get('timestamp') else 0, config_id, str(guild_id)))
+                       1 if data.get('timestamp') else 0, data.get('outer_text', ''), config_id, str(guild_id)))
             new_id = config_id
         else:
             # Sprawdzamy limit
@@ -1025,13 +1027,13 @@ def save_embed_config(guild_id, data, config_id=None):
                 conn.close()
                 return None
             
-            c.execute('''INSERT INTO embed_configs (guild_id, name, channel_id, author, title, description, footer, color, image_url, thumbnail_url, title_url, author_url, link_color, category, reaction_emoji, reaction_role_id, last_message_id, timestamp)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            c.execute('''INSERT INTO embed_configs (guild_id, name, channel_id, author, title, description, footer, color, image_url, thumbnail_url, title_url, author_url, link_color, category, reaction_emoji, reaction_role_id, last_message_id, timestamp, outer_text)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                       (str(guild_id), data.get('name', 'Nowe Osadzenie'), data.get('channel_id', ''), data.get('author', ''), data.get('title', ''),
                        data.get('description', ''), data.get('footer', ''), data.get('color', '#74b816'), data.get('image_url', ''),
                        data.get('thumbnail_url', ''), data.get('title_url', ''), data.get('author_url', ''), data.get('link_color', '#00a8fc'),
                        data.get('category', 'general'), data.get('reaction_emoji', ''), data.get('reaction_role_id', ''), data.get('last_message_id', ''),
-                       1 if data.get('timestamp') else 0))
+                       1 if data.get('timestamp') else 0, data.get('outer_text', '')))
             new_id = c.lastrowid
         conn.commit()
         conn.close()

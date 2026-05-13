@@ -1886,33 +1886,52 @@ async def handle_send_embed(request):
         if cfg.get('timestamp'): e.timestamp = datetime.datetime.now()
         embeds.append(e)
 
-    msg = None
-    last_msg_id = cfg.get('last_message_id')
-    
-    outer_text = cfg.get('outer_text')
-    content_val = outer_text if outer_text and outer_text.strip() else None
-
-    if last_msg_id:
-        try:
-            old_msg = await channel.fetch_message(int(last_msg_id))
-            await old_msg.edit(content=content_val, embeds=embeds)
-            msg = old_msg
-        except: pass
-
-    if not msg:
-        msg = await channel.send(content=content_val, embeds=embeds)
-        try:
-            conn = sqlite3.connect(DB_NAME)
-            conn.cursor().execute("UPDATE embed_configs SET last_message_id = ? WHERE id = ?", (str(msg.id), config_id))
-            conn.commit()
-            conn.close()
-        except: pass
+    try:
+        msg = None
+        last_msg_id = cfg.get('last_message_id')
         
-    if cfg.get('category') == 'rules' and cfg.get('reaction_emoji'):
-        try: await msg.add_reaction(cfg['reaction_emoji'])
-        except: pass
+        outer_text = cfg.get('outer_text')
+        content_val = outer_text if outer_text and outer_text.strip() else None
 
-    return web.json_response({'success': True})
+        if last_msg_id:
+            try:
+                print(f"[API] Proba edycji wiadomosci: {last_msg_id}")
+                old_msg = await channel.fetch_message(int(last_msg_id))
+                await old_msg.edit(content=content_val, embeds=embeds)
+                msg = old_msg
+                print(f"[API] Edytowano wiadomosc: {msg.id}")
+            except Exception as e:
+                print(f"[API] Blad edycji wiadomosci: {e}")
+                pass
+
+        if not msg:
+            try:
+                print(f"[API] Proba wyslania nowej wiadomosci na kanal {channel.id}")
+                msg = await channel.send(content=content_val, embeds=embeds)
+                print(f"[API] Wyslano nowa wiadomosc: {msg.id}")
+                try:
+                    conn = sqlite3.connect(DB_NAME)
+                    conn.cursor().execute("UPDATE embed_configs SET last_message_id = ? WHERE id = ?", (str(msg.id), config_id))
+                    conn.commit()
+                    conn.close()
+                except Exception as db_e:
+                    print(f"[API] Blad zapisu last_message_id do bazy: {db_e}")
+            except Exception as send_e:
+                print(f"[API] Blad krytyczny wysylania wiadomosci: {send_e}")
+                return web.json_response({'success': False, 'error': f'Discord error: {send_e}'}, status=500)
+            
+        if cfg.get('category') == 'rules' and cfg.get('reaction_emoji'):
+            try: 
+                await msg.add_reaction(cfg['reaction_emoji'])
+                print(f"[API] Dodano reakcje: {cfg['reaction_emoji']}")
+            except Exception as react_e:
+                print(f"[API] Blad dodawania reakcji: {react_e}")
+                pass
+
+        return web.json_response({'success': True})
+    except Exception as global_e:
+        print(f"[API] Blad globalny w handle_send_embed: {global_e}")
+        return web.json_response({'success': False, 'error': str(global_e)}, status=500)
 
 async def send_selfrole_panel(channel, cfg):
     import json

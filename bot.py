@@ -458,7 +458,7 @@ async def slap(ctx, uzytkownik: discord.Member):
 async def info(ctx):
     embed = discord.Embed(
         title="🤖 Polski Bot",
-        description="Zaawansowany bot do zarządzania serwerem.\n\n🌐 [Panel WWW](https://polskibot.pl)\n💬 [Support](https://discord.gg/G5F3WBbZ)",
+        description="Zaawansowany bot do zarządzania serwerem.\n\n🌐 [Panel WWW](https://polskibot.pl)\n💬 [Support](https://discord.gg/RunF9ehW6)",
         color=get_embed_color(ctx.guild)
     )
 

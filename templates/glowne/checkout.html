@@ -221,7 +221,9 @@
                 </div>
             </div>
 
-            <button class="btn-confirm" id="confirm-btn" onclick="confirmPayment()" style="margin-top: 30px;">SUBSKRYBUJ TERAZ</button>
+            <div id="payment-button-container" style="margin-top: 30px;">
+                <button class="btn-confirm" id="confirm-btn" onclick="confirmPayment()">SUBSKRYBUJ TERAZ</button>
+            </div>
             
             <div id="blik-status" style="display: none; margin-top: 20px; text-align: center; padding: 15px; background: rgba(116,184,22,0.1); border-radius: 10px; border: 1px solid rgba(116,184,22,0.2);">
                 <div class="fas fa-spinner fa-spin" style="color: #74b816; font-size: 1.5rem; margin-bottom: 10px;"></div>
@@ -256,7 +258,7 @@
         if (activeCard) activeCard.classList.add('active');
 
         const blikBox = document.getElementById('blik-container');
-        const btn = document.getElementById('confirm-btn');
+        const btnContainer = document.getElementById('payment-button-container');
         const info = document.getElementById('confirm-info');
         const statusBox = document.getElementById('blik-status');
 
@@ -264,43 +266,23 @@
 
         if (method === 'card') {
             if (blikBox) blikBox.style.display = 'none';
-            if (btn) {
-                btn.style.display = 'block';
-                btn.textContent = 'SUBSKRYBUJ TERAZ';
-            }
+            btnContainer.innerHTML = '<a href="https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00" class="btn-confirm" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">SUBSKRYBUJ TERAZ</a>';
             if (info) info.textContent = 'Twoja subskrypcja będzie odnawiana automatycznie co miesiąc. Możesz zrezygnować w każdej chwili.';
         } else if (method === 'blik') {
             if (blikBox) blikBox.style.display = 'block';
-            if (btn) {
-                btn.style.display = 'block';
-                btn.textContent = 'ZAPŁAĆ BLIK';
-            }
+            btnContainer.innerHTML = '<button class="btn-confirm" id="confirm-btn" onclick="confirmPayment()">ZAPŁAĆ BLIK</button>';
             if (info) info.textContent = 'Płatność jednorazowa. Premium zostanie aktywowane po weryfikacji kodu.';
         } else if (method === 'paypal') {
             if (blikBox) blikBox.style.display = 'none';
-            if (btn) {
-                btn.style.display = 'block';
-                btn.textContent = 'PRZEJDŹ DO PAYPAL';
-            }
+            btnContainer.innerHTML = '<a href="https://paypal.me/nobadystrange" target="_blank" class="btn-confirm" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">PRZEJDŹ DO PAYPAL</a>';
             if (info) info.textContent = 'Płatność jednorazowa przez PayPal.';
         }
     }
 
     function confirmPayment() {
-        console.log('Potwierdzanie płatności dla:', selectedMethod);
         const btn = document.getElementById('confirm-btn');
         const blikBox = document.getElementById('blik-container');
         const statusBox = document.getElementById('blik-status');
-
-        if (selectedMethod === 'card') {
-            window.location.href = 'https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00';
-            return;
-        }
-
-        if (selectedMethod === 'paypal') {
-            window.location.href = 'https://paypal.me/nobadystrange';
-            return;
-        }
 
         if (selectedMethod === 'blik') {
             const codeInput = document.getElementById('blik-code');
@@ -315,6 +297,7 @@
                 blikBox.style.pointerEvents = 'none';
             }
             if (btn) btn.style.display = 'none';
+            document.getElementById('payment-button-container').style.display = 'none';
             if (statusBox) statusBox.style.display = 'block';
 
             setTimeout(() => {

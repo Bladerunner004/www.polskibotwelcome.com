@@ -139,7 +139,7 @@ def api_debug_sync():
     })
 
 @config_bp.route('/config/<server_id>/checkout')
-def checkout(server_id):
+def premium_checkout(server_id):
     if 'user' not in session or server_id == 'None':
         return redirect(url_for('dashboard.dashboard'))
     plan_name = request.args.get('plan', 'PREMIUM')

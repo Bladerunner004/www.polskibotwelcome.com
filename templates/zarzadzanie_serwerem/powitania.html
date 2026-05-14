@@ -235,6 +235,12 @@
         background: #ff4444;
         color: white;
     }
+    .stat-badge.premium {
+        background: rgba(255, 215, 0, 0.1) !important;
+        color: #ffd700 !important;
+        border: 1px solid rgba(255, 215, 0, 0.3) !important;
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+    }
 </style>
 
 <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/welcome_banner_premium.png');">
@@ -291,7 +297,7 @@
     <div class="settings-card">
         <div class="card-header">
             <h3><i class="fas fa-sign-in-alt"></i> Konfiguracja Powitań</h3>
-            <span id="powitanie-count" class="stat-badge" style="background: rgba(116,184,22,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--accent-green); font-weight: 700; border: 1px solid rgba(116,184,22,0.2);">0 / {% if main_settings.premium %}20{% else %}2{% endif %}</span>
+            <span id="powitanie-count" class="stat-badge {% if main_settings.premium %}premium{% endif %}" style="background: rgba(116,184,22,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--accent-green); font-weight: 700; border: 1px solid rgba(116,184,22,0.2);">0 / {% if main_settings.premium %}20{% else %}2{% endif %}</span>
         </div>
         <div class="card-body">
             <div id="powitanie-configs"></div>
@@ -302,7 +308,7 @@
     <div class="settings-card">
         <div class="card-header">
             <h3><i class="fas fa-sign-out-alt"></i> Konfiguracja Pożegnań</h3>
-            <span id="pozegnanie-count" class="stat-badge" style="background: rgba(116,184,22,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--accent-green); font-weight: 700; border: 1px solid rgba(116,184,22,0.2);">0 / {% if main_settings.premium %}20{% else %}2{% endif %}</span>
+            <span id="pozegnanie-count" class="stat-badge {% if main_settings.premium %}premium{% endif %}" style="background: rgba(116,184,22,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--accent-green); font-weight: 700; border: 1px solid rgba(116,184,22,0.2);">0 / {% if main_settings.premium %}20{% else %}2{% endif %}</span>
         </div>
         <div class="card-body">
             <div id="pozegnanie-configs"></div>

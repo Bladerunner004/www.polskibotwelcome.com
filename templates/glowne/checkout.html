@@ -1,151 +1,169 @@
-{% extends "base_layout.html" %}
-{% block content %}
-<style>
-    :root {
-        --accent-green: #74b816;
-        --bg-dark: #06070a;
-        --card-bg: rgba(15, 17, 23, 0.7);
-        --glass-border: rgba(255, 255, 255, 0.08);
-    }
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - PolskiBot Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --accent-green: #74b816;
+            --bg-dark: #06070a;
+            --card-bg: rgba(15, 17, 23, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --font: 'Outfit', sans-serif;
+        }
 
-    .checkout-wrapper {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 40px 20px;
-        background: url('/static/img/checkout_bg.png') no-repeat center center fixed;
-        background-size: cover;
-    }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    .checkout-container {
-        width: 100%;
-        max-width: 900px;
-        background: var(--card-bg);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border: 1px solid var(--glass-border);
-        border-radius: 32px;
-        overflow: hidden;
-        box-shadow: 0 25px 80px rgba(0,0,0,0.6);
-        display: flex;
-        animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
+        body {
+            font-family: var(--font);
+            background-color: var(--bg-dark);
+            color: white;
+            line-height: 1.6;
+        }
 
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(40px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+        .checkout-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: radial-gradient(circle at 50% 50%, rgba(116, 184, 22, 0.05), transparent 70%);
+        }
 
-    .checkout-info {
-        flex: 1.2;
-        padding: 50px;
-        background: linear-gradient(135deg, rgba(116, 184, 22, 0.05), transparent);
-        border-right: 1px solid var(--glass-border);
-    }
+        .checkout-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+            display: flex;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
-    .checkout-payment {
-        flex: 1;
-        padding: 50px;
-        background: rgba(0,0,0,0.2);
-    }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    .plan-badge {
-        display: inline-block;
-        padding: 6px 14px;
-        background: rgba(116, 184, 22, 0.15);
-        color: var(--accent-green);
-        border-radius: 50px;
-        font-size: 0.75rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 20px;
-    }
+        .checkout-info {
+            flex: 1.2;
+            padding: 50px;
+            background: linear-gradient(135deg, rgba(116, 184, 22, 0.05), transparent);
+            border-right: 1px solid var(--glass-border);
+        }
 
-    h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; color: white; }
-    .subtitle { color: #888; font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px; }
+        .checkout-payment {
+            flex: 1;
+            padding: 50px;
+            background: rgba(0,0,0,0.2);
+        }
 
-    .price-tag {
-        font-size: 3.5rem;
-        font-weight: 900;
-        color: white;
-        margin-bottom: 40px;
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-    }
-    .price-tag span { font-size: 1.2rem; color: #555; }
+        .plan-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(116, 184, 22, 0.15);
+            color: var(--accent-green);
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
 
-    .features-list { list-style: none; margin-bottom: 40px; }
-    .features-list li {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: #ccc;
-        margin-bottom: 15px;
-        font-size: 0.92rem;
-    }
-    .features-list li i { color: var(--accent-green); font-size: 0.8rem; }
+        h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; color: white; }
+        .subtitle { color: #888; font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px; }
 
-    .payment-methods { display: flex; flex-direction: column; gap: 15px; }
-    .method-card {
-        padding: 20px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid var(--glass-border);
-        border-radius: 18px;
-        display: flex;
-        align-items: center;
-        gap: 18px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-    .method-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(116,184,22,0.3); transform: translateX(5px); }
-    .method-card.active { border-color: var(--accent-green); background: rgba(116,184,22,0.05); }
+        .price-tag {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .price-tag span { font-size: 1.2rem; color: #555; }
 
-    .method-icon {
-        width: 48px; height: 48px;
-        background: #111;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.4rem;
-        color: var(--accent-green);
-    }
+        .features-list { list-style: none; margin-bottom: 40px; }
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #ccc;
+            margin-bottom: 15px;
+            font-size: 0.92rem;
+        }
+        .features-list li i { color: var(--accent-green); font-size: 0.8rem; }
 
-    .bank-details {
-        margin-top: 30px;
-        padding: 20px;
-        background: rgba(0,0,0,0.4);
-        border: 1px dashed var(--glass-border);
-        border-radius: 16px;
-    }
-    .bank-label { font-size: 0.7rem; color: #555; text-transform: uppercase; font-weight: 800; margin-bottom: 8px; }
-    .bank-number { font-family: 'Courier New', Courier, monospace; font-size: 1rem; color: var(--accent-green); font-weight: 700; letter-spacing: 1px; word-break: break-all; }
+        .payment-methods { display: flex; flex-direction: column; gap: 15px; }
+        .method-card {
+            padding: 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .method-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(116,184,22,0.3); transform: translateX(5px); }
+        .method-card.active { border-color: var(--accent-green); background: rgba(116,184,22,0.05); }
 
-    .btn-confirm {
-        width: 100%;
-        margin-top: 30px;
-        padding: 18px;
-        background: linear-gradient(135deg, #74b816, #4d7c0f);
-        color: black;
-        border: none;
-        border-radius: 14px;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        cursor: pointer;
-        transition: 0.3s;
-        box-shadow: 0 10px 30px rgba(116, 184, 22, 0.3);
-    }
-    .btn-confirm:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(116, 184, 22, 0.4); }
+        .method-icon {
+            width: 48px; height: 48px;
+            background: #111;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: var(--accent-green);
+        }
 
-    @media (max-width: 850px) {
-        .checkout-container { flex-direction: column; }
-        .checkout-info { border-right: none; border-bottom: 1px solid var(--glass-border); }
-    }
-</style>
+        .bank-details {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.4);
+            border: 1px dashed var(--glass-border);
+            border-radius: 16px;
+        }
+        .bank-label { font-size: 0.7rem; color: #555; text-transform: uppercase; font-weight: 800; margin-bottom: 8px; }
+        .bank-number { font-family: 'Courier New', Courier, monospace; font-size: 1rem; color: var(--accent-green); font-weight: 700; letter-spacing: 1px; word-break: break-all; }
+
+        .btn-confirm {
+            width: 100%;
+            margin-top: 30px;
+            padding: 18px;
+            background: linear-gradient(135deg, #74b816, #4d7c0f);
+            color: black;
+            border: none;
+            border-radius: 14px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 10px 30px rgba(116, 184, 22, 0.3);
+        }
+        .btn-confirm:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(116, 184, 22, 0.4); }
+
+        @media (max-width: 850px) {
+            .checkout-container { flex-direction: column; }
+            .checkout-info { border-right: none; border-bottom: 1px solid var(--glass-border); }
+        }
+    </style>
+</head>
+<body>
 
 <div class="checkout-wrapper">
     <div class="checkout-container">
@@ -167,7 +185,7 @@
             <div class="bank-details">
                 <div class="bank-label">Przelew Tradycyjny / BLIK na numer</div>
                 <div class="bank-number">75 1140 2004 0000 3002 8055 6866</div>
-                <div class="bank-label" style="margin-top:10px;">Tytułem: {{ server_id }}</div>
+                <div class="bank-label" style="margin-top:10px;">Tytułem (ID Serwera): {{ server_id }}</div>
             </div>
         </div>
 
@@ -213,11 +231,9 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PRZETWARZANIE...';
         
         try {
-            // Symulacja powiadomienia systemu o wpłacie
             await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            alert('✅ Twoje zgłoszenie wpłaty zostało przyjęte! System sprawdzi przelew i aktywuje pakiet PREMIUM automatycznie (zwykle do 15 min przy BLIK/Stripe).');
-            window.location.href = '/config/{{ server_id }}';
+            alert('✅ Twoje zgłoszenie wpłaty zostało przyjęte! System sprawdzi przelew i aktywuje pakiet PREMIUM automatycznie.');
+            window.close();
         } catch(e) {
             alert('Wystąpił błąd. Spróbuj ponownie później.');
             btn.disabled = false;
@@ -225,4 +241,5 @@
         }
     }
 </script>
-{% endblock %}
+</body>
+</html>

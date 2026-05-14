@@ -290,11 +290,11 @@
     <div class="settings-card">
         <div class="card-header">
             <h3><i class="fas fa-gavel"></i> Panel z zasadami</h3>
-            <span id="rules-count" class="count-pill {% if main_settings.premium %}premium{% endif %}">{{ rules_configs|length }} / {% if main_settings.premium %}10{% else %}2{% endif %}</span>
+            <span id="rules-count" class="count-pill {% if main_settings.premium %}premium{% endif %}">{{ rules_configs|length }} / {% if main_settings.premium %}5{% else %}1{% endif %}</span>
         </div>
         <div class="card-body">
             <div id="rules-list"></div>
-            <div class="new-config-btn" onclick="openRulesModal()"><i class="fas fa-plus"></i> Dodaj nowe zasady</div>
+            <div class="new-config-btn" onclick="openRulesModal()"><i class="fas fa-plus"></i> Dodaj nowy panel z zasadami</div>
         </div>
     </div>
 </div>
@@ -452,9 +452,9 @@
             </div>
         </div>
 
-        <!-- UKRYTE USTAWIENIA KOLORÓW DLA ZASAD -->
-        <input type="hidden" id="r-color" value="#74b816">
-        <input type="hidden" id="r-link-color" value="#00a8fc">
+        <!-- UKRYTE USTAWIENIA DLA ZASAD -->
+        <input type="hidden" id="r-thumb-url">
+        <input type="hidden" id="r-large-url">
 
         <button type="button" class="btn-save" onclick="saveConfig('rules', true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
         <button type="button" onclick="saveConfig('rules', false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px; border-radius:10px; cursor:pointer; margin-top:8px; font-weight:bold;">TYLKO ZAPISZ</button>

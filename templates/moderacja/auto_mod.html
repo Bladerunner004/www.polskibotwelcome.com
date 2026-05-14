@@ -55,19 +55,18 @@
     }
 </style>
 
-<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/automod_banner_premium.png');">
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
     <div class="hero-glass">
         <div class="hero-header">
             <h1 class="hero-title">
                 <span class="decorative-text">Auto</span> Moderacja
             </h1>
             <p class="hero-subtitle">
-                Automatyczny system ochrony przed spamem, reklamami i toksycznym zachowaniem. Bot zareaguje zanim zrobi to administrator.
+                Zautomatyzuj ochronę swojego serwera przed spamem, wulgaryzmami i niebezpiecznymi linkami.
             </p>
         </div>
         <div class="hero-stats">
             <div class="hero-stat-item">
-                <div class="stat-icon"><i class="fas fa-robot"></i></div>
                 <div class="stat-info">
                     <span class="stat-value">Aktywny</span>
                     <span class="stat-label">Filtr spamu</span>
@@ -170,19 +169,36 @@
     </div>
 
     <!-- REJESTR AUDYTU -->
-    <div class="automod-card {% if not main_settings.premium %}premium-locked{% endif %}">
+    <div class="automod-card">
         <div class="card-icon" style="color: #d4af37;"><i class="fas fa-history"></i></div>
         <div class="card-content">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <h3>Rejestr Audytu</h3>
                 {% if not main_settings.premium %}<span class="premium-badge-gold">PREMIUM</span>{% endif %}
             </div>
-            <p>Logi zmian na serwerze.</p>
+            <p>Logi zmian na serwerze (kanał logów).</p>
         </div>
         <label class="toggle-row">
-            <input type="checkbox" id="automod-auditlog-switch" {% if main_settings.automod_auditlog %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('auditlog')">
+            <input type="checkbox" id="automod-auditlog-switch" {% if main_settings.automod_auditlog %}checked{% endif %} onchange="updateAutomod('auditlog')">
             <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
         </label>
+    </div>
+</div>
+
+<div class="settings-card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h3><i class="fas fa-list-alt"></i> Konfiguracja Kanału Logów</h3>
+    </div>
+    <div class="card-body">
+        <div class="modal-section">
+            <label>WYBIERZ KANAŁ DLA LOGÓW:</label>
+            <select id="automod-log-channel" class="modal-input" onchange="updateLogChannel()">
+                <option value="">Wybierz kanał...</option>
+                {% for channel in channels %}
+                <option value="{{ channel.id }}" {% if main_settings.automod_log_channel == channel.id %}selected{% endif %}># {{ channel.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
 </div>
 

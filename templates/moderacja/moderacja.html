@@ -1,87 +1,116 @@
-<div class="main-content" style="margin-left: 260px; padding: 40px; min-height: 100vh;">
-    <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/moderation_banner_premium.png');">
-        <div class="hero-glass">
-            <div class="hero-header">
-                <h1 class="hero-title">
-                    <span class="decorative-text">System</span> Moderacji
-                </h1>
-                <p class="hero-subtitle">
-                    Zarządzaj bezpieczeństwem swojego serwera. Skonfiguruj komendy moderacyjne i uprawnienia dla swojej administracji.
-                </p>
-            </div>
-            <div class="hero-stats">
-                <div class="hero-stat-item">
-                    <div class="stat-icon"><i class="fas fa-gavel"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-value">Aktywna</span>
-                        <span class="stat-label">Ochrona serwera</span>
-                    </div>
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/moderation_banner_premium.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">System</span> Moderacji
+            </h1>
+            <p class="hero-subtitle">
+                Zarządzaj bezpieczeństwem swojego serwera. Skonfiguruj podstawowe systemy ochronne.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-gavel"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">Aktywna</span>
+                    <span class="stat-label">Ochrona serwera</span>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="settings-card">
-        <div class="card-header">
-            <h3><i class="fas fa-shield-alt"></i> Ustawienia Ogólne</h3>
-        </div>
-        <div class="card-body">
-            <div class="setting-item">
-                <div class="setting-info">
-                    <div class="setting-title">System Moderacji</div>
-                    <div class="setting-desc">Włącza/wyłącza wszystkie komendy moderacyjne (ban, kick, mute).</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="mod-enabled-switch" {% if main_settings.moderation_enabled %}checked{% endif %}>
-                    <span class="slider round"></span>
-                </label>
-            </div>
-            <div class="setting-item">
-                <div class="setting-info">
-                    <div class="setting-title">Wymagaj potwierdzenia</div>
-                    <div class="setting-desc">Bot zapyta o potwierdzenie przed banem/kickiem.</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="mod-confirm-switch" {% if main_settings.moderation_confirm %}checked{% endif %}>
-                    <span class="slider round"></span>
-                </label>
-            </div>
-        </div>
-    </div>
-
-    <div class="settings-card">
-        <div class="card-header">
-            <h3><i class="fas fa-user-shield"></i> Role Administracyjne</h3>
-        </div>
-        <div class="card-body">
-            <div class="modal-section">
-                <label class="modal-label">ROLA MODERATORA:</label>
-                <select class="modal-select" id="mod-role-id">
-                    <option value="">Wybierz rolę...</option>
-                    {% for r in roles %}
-                    <option value="{{ r.id }}" {% if main_settings.mod_role_id == r.id %}selected{% endif %}>{{ r.name }}</option>
-                    {% endfor %}
-                </select>
-                <p class="help-text" style="margin-top: 8px; font-size: 0.75rem; color: #666;">Członkowie z tą rolą będą mogli używać komend typu kick, mute, warn.</p>
-            </div>
-
-            <div class="modal-section" style="margin-top: 30px;">
-                <label class="modal-label">ROLA ADMINISTRATORA:</label>
-                <select class="modal-select" id="admin-role-id">
-                    <option value="">Wybierz rolę...</option>
-                    {% for r in roles %}
-                    <option value="{{ r.id }}" {% if main_settings.admin_role_id == r.id %}selected{% endif %}>{{ r.name }}</option>
-                    {% endfor %}
-                </select>
-                <p class="help-text" style="margin-top: 8px; font-size: 0.75rem; color: #666;">Pełne uprawnienia do konfiguracji bota przez komendy na Discordzie.</p>
-            </div>
-        </div>
-    </div>
-
-    <button type="button" class="btn-save" onclick="saveModerationSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
-        <i class="fas fa-save"></i> ZAPISZ USTAWIENIA MODERACJI
-    </button>
 </div>
+
+<div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
+    <div class="card-header">
+        <h3><i class="fas fa-shield-alt"></i> Ustawienia Ogólne</h3>
+    </div>
+    <div class="card-body">
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-title">System Moderacji</div>
+                <div class="setting-desc">Włącza/wyłącza wszystkie komendy moderacyjne (ban, kick, mute).</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="mod-enabled-switch" {% if main_settings.moderation_enabled %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-title">Wymagaj potwierdzenia</div>
+                <div class="setting-desc">Bot zapyta o potwierdzenie przed banem/kickiem.</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="mod-confirm-switch" {% if main_settings.moderation_confirm %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn-save" onclick="saveModerationSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
+    <i class="fas fa-save"></i> ZAPISZ USTAWIENIA MODERACJI
+</button>
+
+<style>
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .setting-item:last-child { border-bottom: none; }
+    .setting-title { font-weight: 700; color: white; }
+    .setting-desc { font-size: 0.8rem; color: #8b8e94; margin-top: 2px; }
+    
+    /* Switch Style */
+    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent-green); }
+    input:checked + .slider:before { transform: translateX(22px); }
+</style>
+
+<script>
+window.saveModerationSettings = async function() {
+    const btn = event.currentTarget;
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
+
+    try {
+        const modEnabled = document.getElementById('mod-enabled-switch')?.checked ? 1 : 0;
+        const modConfirm = document.getElementById('mod-confirm-switch')?.checked ? 1 : 0;
+
+        await fetch(`/config/{{ server_id }}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                moderation_enabled: modEnabled,
+                moderation_confirm: modConfirm
+            })
+        });
+
+        btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
+        btn.style.background = '#2d7d2a';
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.style.background = '';
+            btn.disabled = false;
+        }, 2000);
+    } catch (err) {
+        btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+        btn.style.background = '#7d2a2a';
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.style.background = '';
+            btn.disabled = false;
+        }, 2000);
+    }
+};
+</script>
 
 <style>
     .main-content { transition: margin-left 0.3s; }

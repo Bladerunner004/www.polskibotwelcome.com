@@ -1,168 +1,37 @@
-<div class="main-content">
-    <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
-        <div class="hero-glass">
-            <div class="hero-header">
-                <h1 class="hero-title">
-                    <span class="decorative-text">System</span> Zgłoszeń
-                </h1>
-                <p class="hero-subtitle">
-                    Profesjonalna obsługa ticketów na Twoim serwerze. Szybko, przejrzyście i z pełną kontrolą.
-                </p>
-            </div>
-            <div class="hero-stats">
-                <div class="hero-stat-item">
-                    <div class="stat-icon" style="color: #00a8fc;"><i class="fas fa-ticket-alt"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-value">System Aktywny</span>
-                        <span class="stat-label">Gotowy do obsługi</span>
-                    </div>
-                </div>
-                {% if main_settings.premium %}
-                <div class="hero-stat-item">
-                    <div class="stat-icon" style="color: #d4af37;"><i class="fas fa-crown"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-value">PREMIUM</span>
-                        <span class="stat-label">Zaawansowane logi</span>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/moderation_banner_premium.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Prace</span> Techniczne
+            </h1>
+            <p class="hero-subtitle">
+                System zgłoszeń (Ticket) przechodzi optymalizację kodu i bazy danych.
+            </p>
         </div>
     </div>
+</div>
 
-    <div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
-        <div class="card-header">
-            <h3><i class="fas fa-cog"></i> Konfiguracja Ticketów</h3>
-            <label class="switch">
-                <input type="checkbox" id="tickets-enabled" {% if main_settings.tickets_enabled %}checked{% endif %}>
-                <span class="slider round"></span>
-            </label>
+<div class="settings-card">
+    <div class="card-body" style="text-align: center; padding: 100px 20px;">
+        <div style="font-size: 6rem; color: #00a8fc; margin-bottom: 40px; animation: maintenance-pulse 2s infinite;">
+            <i class="fas fa-ticket-alt"></i>
         </div>
-        <div class="card-body">
-            <div class="config-grid">
-                <!-- KANAŁ TICKETÓW -->
-                <div class="modal-section">
-                    <label class="modal-label">KANAŁ DLA NOWYCH TICKETÓW:</label>
-                    <select class="modal-select" id="tickets-category-id">
-                        <option value="">Wybierz kategorię...</option>
-                        {% for ch in channels if ch.type == 4 %}
-                        <option value="{{ ch.id }}" {% if main_settings.tickets_category_id == ch.id %}selected{% endif %}>📁 {{ ch.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <p class="help-text">Wszystkie nowe kanały zgłoszeń będą tworzone w tej kategorii.</p>
-                </div>
-
-                <!-- ROLA SUPPORTU -->
-                <div class="modal-section">
-                    <label class="modal-label">ROLA SUPPORTU:</label>
-                    <select class="modal-select" id="tickets-support-role">
-                        <option value="">Wybierz rolę...</option>
-                        {% for role in roles %}
-                        <option value="{{ role.id }}" {% if main_settings.tickets_support_role == role.id %}selected{% endif %}>@ {{ role.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <p class="help-text">Osoby z tą rolą będą miały automatyczny dostęp do nowo otwartych zgłoszeń.</p>
-                </div>
-            </div>
-
-            <!-- WIADOMOŚĆ POWITALNA -->
-            <div class="modal-section" style="margin-top: 30px;">
-                <label class="modal-label">WIADOMOŚĆ POWITALNA (W TICKECIE):</label>
-                <div class="discord-editor-outer">
-                    <textarea class="modal-input" id="tickets-welcome-msg" style="min-height: 120px; resize: vertical; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); color: #dbdee1;" placeholder="Witaj! Opisz swój problem, a nasz support zaraz Ci pomoże...">{{ main_settings.tickets_welcome_msg }}</textarea>
-                </div>
-                <p class="help-text">Ta wiadomość pojawi się zaraz po otwarciu ticketu przez użytkownika.</p>
-            </div>
-
-            <button type="button" class="btn-save" onclick="saveTicketSettings()" style="margin-top: 30px; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
-                <i class="fas fa-save"></i> ZAPISZ KONFIGURACJĘ ZGŁOSZEŃ
+        <h2 style="font-weight: 900; letter-spacing: -1px; color: white; font-size: 2.5rem; margin-bottom: 20px;">MODUŁ W TRAKCIE PRAC</h2>
+        <p style="color: var(--text-gray); max-width: 600px; margin: 0 auto 40px; font-size: 1.1rem; line-height: 1.6;">
+            Wdrażamy zaawansowany system wątków i archiwizacji zgłoszeń. Chcemy, aby obsługa użytkowników na Twoim serwerze była jeszcze szybsza i bardziej przejrzysta.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 20px;">
+            <button class="btn-sidebar-save" style="width: auto; padding: 15px 40px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;" onclick="window.open('https://discord.gg/RunF9ehW6', '_blank')">
+                <i class="fas fa-rocket"></i> POWIADOM MNIE O AKTUALIZACJI
             </button>
         </div>
     </div>
 </div>
 
 <style>
-    .main-content {
-        margin-left: 280px;
-        padding: 40px;
-        width: calc(100% - 280px);
-        box-sizing: border-box;
-    }
-    .config-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 30px;
-    }
-    .modal-label {
-        font-size: 0.7rem;
-        font-weight: 900;
-        color: #555;
-        margin-bottom: 10px;
-        display: block;
-        letter-spacing: 1.5px;
-    }
-    .modal-select {
-        width: 100%;
-        background: #1a1c23;
-        border: 1px solid rgba(255,255,255,0.05);
-        color: white;
-        padding: 15px;
-        border-radius: 10px;
-        font-family: 'Inter', sans-serif;
-    }
-    .help-text {
-        font-size: 0.7rem;
-        color: #666;
-        margin-top: 8px;
-    }
-    .premium-card-gold {
-        border: 1px solid rgba(212, 175, 55, 0.3) !important;
-        box-shadow: 0 15px 40px rgba(212, 175, 55, 0.1) !important;
-    }
-    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
-    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--accent-green); }
-    input:checked + .slider:before { transform: translateX(22px); }
-</style>
-
-<script>
-async function saveTicketSettings() {
-    const btn = event.currentTarget;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
-
-    const payload = {
-        tickets_enabled: document.getElementById('tickets-enabled').checked,
-        tickets_category_id: document.getElementById('tickets-category-id').value,
-        tickets_support_role: document.getElementById('tickets-support-role').value,
-        tickets_welcome_msg: document.getElementById('tickets-welcome-msg').value
-    };
-
-    try {
-        const res = await fetch(`/config/{{ server_id }}/tickets`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-            btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
-            btn.style.background = '#2d7d2a';
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save"></i> ZAPISZ KONFIGURACJĘ ZGŁOSZEŃ';
-                btn.style.background = '';
-            }, 2000);
-        }
-    } catch(e) {
-        btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
-        btn.style.background = '#7d2a2a';
-        setTimeout(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> ZAPISZ KONFIGURACJĘ ZGŁOSZEŃ';
-            btn.style.background = '';
-        }, 2000);
-    }
+@keyframes maintenance-pulse {
+    0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(0, 168, 252, 0)); }
+    50% { transform: scale(1.05); opacity: 0.8; filter: drop-shadow(0 0 20px rgba(0, 168, 252, 0.3)); }
+    100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(0, 168, 252, 0)); }
 }
-</script>
+</style>

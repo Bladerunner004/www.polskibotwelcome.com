@@ -673,6 +673,12 @@
 
     // --- MODALE ---
     window.openGeneralModal = async () => {
+        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const limit = isPremium ? 10 : 2;
+        if (window.localEmbedConfigs.filter(c => c.category === 'general').length >= limit) {
+            alert(`⚠️ Osiągnięto limit osadzeń (${limit}). ${!isPremium ? 'Odblokuj PREMIUM, aby tworzyć do 10 osadzeń!' : ''}`);
+            return;
+        }
         editingId = null;
         resetModal('g');
         await loadSelects('g');
@@ -680,6 +686,12 @@
     };
 
     window.openRulesModal = async () => {
+        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const limit = isPremium ? 5 : 1;
+        if (window.localEmbedConfigs.filter(c => c.category === 'rules').length >= limit) {
+            alert(`⚠️ Osiągnięto limit paneli z zasadami (${limit}). ${!isPremium ? 'Odblokuj PREMIUM, aby tworzyć do 5 paneli!' : ''}`);
+            return;
+        }
         editingId = null;
         resetModal('r');
         await loadSelects('r');

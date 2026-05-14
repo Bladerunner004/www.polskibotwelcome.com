@@ -17,14 +17,28 @@
     .setting-item.locked {
         position: relative;
         cursor: not-allowed;
-        opacity: 0.8;
+        opacity: 0.9;
+        border: 1px solid rgba(255, 215, 0, 0.3) !important;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.05);
+        background: rgba(255, 215, 0, 0.02);
     }
     .setting-item.locked .switch {
         pointer-events: none;
     }
     .setting-item.locked:hover {
-        background: rgba(255, 215, 0, 0.03);
+        background: rgba(255, 215, 0, 0.05);
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
     }
+
+    /* Złoty Switch dla Premium */
+    .switch-premium input:checked + .slider {
+        background-color: #ffd700 !important;
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    .switch-premium .slider:before {
+        background-color: white;
+    }
+
     .premium-overlay-info {
         display: none;
         position: absolute;
@@ -38,9 +52,6 @@
         font-weight: 800;
         color: #ffd700;
         cursor: pointer;
-    }
-    .setting-item.locked:hover .premium-overlay-info {
-        display: flex;
     }
 </style>
 
@@ -77,7 +88,7 @@
                 <div style="font-weight: 700;">Anty-Link <span class="premium-badge"><i class="fas fa-crown"></i> PREMIUM</span></div>
                 <div style="font-size: 0.8rem; color: var(--text-gray);">Blokuje wysyłanie linków zaproszeń i zewnętrznych stron.</div>
             </div>
-            <label class="switch">
+            <label class="switch switch-premium">
                 <input type="checkbox" id="automod-antilink-switch" {% if main_settings.automod_antilink %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                 <span class="slider round"></span>
             </label>
@@ -89,7 +100,7 @@
                 <div style="font-weight: 700; color: #ff4444;"><i class="fas fa-shield-virus"></i> System Anty-Phishing <span class="premium-badge"><i class="fas fa-crown"></i> PREMIUM</span></div>
                 <div style="font-size: 0.8rem; color: var(--text-gray);">Inteligentne wykrywanie fałszywych linków (np. Nitro Scams).</div>
             </div>
-            <label class="switch">
+            <label class="switch switch-premium">
                 <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                 <span class="slider round"></span>
             </label>
@@ -123,7 +134,7 @@
                 <div style="font-weight: 700;">Anty-Badwords <span class="premium-badge"><i class="fas fa-crown"></i> PREMIUM</span></div>
                 <div style="font-size: 0.8rem; color: var(--text-gray);">Automatycznie blokuje wulgaryzmy i toksyczne słowa.</div>
             </div>
-            <label class="switch">
+            <label class="switch switch-premium">
                 <input type="checkbox" id="automod-badwords-switch" {% if main_settings.automod_badwords %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                 <span class="slider round"></span>
             </label>

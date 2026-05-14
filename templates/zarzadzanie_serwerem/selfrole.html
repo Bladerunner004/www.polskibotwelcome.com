@@ -422,6 +422,15 @@
 
     window.addRoleRow = (data = null) => {
         const cont = document.getElementById('sr-roles-container');
+        const rows = document.querySelectorAll('.role-row');
+        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const maxRoles = isPremium ? 10 : 3;
+
+        if (rows.length >= maxRoles) {
+            alert(`⚠️ Osiągnięto limit ról w tym panelu (${maxRoles}). ${!isPremium ? 'Odblokuj PREMIUM, aby dodać do 10 ról!' : ''}`);
+            return;
+        }
+
         const div = document.createElement('div');
         div.className = 'role-row';
         

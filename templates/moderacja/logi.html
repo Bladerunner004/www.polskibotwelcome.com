@@ -62,7 +62,7 @@
                     </label>
                 </div>
 
-                <div class="log-toggle-item">
+                <div class="log-toggle-item {% if main_settings.premium %}premium-border-gold{% endif %}">
                     <div class="toggle-info">
                         <div class="toggle-title">Role (Nadawanie/Odbieranie)</div>
                         <div class="toggle-desc">Monitoruj kto otrzymał lub stracił uprawnienia i role.</div>
@@ -73,35 +73,35 @@
                     </label>
                 </div>
 
-                <div class="log-toggle-item">
+                <div class="log-toggle-item {% if not main_settings.premium %}premium-locked-row{% else %}premium-border-gold{% endif %}">
                     <div class="toggle-info">
-                        <div class="toggle-title">Kanały Głosowe (Voice)</div>
+                        <div class="toggle-title">Kanały Głosowe (Voice) <i class="fas fa-crown gold-icon"></i></div>
                         <div class="toggle-desc">Loguj dołączanie i opuszczanie kanałów głosowych przez ludzi.</div>
                     </div>
                     <label class="switch">
-                        <input type="checkbox" id="logs-voice-activity" {% if main_settings.logs_voice_activity %}checked{% endif %}>
+                        <input type="checkbox" id="logs-voice-activity" {% if main_settings.logs_voice_activity %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                         <span class="slider round"></span>
                     </label>
                 </div>
 
-                <div class="log-toggle-item">
+                <div class="log-toggle-item {% if not main_settings.premium %}premium-locked-row{% else %}premium-border-gold{% endif %}">
                     <div class="toggle-info">
-                        <div class="toggle-title">Zmiany Serwera & Kanałów</div>
+                        <div class="toggle-title">Zmiany Serwera & Kanałów <i class="fas fa-crown gold-icon"></i></div>
                         <div class="toggle-desc">Loguj tworzenie/usuwanie kanałów i zmiany w ustawieniach serwera.</div>
                     </div>
                     <label class="switch">
-                        <input type="checkbox" id="logs-guild-updates" {% if main_settings.logs_guild_updates %}checked{% endif %}>
+                        <input type="checkbox" id="logs-guild-updates" {% if main_settings.logs_guild_updates %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                         <span class="slider round"></span>
                     </label>
                 </div>
 
-                <div class="log-toggle-item">
+                <div class="log-toggle-item {% if not main_settings.premium %}premium-locked-row{% else %}premium-border-gold{% endif %}">
                     <div class="toggle-info">
-                        <div class="toggle-title">Wiadomości (Edycja/Usuwanie)</div>
+                        <div class="toggle-title">Wiadomości (Edycja/Usuwanie) <i class="fas fa-crown gold-icon"></i></div>
                         <div class="toggle-desc">Rejestruj usunięte oraz edytowane wiadomości na kanałach tekstowych.</div>
                     </div>
                     <label class="switch">
-                        <input type="checkbox" id="logs-msg-updates" {% if main_settings.logs_msg_updates %}checked{% endif %}>
+                        <input type="checkbox" id="logs-msg-updates" {% if main_settings.logs_msg_updates %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                         <span class="slider round"></span>
                     </label>
                 </div>

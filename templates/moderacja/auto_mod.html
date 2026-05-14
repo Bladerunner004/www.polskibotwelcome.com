@@ -53,9 +53,11 @@
             </div>
 
             <!-- PREMIUM FILTRY -->
-            <div class="automod-section-title premium-label">ZAAWANSOWANA OCHRONA <span class="badge-gold">PREMIUM</span></div>
+            <div class="automod-section-title premium-label">
+                <i class="fas fa-crown" style="color: #d4af37;"></i> ZAAWANSOWANA OCHRONA <span class="badge-gold">PREMIUM</span>
+            </div>
             
-            <div class="automod-row {% if not main_settings.premium %}premium-locked-row{% endif %}">
+            <div class="automod-row {% if not main_settings.premium %}premium-locked-row{% else %}premium-border-gold{% endif %}">
                 <div class="automod-info">
                     <div class="automod-name">Filtr Anty-Link <i class="fas fa-crown gold-icon"></i></div>
                     <div class="automod-desc">Blokuj zaproszenia do innych serwerów i podejrzane linki.</div>
@@ -66,7 +68,7 @@
                 </label>
             </div>
 
-            <div class="automod-row {% if not main_settings.premium %}premium-locked-row{% endif %}">
+            <div class="automod-row {% if not main_settings.premium %}premium-locked-row{% else %}premium-border-gold{% endif %}">
                 <div class="automod-info">
                     <div class="automod-name">Filtr Anty-Badwords <i class="fas fa-crown gold-icon"></i></div>
                     <div class="automod-desc">Automatycznie usuwaj wulgaryzmy i obraźliwe słowa.</div>
@@ -77,7 +79,7 @@
                 </label>
             </div>
 
-            <div class="automod-row {% if not main_settings.premium %}premium-locked-row{% endif %}">
+            <div class="automod-row {% if not main_settings.premium %}premium-locked-row{% else %}premium-border-gold{% endif %}">
                 <div class="automod-info">
                     <div class="automod-name">Filtr Anty-Phishing <i class="fas fa-crown gold-icon"></i></div>
                     <div class="automod-desc">Blokuj znane linki wyłudzające dane (Scam).</div>

@@ -1,3 +1,49 @@
+<style>
+    .premium-badge {
+        background: linear-gradient(135deg, #ffd700, #ff8c00);
+        color: black;
+        font-size: 0.65rem;
+        font-weight: 900;
+        padding: 3px 8px;
+        border-radius: 6px;
+        margin-left: 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 4px 10px rgba(255, 215, 0, 0.2);
+        vertical-align: middle;
+        text-transform: uppercase;
+    }
+    .setting-item.locked {
+        position: relative;
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
+    .setting-item.locked .switch {
+        pointer-events: none;
+    }
+    .setting-item.locked:hover {
+        background: rgba(255, 215, 0, 0.03);
+    }
+    .premium-overlay-info {
+        display: none;
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(2px);
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        z-index: 10;
+        font-weight: 800;
+        color: #ffd700;
+        cursor: pointer;
+    }
+    .setting-item.locked:hover .premium-overlay-info {
+        display: flex;
+    }
+</style>
+
 <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/automod_banner_premium.png');">
     <div class="hero-glass">
         <div class="hero-header">
@@ -25,26 +71,30 @@
         <h3><i class="fas fa-filter"></i> Filtry Tekstu</h3>
     </div>
     <div class="card-body">
-        <div class="setting-item">
+        <!-- ANTY-LINK (PREMIUM) -->
+        <div class="setting-item {% if not main_settings.premium %}locked{% endif %}" onclick="{% if not main_settings.premium %}showPremiumModal('Anty-Link'){% endif %}">
             <div>
-                <div style="font-weight: 700;">Anty-Link</div>
+                <div style="font-weight: 700;">Anty-Link <span class="premium-badge"><i class="fas fa-crown"></i> PREMIUM</span></div>
                 <div style="font-size: 0.8rem; color: var(--text-gray);">Blokuje wysyłanie linków zaproszeń i zewnętrznych stron.</div>
             </div>
             <label class="switch">
-                <input type="checkbox" id="automod-antilink-switch" {% if main_settings.automod_antilink %}checked{% endif %}>
+                <input type="checkbox" id="automod-antilink-switch" {% if main_settings.automod_antilink %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                 <span class="slider round"></span>
             </label>
         </div>
-        <div class="setting-item">
+
+        <!-- ANTY-PHISHING (PREMIUM) -->
+        <div class="setting-item {% if not main_settings.premium %}locked{% endif %}" onclick="{% if not main_settings.premium %}showPremiumModal('Anty-Phishing'){% endif %}">
             <div>
-                <div style="font-weight: 700; color: #ff4444;"><i class="fas fa-shield-virus"></i> System Anty-Phishing</div>
-                <div style="font-size: 0.8rem; color: var(--text-gray);">Inteligentne wykrywanie fałszywych linków (np. Nitro Scams, wyłudzanie haseł).</div>
+                <div style="font-weight: 700; color: #ff4444;"><i class="fas fa-shield-virus"></i> System Anty-Phishing <span class="premium-badge"><i class="fas fa-crown"></i> PREMIUM</span></div>
+                <div style="font-size: 0.8rem; color: var(--text-gray);">Inteligentne wykrywanie fałszywych linków (np. Nitro Scams).</div>
             </div>
             <label class="switch">
-                <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %}>
+                <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                 <span class="slider round"></span>
             </label>
         </div>
+
         <div class="setting-item">
             <div>
                 <div style="font-weight: 700;">Anty-Caps</div>
@@ -55,6 +105,7 @@
                 <span class="slider round"></span>
             </label>
         </div>
+
         <div class="setting-item">
             <div>
                 <div style="font-weight: 700;">Anty-Spam</div>
@@ -65,16 +116,19 @@
                 <span class="slider round"></span>
             </label>
         </div>
-        <div class="setting-item">
+
+        <!-- ANTY-BADWORDS (PREMIUM) -->
+        <div class="setting-item {% if not main_settings.premium %}locked{% endif %}" onclick="{% if not main_settings.premium %}showPremiumModal('Anty-Badwords'){% endif %}">
             <div>
-                <div style="font-weight: 700;">Anty-Badwords</div>
-                <div style="font-size: 0.8rem; color: var(--text-gray);">Automatycznie blokuje wulgaryzmy, rasizm i toksyczne słowa.</div>
+                <div style="font-weight: 700;">Anty-Badwords <span class="premium-badge"><i class="fas fa-crown"></i> PREMIUM</span></div>
+                <div style="font-size: 0.8rem; color: var(--text-gray);">Automatycznie blokuje wulgaryzmy i toksyczne słowa.</div>
             </div>
             <label class="switch">
-                <input type="checkbox" id="automod-badwords-switch" {% if main_settings.automod_badwords %}checked{% endif %}>
+                <input type="checkbox" id="automod-badwords-switch" {% if main_settings.automod_badwords %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                 <span class="slider round"></span>
             </label>
         </div>
+
         <button type="button" class="btn-save" onclick="saveAutoModSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
             <i class="fas fa-save"></i> ZAPISZ USTAWIENIA AUTO-MOD
         </button>
@@ -82,6 +136,29 @@
 </div>
 
 <script>
+window.showPremiumModal = function(feature) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Wymagane Premium! 👑',
+            text: `Funkcja "${feature}" jest dostępna tylko dla subskrybentów PolskiBot Premium. Chcesz ją odblokować?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffd700',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ODBLOKUJ TERAZ',
+            cancelButtonText: 'PÓŹNIEJ'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/checkout';
+            }
+        });
+    } else {
+        if (confirm(`Funkcja "${feature}" wymaga PolskiBot Premium. Przejść do płatności?`)) {
+            window.location.href = '/checkout';
+        }
+    }
+};
+
 window.saveAutoModSettings = async function() {
     const btn = event.currentTarget;
     const originalHTML = btn.innerHTML;

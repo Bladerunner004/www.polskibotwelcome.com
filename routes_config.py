@@ -235,6 +235,7 @@ def config(server_id):
     guild = {
         "name": guild_data.get('name'), 
         "id": server_id,
+        "icon": guild_data.get('icon'),
         "member_count": guild_data.get('approximate_member_count') or guild_data.get('member_count', 0),
         "owner_id": guild_data.get('owner_id')
     }
@@ -310,22 +311,7 @@ def config(server_id):
         member_count=guild['member_count']
     )
 
-    if 'user' not in session:
-        return redirect(url_for('home.index'))
-    
-    plan_name = request.args.get('plan', 'MIESIĘCZNY')
-    plan_price = request.args.get('price', '15.00')
-    
-    from database import get_settings
-    main_settings = get_settings(server_id)
-    
-    return render_template(
-        'glowne/checkout.html',
-        server_id=server_id,
-        plan_name=plan_name,
-        plan_price=plan_price,
-        main_settings=main_settings
-    )
+
 
 @config_bp.route('/api/<guild_id>/welcome', methods=['GET', 'POST'])
 def api_welcome(guild_id):

@@ -2,10 +2,10 @@
     <div class="hero-glass">
         <div class="hero-header">
             <h1 class="hero-title">
-                <span class="decorative-text">Zmiany</span> na serwerze
+                <span class="decorative-text">Rejestr</span> Audytu
             </h1>
             <p class="hero-subtitle">
-                Szczegółowa historia wszystkich zdarzeń. Każda zmiana roli, wejście na voice czy usunięta wiadomość jest tutaj zapisana.
+                Ekskluzywny wgląd w każdą zmianę na Twoim serwerze. Pełna transparentność i bezpieczeństwo w jednym miejscu.
             </p>
         </div>
         <div class="hero-stats">
@@ -13,60 +13,88 @@
                 <div class="stat-icon"><i class="fas fa-list-ul"></i></div>
                 <div class="stat-info">
                     <span class="stat-value">{{ audit_logs|length }}</span>
-                    <span class="stat-label">Ostatnich zdarzeń</span>
+                    <span class="stat-label">Akcji w rejestrze</span>
                 </div>
             </div>
-            {% if main_settings.premium %}
             <div class="hero-stat-item">
                 <div class="stat-icon" style="color: #d4af37;"><i class="fas fa-crown"></i></div>
                 <div class="stat-info">
                     <span class="stat-value">PREMIUM</span>
-                    <span class="stat-label">System Audytu</span>
+                    <span class="stat-label">Dostęp elitarny</span>
                 </div>
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
 
-<div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}" style="padding: 0; overflow: hidden;">
+<div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}" style="padding: 0; overflow: hidden; position: relative;">
     <div class="card-header" style="padding: 25px 30px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-        <h3><i class="fas fa-history"></i> Rejestr Audytu</h3>
+        <h3><i class="fas fa-history"></i> Ostatnie aktywności</h3>
     </div>
-    <div class="card-body" style="padding: 0;">
-        <div class="audit-table-wrapper">
+    
+    <div class="card-body" style="padding: 0; position: relative;">
+        <!-- BLOKADA PREMIUM -->
+        {% if not main_settings.premium %}
+        <div class="premium-lock-overlay">
+            <div class="lock-content">
+                <div class="lock-icon"><i class="fas fa-lock"></i></div>
+                <h2>Funkcja Premium</h2>
+                <p>Szczegółowy rejestr audytu jest dostępny wyłącznie dla serwerów z aktywną subskrypcją Premium.</p>
+                <a href="/config/{{ server_id }}/premium" class="btn-unlock-premium">
+                    <i class="fas fa-crown"></i> ODBLOKUJ AUDYT PREMIUM
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="audit-table-wrapper {% if not main_settings.premium %}is-locked{% endif %}">
             <table class="audit-table">
                 <thead>
                     <tr>
-                        <th>DATA</th>
-                        <th>UŻYTKOWNIK</th>
+                        <th>DATA I GODZINA</th>
+                        <th>ADMINISTRATOR</th>
                         <th>AKCJA</th>
-                        <th>SZCZEGÓŁY</th>
+                        <th>SZCZEGÓŁY ZMIANY</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for log in audit_logs %}
                     <tr>
-                        <td class="col-date">{{ log.created_at }}</td>
+                        <td class="col-date">
+                            <div class="date-box">
+                                <span class="time-main">{{ log.created_at }}</span>
+                            </div>
+                        </td>
                         <td class="col-user">
-                            <div class="user-pill">
-                                <img src="{{ log.user_avatar }}" class="user-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                                <span>{{ log.username }}</span>
+                            <div class="user-pill-fancy">
+                                <img src="{{ log.user_avatar }}" class="user-avatar-small" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                                <div class="user-info-text">
+                                    <span class="username">{{ log.username }}</span>
+                                    <span class="user-id">ID: {{ log.user_id }}</span>
+                                </div>
                             </div>
                         </td>
                         <td class="col-action">
-                            <span class="action-badge badge-{{ log.action_type|lower }}">
-                                {{ log.action_type }}
-                            </span>
+                            {% if "CREATE" in log.action_type %}
+                                <span class="action-badge-fancy badge-create"><i class="fas fa-plus-circle"></i> {{ log.action_type }}</span>
+                            {% elif "DELETE" in log.action_type %}
+                                <span class="action-badge-fancy badge-delete"><i class="fas fa-trash-alt"></i> {{ log.action_type }}</span>
+                            {% else %}
+                                <span class="action-badge-fancy badge-update"><i class="fas fa-pen"></i> {{ log.action_type }}</span>
+                            {% endif %}
                         </td>
-                        <td class="col-details">{{ log.details }}</td>
+                        <td class="col-details">
+                            <div class="details-bubble">
+                                {{ log.details|replace('{', '')|replace('}', '')|replace('"', '') }}
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                     {% if not audit_logs %}
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 60px; color: #555;">
-                            <i class="fas fa-ghost" style="display: block; font-size: 2rem; margin-bottom: 15px; opacity: 0.2;"></i>
-                            Brak zarejestrowanych zmian na serwerze.
+                        <td colspan="4" style="text-align: center; padding: 100px 30px; color: #555;">
+                            <div style="font-size: 3rem; margin-bottom: 20px; opacity: 0.1;"><i class="fas fa-folder-open"></i></div>
+                            Brak zarejestrowanych zmian. System oczekuje na aktywność.
                         </td>
                     </tr>
                     {% endif %}
@@ -77,20 +105,37 @@
 </div>
 
 <style>
-    .audit-table-wrapper { width: 100%; overflow-x: auto; }
-    .audit-table { width: 100%; border-collapse: collapse; min-width: 800px; }
-    .audit-table th { text-align: left; padding: 15px 30px; font-size: 0.7rem; font-weight: 900; color: #444; letter-spacing: 1px; text-transform: uppercase; background: rgba(0,0,0,0.2); }
-    .audit-table td { padding: 18px 30px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.85rem; color: #aaa; vertical-align: middle; }
+    .audit-table-wrapper { width: 100%; overflow-x: auto; transition: 0.5s filter; }
+    .audit-table-wrapper.is-locked { filter: blur(15px); pointer-events: none; user-select: none; }
+    
+    .premium-lock-overlay {
+        position: absolute; inset: 0; z-index: 100;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(12, 13, 17, 0.6); backdrop-filter: blur(2px);
+    }
+    .lock-content { text-align: center; max-width: 450px; padding: 40px; background: #0c0d11; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 24px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+    .lock-icon { font-size: 3rem; color: #d4af37; margin-bottom: 20px; }
+    .lock-content h2 { color: white; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+    .lock-content p { color: #8b8e94; line-height: 1.6; margin-bottom: 30px; }
+    .btn-unlock-premium { background: #d4af37; color: black; padding: 15px 30px; border-radius: 12px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: 0.3s; }
+    .btn-unlock-premium:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); }
+
+    .audit-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    .audit-table th { text-align: left; padding: 20px 30px; font-size: 0.7rem; font-weight: 900; color: #555; letter-spacing: 2px; text-transform: uppercase; background: rgba(0,0,0,0.15); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .audit-table td { padding: 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
     .audit-table tr:hover { background: rgba(255,255,255,0.01); }
-    
-    .user-pill { display: flex; align-items: center; gap: 10px; color: white; font-weight: 600; }
-    .user-avatar { width: 28px; height: 28px; border-radius: 50%; }
-    
-    .action-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
-    .badge-update { background: rgba(0, 168, 252, 0.1); color: #00a8fc; }
-    .badge-create { background: rgba(116, 184, 22, 0.1); color: #74b816; }
-    .badge-delete { background: rgba(250, 82, 82, 0.1); color: #fa5252; }
-    
-    .col-date { white-space: nowrap; font-family: monospace; opacity: 0.5; }
-    .col-details { line-height: 1.4; color: #888; }
+
+    .user-pill-fancy { display: flex; align-items: center; gap: 12px; }
+    .user-avatar-small { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); }
+    .user-info-text { display: flex; flex-direction: column; }
+    .user-info-text .username { color: white; font-weight: 700; font-size: 0.9rem; }
+    .user-info-text .user-id { font-size: 0.7rem; color: #555; font-family: monospace; }
+
+    .action-badge-fancy { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; }
+    .badge-update { background: rgba(0, 168, 252, 0.1); color: #00a8fc; border: 1px solid rgba(0, 168, 252, 0.2); }
+    .badge-create { background: rgba(46, 213, 115, 0.1); color: #2ed573; border: 1px solid rgba(46, 213, 115, 0.2); }
+    .badge-delete { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.2); }
+
+    .col-date { white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #666; }
+    .details-bubble { background: rgba(0,0,0,0.2); padding: 10px 15px; border-radius: 10px; color: #ccc; font-size: 0.85rem; line-height: 1.5; border-left: 3px solid rgba(255,255,255,0.1); }
 </style>

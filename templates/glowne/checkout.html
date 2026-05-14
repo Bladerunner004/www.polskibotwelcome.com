@@ -240,67 +240,82 @@
     let selectedMethod = 'card';
 
     // Obsługa wpisywania kodu BLIK
-    document.getElementById('blik-code').addEventListener('input', function(e) {
-        this.value = this.value.replace(/[^0-9]/g, '');
-    });
+    const blikInput = document.getElementById('blik-code');
+    if (blikInput) {
+        blikInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    }
 
     function selectMethod(method) {
         selectedMethod = method;
+        console.log('Wybrano metodę:', method);
+        
         document.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
-        document.getElementById('method-' + method).classList.add('active');
+        const activeCard = document.getElementById('method-' + method);
+        if (activeCard) activeCard.classList.add('active');
 
         const blikBox = document.getElementById('blik-container');
         const btn = document.getElementById('confirm-btn');
         const info = document.getElementById('confirm-info');
         const statusBox = document.getElementById('blik-status');
 
-        statusBox.style.display = 'none';
+        if (statusBox) statusBox.style.display = 'none';
 
         if (method === 'card') {
-            blikBox.style.display = 'none';
-            btn.style.display = 'block';
-            btn.textContent = 'SUBSKRYBUJ TERAZ';
-            info.textContent = 'Twoja subskrypcja będzie odnawiana automatycznie co miesiąc. Możesz zrezygnować w każdej chwili.';
+            if (blikBox) blikBox.style.display = 'none';
+            if (btn) {
+                btn.style.display = 'block';
+                btn.textContent = 'SUBSKRYBUJ TERAZ';
+            }
+            if (info) info.textContent = 'Twoja subskrypcja będzie odnawiana automatycznie co miesiąc. Możesz zrezygnować w każdej chwili.';
         } else if (method === 'blik') {
-            blikBox.style.display = 'block';
-            btn.style.display = 'block';
-            btn.textContent = 'ZAPŁAĆ BLIK';
-            info.textContent = 'Płatność jednorazowa. Premium zostanie aktywowane po weryfikacji kodu.';
+            if (blikBox) blikBox.style.display = 'block';
+            if (btn) {
+                btn.style.display = 'block';
+                btn.textContent = 'ZAPŁAĆ BLIK';
+            }
+            if (info) info.textContent = 'Płatność jednorazowa. Premium zostanie aktywowane po weryfikacji kodu.';
         } else if (method === 'paypal') {
-            blikBox.style.display = 'none';
-            btn.style.display = 'block';
-            btn.textContent = 'Przejdź do PayPal →';
-            info.textContent = 'Płatność jednorazowa przez PayPal.';
+            if (blikBox) blikBox.style.display = 'none';
+            if (btn) {
+                btn.style.display = 'block';
+                btn.textContent = 'PRZEJDŹ DO PAYPAL';
+            }
+            if (info) info.textContent = 'Płatność jednorazowa przez PayPal.';
         }
     }
 
-    async function confirmPayment() {
+    function confirmPayment() {
+        console.log('Potwierdzanie płatności dla:', selectedMethod);
         const btn = document.getElementById('confirm-btn');
         const blikBox = document.getElementById('blik-container');
         const statusBox = document.getElementById('blik-status');
 
         if (selectedMethod === 'card') {
-            // Real Stripe Subscription Link
-            window.open('https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00', '_blank');
+            window.location.href = 'https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00';
             return;
         }
 
         if (selectedMethod === 'paypal') {
-            window.open('https://paypal.me/nobadystrange', '_blank');
+            window.location.href = 'https://paypal.me/nobadystrange';
             return;
         }
 
         if (selectedMethod === 'blik') {
-            const code = document.getElementById('blik-code').value;
+            const codeInput = document.getElementById('blik-code');
+            const code = codeInput ? codeInput.value : '';
             if (code.length !== 6) {
                 alert('❌ Wpisz poprawny, 6-cyfrowy kod BLIK!');
                 return;
             }
 
-            blikBox.style.opacity = '0.3';
-            blikBox.style.pointerEvents = 'none';
-            btn.style.display = 'none';
-            statusBox.style.display = 'block';
+            if (blikBox) {
+                blikBox.style.opacity = '0.3';
+                blikBox.style.pointerEvents = 'none';
+            }
+            if (btn) btn.style.display = 'none';
+            if (statusBox) statusBox.style.display = 'block';
 
             setTimeout(() => {
                 alert('✅ Płatność BLIK zaakceptowana! Twoje konto Premium zostało aktywowane.');
@@ -309,7 +324,8 @@
         }
     }
 
-    selectMethod('card');
+    // Inicjalizacja domyślnej metody
+    window.onload = () => selectMethod('card');
 </script>
 </body>
 </html>

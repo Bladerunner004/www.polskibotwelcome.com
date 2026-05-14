@@ -854,8 +854,8 @@
             else { gCont.appendChild(div); gCount++; }
         });
 
-        const embedLimit = {% if main_settings.premium %}50{% else %}2{% endif %};
-        const rulesLimit = {% if main_settings.premium %}10{% else %}2{% endif %};
+        const embedLimit = {% if main_settings.premium %}50{% else %}3{% endif %};
+        const rulesLimit = {% if main_settings.premium %}10{% else %}3{% endif %};
         getE('embed-count').textContent = `${gCount} / ${embedLimit}`;
         getE('rules-count').textContent = `${rCount} / ${rulesLimit}`;
         getE('embed-count-hero').textContent = `${gCount + rCount} aktywnych`;

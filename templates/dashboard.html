@@ -335,24 +335,53 @@
             box-shadow: 0 0 25px var(--accent-glow);
         }
 
-        .btn-config {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            padding: 15px;
-            border-radius: 15px;
-            text-decoration: none;
-            font-weight: 800;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: 0.2s;
-            border: none;
-            cursor: pointer;
+        /* ── PREMIUM STYLES ── */
+        .premium-server {
+            position: relative;
+            border: 1px solid rgba(212, 175, 55, 0.1) !important;
         }
 
+        .premium-server:hover {
+            border-color: #d4af37 !important;
+            box-shadow: 0 25px 60px rgba(212, 175, 55, 0.15) !important;
+            transform: translateY(-12px) !important;
+        }
+
+        .premium-server .icon {
+            border-color: rgba(212, 175, 55, 0.3) !important;
+        }
+
+        .premium-server:hover .icon {
+            border-color: #d4af37 !important;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .btn-config-premium {
+            background: linear-gradient(135deg, #d4af37, #f1c40f) !important;
+            color: black !important;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-config-premium:hover {
+            transform: scale(1.05) !important;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5) !important;
+            filter: brightness(1.1);
+        }
+
+        .premium-tag {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(212, 175, 55, 0.1);
+            color: #d4af37;
+            font-size: 0.65rem;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
 
         .footer {
             margin-top: 100px;
@@ -397,7 +426,11 @@
 
         <div class="grid">
             {% for server in servers %}
-            <div class="card">
+            <div class="card {% if server.premium %}premium-server{% endif %}">
+                {% if server.premium %}
+                <div class="premium-tag"><i class="fas fa-crown"></i> Premium</div>
+                {% endif %}
+
                 {% if server.icon %}
                 <img src="https://cdn.discordapp.com/icons/{{ server.id }}/{{ server.icon }}.png" class="icon">
                 {% else %}
@@ -408,7 +441,7 @@
 
                 {% if server.has_bot %}
                 {% if server.id %}
-                <a href="/config/{{ server.id }}" class="btn-config">KONFIGURUJ</a>
+                <a href="/config/{{ server.id }}" class="btn-config {% if server.premium %}btn-config-premium{% endif %}">KONFIGURUJ</a>
                 {% else %}
                 <button class="btn-config" disabled>BŁĄD ID</button>
                 {% endif %}

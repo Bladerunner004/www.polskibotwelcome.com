@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - PolskiBot Premium</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <script src="https://www.paypal.com/sdk/js?client-id=U96HDRD4MJUDU&currency=PLN"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=U96HDRD4MJUDU&currency=PLN&components=buttons"></script>
     <style>
         :root {
             --accent-green: #74b816;
-            --bg-dark: #06070a;
-            --card-bg: rgba(15, 17, 23, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #0070ba;
+            --bg-dark: #0b0d11;
+            --card-bg: rgba(20, 24, 30, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.05);
             --font: 'Outfit', sans-serif;
         }
 
@@ -22,6 +23,9 @@
             background-color: var(--bg-dark);
             color: white;
             line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(116, 184, 22, 0.05), transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(0, 112, 186, 0.05), transparent 40%);
         }
 
         .checkout-wrapper {
@@ -30,135 +34,149 @@
             align-items: center;
             justify-content: center;
             padding: 40px 20px;
-            background: radial-gradient(circle at 50% 50%, rgba(116, 184, 22, 0.05), transparent 70%);
         }
 
         .checkout-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 950px;
             background: var(--card-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
+            backdrop-filter: blur(30px);
             border: 1px solid var(--glass-border);
-            border-radius: 32px;
+            border-radius: 40px;
             overflow: hidden;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
             display: flex;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: fadeIn 0.8s ease-out;
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .checkout-info {
-            flex: 1.2;
-            padding: 50px;
-            background: linear-gradient(135deg, rgba(116, 184, 22, 0.05), transparent);
+            flex: 1.1;
+            padding: 60px;
             border-right: 1px solid var(--glass-border);
+            background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
         }
 
         .checkout-payment {
             flex: 1;
-            padding: 50px;
-            background: rgba(0,0,0,0.2);
+            padding: 60px;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
         }
 
         .plan-badge {
             display: inline-block;
-            padding: 6px 14px;
-            background: rgba(116, 184, 22, 0.15);
+            padding: 8px 16px;
+            background: rgba(116, 184, 22, 0.1);
             color: var(--accent-green);
-            border-radius: 50px;
-            font-size: 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 20px;
+            letter-spacing: 1.5px;
+            margin-bottom: 25px;
         }
 
-        h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; color: white; }
-        .subtitle { color: #888; font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px; }
+        h1 { font-size: 2.8rem; font-weight: 900; margin-bottom: 15px; letter-spacing: -1px; }
+        .subtitle { color: #888; font-size: 1rem; margin-bottom: 40px; }
 
         .price-tag {
-            font-size: 3.5rem;
+            font-size: 4rem;
             font-weight: 900;
-            color: white;
             margin-bottom: 40px;
             display: flex;
             align-items: baseline;
-            gap: 8px;
+            gap: 10px;
         }
-        .price-tag span { font-size: 1.2rem; color: #555; }
+        .price-tag span { font-size: 1.2rem; color: #444; font-weight: 600; }
 
-        .features-list { list-style: none; margin-bottom: 40px; }
+        .features-list { list-style: none; }
         .features-list li {
             display: flex;
             align-items: center;
-            gap: 12px;
-            color: #ccc;
-            margin-bottom: 15px;
-            font-size: 0.92rem;
+            gap: 15px;
+            color: #aaa;
+            margin-bottom: 18px;
+            font-size: 1rem;
         }
-        .features-list li i { color: var(--accent-green); font-size: 0.8rem; }
+        .features-list li i { color: var(--accent-green); font-size: 1.1rem; }
 
-        .payment-methods { display: flex; flex-direction: column; gap: 15px; }
+        .payment-methods { display: flex; flex-direction: column; gap: 12px; }
         .method-card {
-            padding: 20px;
-            background: rgba(255,255,255,0.03);
+            padding: 18px;
+            background: rgba(255,255,255,0.02);
             border: 1px solid var(--glass-border);
-            border-radius: 18px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 15px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .method-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(116,184,22,0.3); transform: translateX(5px); }
-        .method-card.active { border-color: var(--accent-green); background: rgba(116,184,22,0.05); }
+        .method-card:hover { 
+            background: rgba(255,255,255,0.05); 
+            border-color: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+        .method-card.active { 
+            border-color: var(--accent-green); 
+            background: rgba(116, 184, 22, 0.08); 
+            box-shadow: 0 0 30px rgba(116, 184, 22, 0.1);
+        }
+        .method-card#method-paypal.active {
+            border-color: var(--accent-blue);
+            background: rgba(0, 112, 186, 0.08);
+            box-shadow: 0 0 30px rgba(0, 112, 186, 0.1);
+        }
 
         .method-icon {
-            width: 48px; height: 48px;
-            background: #111;
+            width: 44px; height: 44px;
+            background: rgba(0,0,0,0.4);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             color: var(--accent-green);
         }
-
-        .bank-details {
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(0,0,0,0.4);
-            border: 1px dashed var(--glass-border);
-            border-radius: 16px;
-        }
-        .bank-label { font-size: 0.7rem; color: #555; text-transform: uppercase; font-weight: 800; margin-bottom: 8px; }
-        .bank-number { font-family: 'Courier New', Courier, monospace; font-size: 1rem; color: var(--accent-green); font-weight: 700; letter-spacing: 1px; word-break: break-all; }
+        #method-paypal .method-icon { color: var(--accent-blue); }
 
         .btn-confirm {
             width: 100%;
-            margin-top: 30px;
-            padding: 18px;
-            background: linear-gradient(135deg, #74b816, #4d7c0f);
+            padding: 20px;
+            background: white;
             color: black;
             border: none;
-            border-radius: 14px;
-            font-weight: 900;
+            border-radius: 18px;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             cursor: pointer;
             transition: 0.3s;
-            box-shadow: 0 10px 30px rgba(116, 184, 22, 0.3);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .btn-confirm:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(116, 184, 22, 0.4); }
+        .btn-confirm:hover { background: #eee; transform: translateY(-3px); }
 
-        @media (max-width: 850px) {
+        .info-box {
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 25px;
+            padding: 0 20px;
+        }
+
+        @media (max-width: 900px) {
             .checkout-container { flex-direction: column; }
-            .checkout-info { border-right: none; border-bottom: 1px solid var(--glass-border); }
+            .checkout-info { border-right: none; border-bottom: 1px solid var(--glass-border); padding: 40px; }
+            .checkout-payment { padding: 40px; }
         }
     </style>
 </head>
@@ -186,43 +204,44 @@
         </div>
 
         <div class="checkout-payment">
-            <h3 style="margin-bottom: 25px; font-weight: 800;">Wybierz Metodę</h3>
+            <h3 style="margin-bottom: 30px; font-weight: 800; font-size: 1.1rem; color: #ccc;">Wybierz Metodę</h3>
+            
             <div class="payment-methods">
                 <div class="method-card active" id="method-card" onclick="selectMethod('card')">
                     <div class="method-icon"><i class="fas fa-credit-card"></i></div>
                     <div>
                         <div style="font-weight: 700; font-size: 0.95rem;">Subskrypcja (Karta)</div>
-                        <div style="font-size: 0.75rem; color: #666;">Automatyczne odnawianie</div>
+                        <div style="font-size: 0.75rem; color: #555;">Odnawialna automatycznie</div>
                     </div>
                 </div>
                 <div class="method-card" id="method-blik" onclick="selectMethod('blik')">
                     <div class="method-icon"><i class="fas fa-mobile-alt"></i></div>
                     <div>
                         <div style="font-weight: 700; font-size: 0.95rem;">Kod BLIK</div>
-                        <div style="font-size: 0.75rem; color: #666;">Jednorazowa płatność</div>
+                        <div style="font-size: 0.75rem; color: #555;">Realizowane przez Stripe</div>
                     </div>
                 </div>
                 <div class="method-card" id="method-paypal" onclick="selectMethod('paypal')">
                     <div class="method-icon"><i class="fab fa-paypal"></i></div>
                     <div>
                         <div style="font-weight: 700; font-size: 0.95rem;">PayPal / GiftCard</div>
-                        <div style="font-size: 0.75rem; color: #666;">Płatność ręczna / GiftCard</div>
+                        <div style="font-size: 0.75rem; color: #555;">Bezpieczna płatność PayPal</div>
                     </div>
                 </div>
             </div>
 
-            <div id="payment-buttons" style="margin-top: 30px;">
-                <!-- Stripe / BLIK Button (Stripe handles both) -->
-                <a href="https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00" target="_blank" id="btn-stripe" class="btn-confirm" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">SUBSKRYBUJ TERAZ</a>
+            <div style="margin-top: 40px; min-height: 100px;">
+                <div id="stripe-buttons">
+                    <a href="https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00" target="_blank" id="btn-stripe" class="btn-confirm">SUBSKRYBUJ TERAZ</a>
+                    <a href="https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00" target="_blank" id="btn-blik" class="btn-confirm" style="display:none;">ZAPŁAĆ BLIK</a>
+                </div>
                 
-                <!-- PayPal Button (SDK) -->
-                <div id="paypal-button-container" style="display: none; margin-top: 25px;"></div>
-
-                <a href="https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00" target="_blank" id="btn-blik" class="btn-confirm" style="text-decoration:none; display:none; align-items:center; justify-content:center;">ZAPŁAĆ BLIK (STRIPE)</a>
+                <!-- Kontener PayPal - musi być widoczny by SDK mogło w nim rysować -->
+                <div id="paypal-button-container" style="display: none; width: 100%;"></div>
             </div>
 
-            <p style="text-align: center; color: #444; font-size: 0.75rem; margin-top: 20px;" id="confirm-info">
-                Płatność kartą lub BLIK jest realizowana bezpiecznie przez Stripe.
+            <p class="info-box" id="confirm-info">
+                Wszystkie płatności są szyfrowane i zabezpieczone.
             </p>
         </div>
     </div>
@@ -230,45 +249,54 @@
 
 <script>
     let selectedMethod = 'card';
-    let paypalInitialized = false;
+    let paypalLoaded = false;
 
     function selectMethod(method) {
         selectedMethod = method;
-        console.log('Wybrano metodę:', method);
+        console.log('Metoda:', method);
         
         document.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
-        const activeCard = document.getElementById('method-' + method);
-        if (activeCard) activeCard.classList.add('active');
+        document.getElementById('method-' + method).classList.add('active');
 
-        const paypalBox = document.getElementById('paypal-button-container');
-        const info = document.getElementById('confirm-info');
-        
         const btnStripe = document.getElementById('btn-stripe');
         const btnBlik = document.getElementById('btn-blik');
+        const paypalBox = document.getElementById('paypal-button-container');
+        const info = document.getElementById('confirm-info');
 
-        // Ukrywamy wszystko
+        // Reset
         btnStripe.style.display = 'none';
         btnBlik.style.display = 'none';
         paypalBox.style.display = 'none';
 
         if (method === 'card') {
             btnStripe.style.display = 'flex';
-            if (info) info.textContent = 'Twoja subskrypcja będzie odnawiana automatycznie co miesiąc. Realizowane przez Stripe.';
+            info.textContent = 'Subskrypcja odnawiana co miesiąc. Możesz zrezygnować w każdej chwili.';
         } else if (method === 'blik') {
             btnBlik.style.display = 'flex';
-            if (info) info.textContent = 'Zostaniesz przekierowany do Stripe, gdzie wybierzesz płatność BLIK.';
+            info.textContent = 'Zostaniesz przekierowany do Stripe, aby zapłacić BLIKiem.';
         } else if (method === 'paypal') {
             paypalBox.style.display = 'block';
-            if (info) info.textContent = 'Zaloguj się do PayPal lub zapłać kartą (w tym kartami podarunkowymi).';
-            if (!paypalInitialized) {
+            info.textContent = 'Zapłać za pomocą konta PayPal lub karty (GiftCard).';
+            if (!paypalLoaded) {
                 initPayPal();
-                paypalInitialized = true;
+                paypalLoaded = true;
             }
         }
     }
 
     function initPayPal() {
+        if (typeof paypal === 'undefined') {
+            document.getElementById('paypal-button-container').innerHTML = '<div style="color:#ff4444; font-size:0.8rem; text-align:center; padding:20px;">Błąd ładowania PayPal. Spróbuj odświeżyć stronę (F5).</div>';
+            return;
+        }
+
         paypal.Buttons({
+            style: {
+                layout: 'vertical',
+                color:  'gold',
+                shape:  'rect',
+                label:  'paypal'
+            },
             createOrder: function(data, actions) {
                 return actions.order.create({
                     purchase_units: [{
@@ -279,14 +307,17 @@
             },
             onApprove: function(data, actions) {
                 return actions.order.capture().then(function(details) {
-                    alert('✅ Płatność PayPal zakończona pomyślnie! Twoje konto Premium zostało aktywowane.');
+                    alert('✅ Płatność zaakceptowana! Dzięki, ' + details.payer.name.given_name + '!');
                     window.close();
                 });
             }
         }).render('#paypal-button-container');
     }
 
-    window.onload = () => selectMethod('card');
+    window.onload = () => {
+        // Małe opóźnienie by upewnić się, że DOM jest gotowy
+        setTimeout(() => selectMethod('card'), 100);
+    };
 </script>
 </body>
 </html>

@@ -55,7 +55,25 @@
     .new-config-btn { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px dashed var(--border-gray); border-radius: 12px; color: var(--text-gray); font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .new-config-btn:hover { background: rgba(116,184,22,0.1); border-color: var(--accent-green); color: var(--accent-green); }
 
-    .count-pill { background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: #888; border: 1px solid var(--border-gray); }
+    .count-pill {
+        background: rgba(116, 184, 22, 0.1);
+        color: var(--accent-green);
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 800;
+        border: 1px solid rgba(116,184,22,0.3);
+        box-shadow: 0 0 10px rgba(116, 184, 22, 0.05);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .count-pill.premium {
+        background: rgba(255, 215, 0, 0.1) !important;
+        color: #ffd700 !important;
+        border: 1px solid rgba(255, 215, 0, 0.4) !important;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
+    }
 
     /* MODAL STYLES */
     .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 9999; }
@@ -99,6 +117,34 @@
     .footer-id:hover { color: #949ba4; }
 </style>
 
+{% if main_settings.premium %}
+<div class="osadzenia-container" style="margin-bottom: 0; padding-bottom: 0; max-width: 100%; padding: 0 20px;">
+    <div class="settings-card" style="background: linear-gradient(90deg, rgba(212, 175, 55, 0.1), transparent); border-color: rgba(212, 175, 55, 0.3); border-radius: 20px; margin-bottom: 20px;">
+        <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="width: 50px; height: 50px; background: rgba(212, 175, 55, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #d4af37;">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; color: #d4af37; font-weight: 800;">AKTYWNA SUBSKRYPCJA PREMIUM</h4>
+                    <p style="margin: 5px 0 0; color: #888; font-size: 0.85rem;">Korzystasz z planu: <strong>{{ main_settings.subscription_type|capitalize }}</strong></p>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 1.2rem; font-weight: 900; color: white;">
+                    {% if days_left is not none %}
+                        {{ days_left }} dni
+                    {% else %}
+                        Bez limitu
+                    {% endif %}
+                </div>
+                <div style="font-size: 0.7rem; color: #666; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Pozostało do końca</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/selfrole_banner_premium.png');">
     <div class="hero-glass">
         <div class="hero-header">
@@ -121,7 +167,7 @@
     </div>
 </div>
 
-<div class="selfrole-grid">
+<div class="selfrole-grid" style="padding: 0 20px;">
     <!-- REACTION ROLES -->
     <div class="selfrole-card">
         <div class="card-header">
@@ -129,7 +175,7 @@
                 <h3><i class="fas fa-fingerprint"></i> Panele z rolami</h3>
                 <p class="card-desc">Uzyskaj role poprzez reakcję pod wiadomością.</p>
             </div>
-            <span id="count-reaction" class="count-pill">0 / {% if main_settings.premium %}20{% else %}2{% endif %}</span>
+            <span id="count-reaction" class="count-pill {% if main_settings.premium %}premium{% endif %}">0 / {% if main_settings.premium %}20{% else %}2{% endif %}</span>
         </div>
         <div class="card-body">
             <div id="list-reaction" class="config-list"></div>
@@ -146,7 +192,7 @@
                 <h3><i class="fas fa-mouse-pointer"></i> Panele z przyciskami</h3>
                 <p class="card-desc">Uzyskaj role poprzez klikanie przycisków.</p>
             </div>
-            <span id="count-button" class="count-pill">0 / {% if main_settings.premium %}20{% else %}2{% endif %}</span>
+            <span id="count-button" class="count-pill {% if main_settings.premium %}premium{% endif %}">0 / {% if main_settings.premium %}20{% else %}2{% endif %}</span>
         </div>
         <div class="card-body">
             <div id="list-button" class="config-list"></div>

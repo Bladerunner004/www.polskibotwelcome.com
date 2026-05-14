@@ -1,4 +1,4 @@
-<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/logs_banner_premium.png');">
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
     <div class="hero-glass">
         <div class="hero-header">
             <h1 class="hero-title">
@@ -16,18 +16,20 @@
                     <span class="stat-label">Ostatnich zdarzeń</span>
                 </div>
             </div>
+            {% if main_settings.premium %}
             <div class="hero-stat-item">
-                <div class="stat-icon" style="background: rgba(116, 184, 22, 0.1); color: var(--accent-green);"><i class="fas fa-bolt"></i></div>
+                <div class="stat-icon" style="color: #d4af37;"><i class="fas fa-crown"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value">Na żywo</span>
+                    <span class="stat-value">PREMIUM</span>
                     <span class="stat-label">System Audytu</span>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<div class="settings-card" style="padding: 0; overflow: hidden;">
+<div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}" style="padding: 0; overflow: hidden;">
     <div class="card-header" style="padding: 25px 30px; border-bottom: 1px solid rgba(255,255,255,0.05);">
         <h3><i class="fas fa-history"></i> Rejestr Audytu</h3>
         <div class="card-actions">

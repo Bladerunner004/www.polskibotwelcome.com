@@ -29,7 +29,7 @@
 
 <div class="white-label-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
     <!-- Konfiguracja -->
-    <div class="settings-card">
+    <div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
         <div class="card-header">
             <h3><i class="fas fa-cog"></i> Konfiguracja Bota</h3>
         </div>
@@ -59,26 +59,26 @@
             <div class="modal-section" style="margin-top: 25px; border-top: 1px solid var(--border-gray); padding-top: 20px;">
                 <label class="toggle-row">
                     <input type="checkbox" id="custom-bot-enabled" {% if not main_settings.premium %}disabled{% endif %}>
-                    <div class="toggle-switch"></div>
+                    <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
                     Uruchom dedykowanego bota
                 </label>
             </div>
 
-            <button class="btn-sidebar-save" style="margin-top: 30px; width: 100%;" onclick="saveCustomBotLocal()" {% if not main_settings.premium %}disabled style="opacity: 0.5;"{% endif %}>
+            <button class="btn-sidebar-save {% if main_settings.premium %}btn-gold{% endif %}" style="margin-top: 30px; width: 100%;" onclick="saveCustomBotLocal()" {% if not main_settings.premium %}disabled style="opacity: 0.5;"{% endif %}>
                 <i class="fas fa-save"></i> ZAPISZ KONFIGURACJĘ
             </button>
         </div>
     </div>
 
     <!-- Instrukcja -->
-    <div class="settings-card">
+    <div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
         <div class="card-header">
             <h3><i class="fas fa-info-circle"></i> Jak to działa?</h3>
         </div>
         <div class="card-body">
             <div class="guide-item" style="margin-bottom: 20px;">
                 <div style="display: flex; gap: 15px;">
-                    <div style="width: 30px; height: 30px; background: var(--accent-green); color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0;">1</div>
+                    <div style="width: 30px; height: 30px; background: {% if main_settings.premium %}var(--accent-gold){% else %}var(--accent-green){% endif %}; color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0;">1</div>
                     <div>
                         <strong style="display: block; margin-bottom: 5px;">Utwórz Aplikację</strong>
                         <p style="font-size: 0.85rem; color: #888;">Wejdź na portal deweloperski Discorda i stwórz nową aplikację. W zakładce "Bot" skopiuj jego TOKEN.</p>
@@ -87,7 +87,7 @@
             </div>
             <div class="guide-item" style="margin-bottom: 20px;">
                 <div style="display: flex; gap: 15px;">
-                    <div style="width: 30px; height: 30px; background: var(--accent-green); color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0;">2</div>
+                    <div style="width: 30px; height: 30px; background: {% if main_settings.premium %}var(--accent-gold){% else %}var(--accent-green){% endif %}; color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0;">2</div>
                     <div>
                         <strong style="display: block; margin-bottom: 5px;">Włącz Intenty</strong>
                         <p style="font-size: 0.85rem; color: #888;">W ustawieniach bota na portalu Discorda włącz: "Presence Intent", "Server Members Intent" oraz "Message Content Intent".</p>
@@ -96,7 +96,7 @@
             </div>
             <div class="guide-item">
                 <div style="display: flex; gap: 15px;">
-                    <div style="width: 30px; height: 30px; background: var(--accent-green); color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0;">3</div>
+                    <div style="width: 30px; height: 30px; background: {% if main_settings.premium %}var(--accent-gold){% else %}var(--accent-green){% endif %}; color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0;">3</div>
                     <div>
                         <strong style="display: block; margin-bottom: 5px;">Wprowadź Token</strong>
                         <p style="font-size: 0.85rem; color: #888;">Wklej token w panelu po lewej stronie i kliknij Zapisz. PolskiBot zacznie działać pod Twoją własną tożsamością!</p>
@@ -113,6 +113,22 @@
         </div>
     </div>
 </div>
+
+<style>
+    .premium-card-gold {
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
+        box-shadow: 0 15px 40px rgba(212, 175, 55, 0.1) !important;
+    }
+    .premium-card-gold:hover {
+        border-color: #d4af37 !important;
+        box-shadow: 0 20px 50px rgba(212, 175, 55, 0.2) !important;
+    }
+    .btn-gold {
+        background: linear-gradient(135deg, #d4af37, #f1c40f) !important;
+        color: black !important;
+        font-weight: 900 !important;
+    }
+</style>
 
 <style>
     #bot-status-icon { transition: 0.3s; }

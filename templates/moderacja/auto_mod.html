@@ -97,74 +97,105 @@
         <!-- ANTY-PHISHING (PREMIUM) -->
         <div class="setting-item {% if not main_settings.premium %}locked{% endif %}" onclick="{% if not main_settings.premium %}showPremiumModal('Anty-Phishing'){% endif %}">
             <div>
-                <div style="font-weight: 700; color: #ff4444;"><i class="fas fa-shield-virus"></i> System Anty-Phishing <span class="premium-badge"><i class="fas fa-crown"></i> PREMIUM</span></div>
-                <div style="font-size: 0.8rem; color: var(--text-gray);">Inteligentne wykrywanie fałszywych linków (np. Nitro Scams).</div>
-            </div>
-            <label class="switch switch-premium">
-                <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
-                <span class="slider round"></span>
-        <div class="automod-grid">
-            <!-- ANTY-LINK -->
-            <div class="automod-card">
-                <div class="card-icon"><i class="fas fa-link"></i></div>
-                <div class="card-content">
-                    <h3>Anty-Link</h3>
-                    <p>Blokuje wysyłanie linków na czacie.</p>
-                </div>
-                <label class="toggle-row">
-                    <input type="checkbox" id="automod-antilink-switch" {% if main_settings.automod_antilink %}checked{% endif %} onchange="updateAutomod('antilink')">
-                    <div class="toggle-switch"></div>
-                </label>
-            </div>
-
-            <!-- ANTY-BADWORDS -->
-            <div class="automod-card">
-                <div class="card-icon"><i class="fas fa-comment-slash"></i></div>
-                <div class="card-content">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <h3>Anty-Badwords</h3>
-                        {% if not main_settings.premium %}<span class="premium-badge-gold">PREMIUM</span>{% endif %}
-                    </div>
-                    <p>Automatycznie usuwa wulgaryzmy.</p>
-                </div>
-                <label class="toggle-row">
-                    <input type="checkbox" id="automod-antibadwords-switch" {% if main_settings.automod_antibadwords %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antibadwords')">
-                    <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
-                </label>
-            </div>
-
-            <!-- ANTY-PHISHING -->
-            <div class="automod-card">
-                <div class="card-icon"><i class="fas fa-user-shield"></i></div>
-                <div class="card-content">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <h3>Anty-Phishing</h3>
-                        {% if not main_settings.premium %}<span class="premium-badge-gold">PREMIUM</span>{% endif %}
-                    </div>
-                    <p>Chroni przed linkami wyłudzającymi dane.</p>
-                </div>
-                <label class="toggle-row">
-                    <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antiphishing')">
-                    <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
-                </label>
-            </div>
-
-            <!-- REJESTR AUDYTU (NOWOŚĆ) -->
-            <div class="automod-card">
-                <div class="card-icon"><i class="fas fa-history"></i></div>
-                <div class="card-content">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <h3>Rejestr Audytu</h3>
-                        {% if not main_settings.premium %}<span class="premium-badge-gold">PREMIUM</span>{% endif %}
-                    </div>
-                    <p>Zapisuje zmiany na serwerze w kanale logów.</p>
-                </div>
-                <label class="toggle-row">
-                    <input type="checkbox" id="automod-auditlog-switch" {% if main_settings.automod_auditlog %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('auditlog')">
-                    <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
-                </label>
-            </div>
+  <div class="automod-grid">
+    <!-- ANTY-LINK -->
+    <div class="automod-card">
+        <div class="card-icon"><i class="fas fa-link"></i></div>
+        <div class="card-content">
+            <h3>Anty-Link</h3>
+            <p>Blokuje wysyłanie linków na czacie.</p>
         </div>
+        <label class="toggle-row">
+            <input type="checkbox" id="automod-antilink-switch" {% if main_settings.automod_antilink %}checked{% endif %} onchange="updateAutomod('antilink')">
+            <div class="toggle-switch"></div>
+        </label>
+    </div>
+
+    <!-- ANTY-CAPS -->
+    <div class="automod-card">
+        <div class="card-icon"><i class="fas fa-font"></i></div>
+        <div class="card-content">
+            <h3>Anty-Caps</h3>
+            <p>Usuwa wiadomości pisane DUŻYMI LITERAMI.</p>
+        </div>
+        <label class="toggle-row">
+            <input type="checkbox" id="automod-anticaps-switch" {% if main_settings.automod_anticaps %}checked{% endif %} onchange="updateAutomod('anticaps')">
+            <div class="toggle-switch"></div>
+        </label>
+    </div>
+
+    <!-- ANTY-SPAM -->
+    <div class="automod-card">
+        <div class="card-icon"><i class="fas fa-redo"></i></div>
+        <div class="card-content">
+            <h3>Anty-Spam</h3>
+            <p>Wykrywa powtarzające się wiadomości.</p>
+        </div>
+        <label class="toggle-row">
+            <input type="checkbox" id="automod-antispam-switch" {% if main_settings.automod_antispam %}checked{% endif %} onchange="updateAutomod('antispam')">
+            <div class="toggle-switch"></div>
+        </label>
+    </div>
+
+    <!-- ANTY-BADWORDS -->
+    <div class="automod-card {% if not main_settings.premium %}premium-locked{% endif %}">
+        <div class="card-icon" style="color: #d4af37;"><i class="fas fa-comment-slash"></i></div>
+        <div class="card-content">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <h3>Anty-Badwords</h3>
+                {% if not main_settings.premium %}<span class="premium-badge-gold">PREMIUM</span>{% endif %}
+            </div>
+            <p>Automatycznie usuwa wulgaryzmy.</p>
+        </div>
+        <label class="toggle-row">
+            <input type="checkbox" id="automod-antibadwords-switch" {% if main_settings.automod_antibadwords %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antibadwords')">
+            <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
+        </label>
+    </div>
+
+    <!-- ANTY-PHISHING -->
+    <div class="automod-card {% if not main_settings.premium %}premium-locked{% endif %}">
+        <div class="card-icon" style="color: #d4af37;"><i class="fas fa-user-shield"></i></div>
+        <div class="card-content">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <h3>Anty-Phishing</h3>
+                {% if not main_settings.premium %}<span class="premium-badge-gold">PREMIUM</span>{% endif %}
+            </div>
+            <p>Chroni przed wyłudzaniem danych.</p>
+        </div>
+        <label class="toggle-row">
+            <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antiphishing')">
+            <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
+        </label>
+    </div>
+
+    <!-- REJESTR AUDYTU -->
+    <div class="automod-card {% if not main_settings.premium %}premium-locked{% endif %}">
+        <div class="card-icon" style="color: #d4af37;"><i class="fas fa-history"></i></div>
+        <div class="card-content">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <h3>Rejestr Audytu</h3>
+                {% if not main_settings.premium %}<span class="premium-badge-gold">PREMIUM</span>{% endif %}
+            </div>
+            <p>Logi zmian na serwerze.</p>
+        </div>
+        <label class="toggle-row">
+            <input type="checkbox" id="automod-auditlog-switch" {% if main_settings.automod_auditlog %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('auditlog')">
+            <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
+        </label>
+    </div>
+</div>
+
+<style>
+    .premium-locked {
+        border: 1px solid rgba(212, 175, 55, 0.2) !important;
+        background: rgba(212, 175, 55, 0.02) !important;
+    }
+    .premium-locked:hover {
+        border-color: #d4af37 !important;
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.1) !important;
+    }
+</style>
 
         <style>
             .automod-grid {

@@ -110,6 +110,19 @@ window.saveGeneralSettings = async function() {
 </script>
 
 <style>
+    .settings-card {
+        background: var(--bg2);
+        border: 1px solid {% if main_settings.premium %}rgba(212, 175, 55, 0.3){% else %}var(--border-gray){% endif %};
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        transition: 0.3s;
+        box-shadow: {% if main_settings.premium %}0 15px 40px rgba(212, 175, 55, 0.1){% else %}0 10px 30px rgba(0,0,0,0.2){% endif %};
+    }
+    .settings-card:hover {
+        border-color: {% if main_settings.premium %}#d4af37{% else %}var(--accent-green){% endif %};
+        box-shadow: {% if main_settings.premium %}0 20px 50px rgba(212, 175, 55, 0.2){% else %}0 15px 40px rgba(0,0,0,0.3){% endif %};
+    }
     .premium-input {
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid var(--border-gray);

@@ -137,7 +137,7 @@
     </div>
 
     <!-- ANTY-BADWORDS -->
-    <div class="automod-card {% if not main_settings.premium %}premium-locked{% endif %}">
+    <div class="automod-card">
         <div class="card-icon" style="color: #d4af37;"><i class="fas fa-comment-slash"></i></div>
         <div class="card-content">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -147,13 +147,13 @@
             <p>Automatycznie usuwa wulgaryzmy.</p>
         </div>
         <label class="toggle-row">
-            <input type="checkbox" id="automod-antibadwords-switch" {% if main_settings.automod_antibadwords %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antibadwords')">
+            <input type="checkbox" id="automod-antibadwords-switch" {% if main_settings.automod_antibadwords %}checked{% endif %} onchange="updateAutomod('antibadwords')">
             <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
         </label>
     </div>
 
     <!-- ANTY-PHISHING -->
-    <div class="automod-card {% if not main_settings.premium %}premium-locked{% endif %}">
+    <div class="automod-card">
         <div class="card-icon" style="color: #d4af37;"><i class="fas fa-user-shield"></i></div>
         <div class="card-content">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -163,7 +163,7 @@
             <p>Chroni przed wyłudzaniem danych.</p>
         </div>
         <label class="toggle-row">
-            <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antiphishing')">
+            <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %} onchange="updateAutomod('antiphishing')">
             <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
         </label>
     </div>

@@ -1,164 +1,109 @@
+<div class="main-content-wrapper" style="margin-left: 280px; padding: 40px; width: calc(100% - 280px);">
+    <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
+        <div class="hero-glass">
+            <div class="hero-header">
+                <h1 class="hero-title">
+                    <span class="decorative-text">Auto</span> Moderacja
+                </h1>
+                <p class="hero-subtitle">
+                    Zautomatyzuj ochronę swojego serwera. Wybierz odpowiednie filtry, aby utrzymać porządek.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-card">
+        <div class="card-header">
+            <h3><i class="fas fa-shield-alt"></i> Konfiguracja Filtrów</h3>
+        </div>
+        <div class="card-body">
+            <!-- Anty-Caps (FREE) -->
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-title"><i class="fas fa-font"></i> System Anty-Caps</div>
+                    <div class="setting-desc">Usuwa wiadomości pisane DUŻYMI LITERAMI.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="automod-anticaps-switch" {% if main_settings.automod_anticaps %}checked{% endif %} onchange="updateAutomod('anticaps')">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <!-- Anty-Spam (FREE) -->
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-title"><i class="fas fa-redo"></i> System Anty-Spam</div>
+                    <div class="setting-desc">Wykrywa powtarzające się wiadomości.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="automod-antispam-switch" {% if main_settings.automod_antispam %}checked{% endif %} onchange="updateAutomod('antispam')">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Anty-Link (PREMIUM) -->
+            <div class="setting-item {% if not main_settings.premium %}premium-locked-row{% endif %}">
+                <div class="setting-info">
+                    <div class="setting-title">
+                        <i class="fas fa-link"></i> System Anty-Link
+                        <span class="premium-tag-small"><i class="fas fa-crown"></i> PREMIUM</span>
+                    </div>
+                    <div class="setting-desc">Blokuje wysyłanie linków na czacie.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="automod-antilink-switch" {% if main_settings.automod_antilink %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antilink')">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <!-- Anty-Badwords (PREMIUM) -->
+            <div class="setting-item {% if not main_settings.premium %}premium-locked-row{% endif %}">
+                <div class="setting-info">
+                    <div class="setting-title">
+                        <i class="fas fa-comment-slash"></i> Anty-Badwords
+                        <span class="premium-tag-small"><i class="fas fa-crown"></i> PREMIUM</span>
+                    </div>
+                    <div class="setting-desc">Automatyczne usuwanie wulgaryzmów.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="automod-antibadwords-switch" {% if main_settings.automod_antibadwords %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antibadwords')">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <!-- Anty-Phishing (PREMIUM) -->
+            <div class="setting-item {% if not main_settings.premium %}premium-locked-row{% endif %}">
+                <div class="setting-info">
+                    <div class="setting-title">
+                        <i class="fas fa-user-shield"></i> Anty-Phishing
+                        <span class="premium-tag-small"><i class="fas fa-crown"></i> PREMIUM</span>
+                    </div>
+                    <div class="setting-desc">Chroni przed wyłudzaniem danych i fałszywymi linkami.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antiphishing')">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn-save" onclick="saveAutoModSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
+        <i class="fas fa-save"></i> ZAPISZ USTAWIENIA AUTO-MOD
+    </button>
+</div>
+
 <style>
-    .premium-badge {
-        background: linear-gradient(135deg, #ffd700, #ff8c00);
-        color: black;
-        font-size: 0.65rem;
-        font-weight: 900;
-        padding: 3px 8px;
-        border-radius: 6px;
-        margin-left: 10px;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        box-shadow: 0 4px 10px rgba(255, 215, 0, 0.2);
-        vertical-align: middle;
-        text-transform: uppercase;
+    .premium-locked-row {
+        opacity: 0.7;
+        background: rgba(212, 175, 55, 0.05) !important;
+        border: 1px solid rgba(212, 175, 55, 0.1) !important;
     }
-    .setting-item.locked {
-        position: relative;
+    .premium-locked-row .switch {
         cursor: not-allowed;
-        opacity: 0.9;
-        border: 1px solid rgba(255, 215, 0, 0.3) !important;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.05);
-        background: rgba(255, 215, 0, 0.02);
     }
-    .setting-item.locked .switch {
-        pointer-events: none;
-    }
-    .setting-item.locked:hover {
-        background: rgba(255, 215, 0, 0.05);
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
-    }
-
-    /* Złoty Switch dla Premium */
-    .switch-premium input:checked + .slider {
-        background-color: #ffd700 !important;
-        box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-    }
-    .switch-premium .slider:before {
-        background-color: white;
-    }
-
-    .premium-overlay-info {
-        display: none;
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.4);
-        backdrop-filter: blur(2px);
-        align-items: center;
-        justify-content: center;
-        border-radius: 18px;
-        z-index: 10;
-        font-weight: 800;
-        color: #ffd700;
-        cursor: pointer;
-    }
-</style>
-
-<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png');">
-    <div class="hero-glass">
-        <div class="hero-header">
-            <h1 class="hero-title">
-                <span class="decorative-text">Auto</span> Moderacja
-            </h1>
-            <p class="hero-subtitle">
-                Zautomatyzuj ochronę swojego serwera. Wybierz odpowiednie filtry, aby utrzymać porządek na swoich kanałach.
-            </p>
-        </div>
-    </div>
-</div>
-
-<div class="settings-card">
-    <div class="card-header">
-        <h3><i class="fas fa-shield-alt"></i> Konfiguracja Filtrów</h3>
-    </div>
-    <div class="card-body">
-        <!-- Anty-Link -->
-        <div class="setting-item">
-            <div class="setting-info">
-                <div class="setting-title"><i class="fas fa-link"></i> System Anty-Link</div>
-                <div class="setting-desc">Blokuje wysyłanie linków na czacie.</div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="automod-antilink-switch" {% if main_settings.automod_antilink %}checked{% endif %} onchange="updateAutomod('antilink')">
-                <span class="slider round"></span>
-            </label>
-        </div>
-
-        <!-- Anty-Caps -->
-        <div class="setting-item">
-            <div class="setting-info">
-                <div class="setting-title"><i class="fas fa-font"></i> System Anty-Caps</div>
-                <div class="setting-desc">Usuwa wiadomości pisane DUŻYMI LITERAMI.</div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="automod-anticaps-switch" {% if main_settings.automod_anticaps %}checked{% endif %} onchange="updateAutomod('anticaps')">
-                <span class="slider round"></span>
-            </label>
-        </div>
-
-        <!-- Anty-Spam -->
-        <div class="setting-item">
-            <div class="setting-info">
-                <div class="setting-title"><i class="fas fa-redo"></i> System Anty-Spam</div>
-                <div class="setting-desc">Wykrywa powtarzające się wiadomości.</div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="automod-antispam-switch" {% if main_settings.automod_antispam %}checked{% endif %} onchange="updateAutomod('antispam')">
-                <span class="slider round"></span>
-            </label>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Anty-Badwords (PREMIUM) -->
-        <div class="setting-item">
-            <div class="setting-info">
-                <div class="setting-title">
-                    <i class="fas fa-comment-slash"></i> Anty-Badwords
-                    <span class="premium-tag-small"><i class="fas fa-crown"></i> PREMIUM</span>
-                </div>
-                <div class="setting-desc">Automatyczne usuwanie wulgaryzmów.</div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="automod-antibadwords-switch" {% if main_settings.automod_antibadwords %}checked{% endif %} onchange="updateAutomod('antibadwords')">
-                <span class="slider round"></span>
-            </label>
-        </div>
-
-        <!-- Anty-Phishing (PREMIUM) -->
-        <div class="setting-item">
-            <div class="setting-info">
-                <div class="setting-title">
-                    <i class="fas fa-user-shield"></i> Anty-Phishing
-                    <span class="premium-tag-small"><i class="fas fa-crown"></i> PREMIUM</span>
-                </div>
-                <div class="setting-desc">Chroni przed wyłudzaniem danych i fałszywymi linkami.</div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %} onchange="updateAutomod('antiphishing')">
-                <span class="slider round"></span>
-            </label>
-        </div>
-
-        <!-- Rejestr Audytu (PREMIUM) -->
-        <div class="setting-item">
-            <div class="setting-info">
-                <div class="setting-title">
-                    <i class="fas fa-history"></i> Rejestr Audytu
-                    <span class="premium-tag-small"><i class="fas fa-crown"></i> PREMIUM</span>
-                </div>
-                <div class="setting-desc">Logi zmian na serwerze w kanale logów.</div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="automod-auditlog-switch" {% if main_settings.automod_auditlog %}checked{% endif %} onchange="updateAutomod('auditlog')">
-                <span class="slider round"></span>
-            </label>
-        </div>
-    </div>
-</div>
-
-<style>
     .setting-item {
         display: flex;
         justify-content: space-between;

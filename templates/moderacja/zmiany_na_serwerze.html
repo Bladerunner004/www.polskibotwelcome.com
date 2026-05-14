@@ -1,183 +1,96 @@
-<div class="main-content" style="margin-left: 260px; padding: 40px; min-height: 100vh;">
-    <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
-        <div class="hero-glass">
-            <div class="hero-header">
-                <h1 class="hero-title">
-                    <span class="decorative-text">Zmiany</span> na serwerze
-                </h1>
-                <p class="hero-subtitle">
-                    Szczegółowa historia wszystkich zdarzeń. Każda zmiana roli, wejście na voice czy usunięta wiadomość jest tutaj zapisana.
-                </p>
-            </div>
-            <div class="hero-stats">
-                <div class="hero-stat-item">
-                    <div class="stat-icon"><i class="fas fa-list-ul"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-value">{{ audit_logs|length }}</span>
-                        <span class="stat-label">Ostatnich zdarzeń</span>
-                    </div>
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Zmiany</span> na serwerze
+            </h1>
+            <p class="hero-subtitle">
+                Szczegółowa historia wszystkich zdarzeń. Każda zmiana roli, wejście na voice czy usunięta wiadomość jest tutaj zapisana.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-list-ul"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ audit_logs|length }}</span>
+                    <span class="stat-label">Ostatnich zdarzeń</span>
                 </div>
-                {% if main_settings.premium %}
-                <div class="hero-stat-item">
-                    <div class="stat-icon" style="color: #d4af37;"><i class="fas fa-crown"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-value">PREMIUM</span>
-                        <span class="stat-label">System Audytu</span>
-                    </div>
-                </div>
-                {% endif %}
             </div>
+            {% if main_settings.premium %}
+            <div class="hero-stat-item">
+                <div class="stat-icon" style="color: #d4af37;"><i class="fas fa-crown"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">PREMIUM</span>
+                    <span class="stat-label">System Audytu</span>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
+</div>
 
-    <div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}" style="padding: 0; overflow: hidden;">
+<div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}" style="padding: 0; overflow: hidden;">
     <div class="card-header" style="padding: 25px 30px; border-bottom: 1px solid rgba(255,255,255,0.05);">
         <h3><i class="fas fa-history"></i> Rejestr Audytu</h3>
-        <div class="card-actions">
-            <button type="button" class="action-btn-small" onclick="location.reload()">
-                <i class="fas fa-sync-alt"></i> Odśwież
-            </button>
-        </div>
     </div>
-    
-    <div class="table-responsive">
-        <table class="audit-table">
-            <thead>
-                <tr>
-                    <th><i class="far fa-clock"></i> Czas</th>
-                    <th><i class="fas fa-tag"></i> Kategoria</th>
-                    <th><i class="fas fa-user"></i> Użytkownik</th>
-                    <th><i class="fas fa-info-circle"></i> Akcja</th>
-                    <th><i class="fas fa-align-left"></i> Szczegóły</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if audit_logs %}
+    <div class="card-body" style="padding: 0;">
+        <div class="audit-table-wrapper">
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th>DATA</th>
+                        <th>UŻYTKOWNIK</th>
+                        <th>AKCJA</th>
+                        <th>SZCZEGÓŁY</th>
+                    </tr>
+                </thead>
+                <tbody>
                     {% for log in audit_logs %}
-                    <tr class="log-row">
-                        <td class="log-time">{{ log.timestamp }}</td>
-                        <td>
-                            <span class="log-badge badge-{{ log.category }}">
-                                {{ log.category|upper }}
+                    <tr>
+                        <td class="col-date">{{ log.created_at }}</td>
+                        <td class="col-user">
+                            <div class="user-pill">
+                                <img src="{{ log.user_avatar }}" class="user-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                                <span>{{ log.username }}</span>
+                            </div>
+                        </td>
+                        <td class="col-action">
+                            <span class="action-badge badge-{{ log.action_type|lower }}">
+                                {{ log.action_type }}
                             </span>
                         </td>
-                        <td class="log-user">
-                            <div class="user-chip">
-                                <span>{{ log.user_name }}</span>
-                            </div>
-                        </td>
-                        <td class="log-action">{{ log.action }}</td>
-                        <td class="log-details">
-                            <div class="details-bubble">
-                                {{ log.details|replace('\n', '<br>')|safe }}
-                            </div>
-                        </td>
+                        <td class="col-details">{{ log.details }}</td>
                     </tr>
                     {% endfor %}
-                {% else %}
+                    {% if not audit_logs %}
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 60px; color: #666;">
-                            <i class="fas fa-ghost" style="font-size: 3rem; display: block; margin-bottom: 20px; opacity: 0.2;"></i>
-                            Brak zarejestrowanych zmian. Skonfiguruj logi w zakładce "Logi", aby zacząć zbierać dane.
+                        <td colspan="4" style="text-align: center; padding: 60px; color: #555;">
+                            <i class="fas fa-ghost" style="display: block; font-size: 2rem; margin-bottom: 15px; opacity: 0.2;"></i>
+                            Brak zarejestrowanych zmian na serwerze.
                         </td>
                     </tr>
-                {% endif %}
-            </tbody>
-        </table>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <style>
-    .audit-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;
-    }
-    .audit-table thead th {
-        background: rgba(255,255,255,0.02);
-        padding: 15px 20px;
-        text-align: left;
-        color: #888;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-size: 0.7rem;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .audit-table tbody td {
-        padding: 18px 20px;
-        border-bottom: 1px solid rgba(255,255,255,0.03);
-        vertical-align: middle;
-    }
-    .log-row:hover {
-        background: rgba(255,255,255,0.01);
-    }
-    .log-time {
-        color: #666;
-        white-space: nowrap;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.75rem;
-    }
-    .log-user {
-        font-weight: 700;
-        color: white;
-    }
-    .user-chip {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .log-action {
-        color: var(--accent-green);
-        font-weight: 800;
-    }
-    .log-details {
-        max-width: 400px;
-    }
-    .details-bubble {
-        background: rgba(0,0,0,0.2);
-        padding: 10px 14px;
-        border-radius: 12px;
-        color: #bbb;
-        font-size: 0.75rem;
-        line-height: 1.5;
-        border: 1px solid rgba(255,255,255,0.05);
-    }
+    .audit-table-wrapper { width: 100%; overflow-x: auto; }
+    .audit-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    .audit-table th { text-align: left; padding: 15px 30px; font-size: 0.7rem; font-weight: 900; color: #444; letter-spacing: 1px; text-transform: uppercase; background: rgba(0,0,0,0.2); }
+    .audit-table td { padding: 18px 30px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.85rem; color: #aaa; vertical-align: middle; }
+    .audit-table tr:hover { background: rgba(255,255,255,0.01); }
     
-    .log-badge {
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.65rem;
-        font-weight: 900;
-        letter-spacing: 0.5px;
-    }
-    .badge-msg_updates { background: rgba(52, 152, 219, 0.15); color: #3498db; }
-    .badge-mod_actions { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
-    .badge-join_leave { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
-    .badge-role_updates { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
-    .badge-voice_activity { background: rgba(26, 188, 156, 0.15); color: #1abc9c; }
-    .badge-guild_updates { background: rgba(241, 196, 15, 0.15); color: #f1c40f; }
-
-    .action-btn-small {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.1);
-        color: white;
-        padding: 8px 15px;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: 0.2s;
-    }
-    .action-btn-small:hover {
-        background: rgba(255,255,255,0.1);
-        transform: translateY(-1px);
-    }
-
-    .table-responsive {
-        overflow-x: auto;
-    }
+    .user-pill { display: flex; align-items: center; gap: 10px; color: white; font-weight: 600; }
+    .user-avatar { width: 28px; height: 28px; border-radius: 50%; }
+    
+    .action-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+    .badge-update { background: rgba(0, 168, 252, 0.1); color: #00a8fc; }
+    .badge-create { background: rgba(116, 184, 22, 0.1); color: #74b816; }
+    .badge-delete { background: rgba(250, 82, 82, 0.1); color: #fa5252; }
+    
+    .col-date { white-space: nowrap; font-family: monospace; opacity: 0.5; }
+    .col-details { line-height: 1.4; color: #888; }
 </style>

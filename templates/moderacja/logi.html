@@ -1,126 +1,120 @@
-<div class="main-content" style="margin-left: 260px; padding: 40px; min-height: 100vh;">
-    <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
-        <div class="hero-glass">
-            <div class="hero-header">
-                <h1 class="hero-title">
-                    <span class="decorative-text">Logi</span> Serwerowe
-                </h1>
-                <p class="hero-subtitle">
-                    Zapisuj każdą akcję na serwerze. Od usuniętych wiadomości po zmiany w rolach — miej wszystko pod kontrolą.
-                </p>
-            </div>
-            <div class="hero-stats">
-                <div class="hero-stat-item">
-                    <div class="stat-icon"><i class="fas fa-history"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-value">Monitorowanie</span>
-                        <span class="stat-label">Działa poprawnie</span>
-                    </div>
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Logi</span> Serwerowe
+            </h1>
+            <p class="hero-subtitle">
+                Zapisuj każdą akcję na serwerze. Od usuniętych wiadomości po zmiany w rolach — miej wszystko pod kontrolą.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-history"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">Monitorowanie</span>
+                    <span class="stat-label">Działa poprawnie</span>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
-        <div class="card-header">
-            <h3><i class="fas fa-stream"></i> Konfiguracja Logów</h3>
-        </div>
-        <div class="card-body">
-            <div class="modal-section">
-                <label class="modal-label">KANAŁ LOGÓW:</label>
-                <select class="modal-select" id="logs-channel-id">
-                    <option value="">Wybierz kanał...</option>
-                    {% for ch in channels %}
-                    <option value="{{ ch.id }}" {% if main_settings.logs_channel_id == ch.id %}selected{% endif %}># {{ ch.name }}</option>
-                    {% endfor %}
-                </select>
-                <p class="help-text" style="margin-top: 8px; font-size: 0.75rem; color: #666;">Wybierz kanał, na którym bot będzie publikował wszystkie powiadomienia.</p>
-            </div>
-            
-            <div class="modal-section" style="margin-top: 40px;">
-                <label class="modal-label">ZDARZENIA DO ZAPISYWANIA:</label>
-                <div class="logs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 20px;">
-                    
-                    <div class="log-toggle-item">
-                        <div class="toggle-info">
-                            <div class="toggle-title">Wejścia i Wyjścia</div>
-                            <div class="toggle-desc">Powiadamiaj o nowych użytkownikach i tych, którzy opuścili serwer.</div>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="logs-join-leave" {% if main_settings.logs_join_leave %}checked{% endif %}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div class="log-toggle-item">
-                        <div class="toggle-info">
-                            <div class="toggle-title">Moderacja (Bany/Mute)</div>
-                            <div class="toggle-desc">Loguj nadawanie kar, banowanie, wyrzucanie i wyciszanie.</div>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="logs-mod-actions" {% if main_settings.logs_mod_actions %}checked{% endif %}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div class="log-toggle-item">
-                        <div class="toggle-info">
-                            <div class="toggle-title">Role (Nadawanie/Odbieranie)</div>
-                            <div class="toggle-desc">Monitoruj kto otrzymał lub stracił uprawnienia i role.</div>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="logs-role-updates" {% if main_settings.logs_role_updates %}checked{% endif %}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div class="log-toggle-item">
-                        <div class="toggle-info">
-                            <div class="toggle-title">Kanały Głosowe (Voice)</div>
-                            <div class="toggle-desc">Loguj dołączanie i opuszczanie kanałów głosowych przez ludzi.</div>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="logs-voice-activity" {% if main_settings.logs_voice_activity %}checked{% endif %}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div class="log-toggle-item">
-                        <div class="toggle-info">
-                            <div class="toggle-title">Zmiany Serwera & Kanałów</div>
-                            <div class="toggle-desc">Loguj tworzenie/usuwanie kanałów i zmiany w ustawieniach serwera.</div>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="logs-guild-updates" {% if main_settings.logs_guild_updates %}checked{% endif %}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div class="log-toggle-item">
-                        <div class="toggle-info">
-                            <div class="toggle-title">Wiadomości (Edycja/Usuwanie)</div>
-                            <div class="toggle-desc">Rejestruj usunięte oraz edytowane wiadomości na kanałach tekstowych.</div>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="logs-msg-updates" {% if main_settings.logs_msg_updates %}checked{% endif %}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                </div>
-            </div>
-            <button type="button" class="btn-save" onclick="saveLogSettingsAction()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
-                <i class="fas fa-save"></i> ZAPISZ USTAWIENIA LOGÓW
-            </button>
         </div>
     </div>
 </div>
 
+<div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
+    <div class="card-header">
+        <h3><i class="fas fa-stream"></i> Konfiguracja Logów</h3>
+    </div>
+    <div class="card-body">
+        <div class="modal-section">
+            <label class="modal-label">KANAŁ LOGÓW:</label>
+            <select class="modal-select" id="logs-channel-id" style="width: 100%; background: #1a1c23; color: white; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                <option value="">Wybierz kanał...</option>
+                {% for ch in channels %}
+                <option value="{{ ch.id }}" {% if main_settings.logs_channel_id == ch.id %}selected{% endif %}># {{ ch.name }}</option>
+                {% endfor %}
+            </select>
+            <p class="help-text" style="margin-top: 8px; font-size: 0.75rem; color: #666;">Wybierz kanał, na którym bot będzie publikował wszystkie powiadomienia.</p>
+        </div>
+        
+        <div class="modal-section" style="margin-top: 40px;">
+            <label class="modal-label">ZDARZENIA DO ZAPISYWANIA:</label>
+            <div class="logs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 20px;">
+                
+                <div class="log-toggle-item">
+                    <div class="toggle-info">
+                        <div class="toggle-title">Wejścia i Wyjścia</div>
+                        <div class="toggle-desc">Powiadamiaj o nowych użytkownikach i tych, którzy opuścili serwer.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="logs-join-leave" {% if main_settings.logs_join_leave %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div class="log-toggle-item">
+                    <div class="toggle-info">
+                        <div class="toggle-title">Moderacja (Bany/Mute)</div>
+                        <div class="toggle-desc">Loguj nadawanie kar, banowanie, wyrzucanie i wyciszanie.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="logs-mod-actions" {% if main_settings.logs_mod_actions %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div class="log-toggle-item">
+                    <div class="toggle-info">
+                        <div class="toggle-title">Role (Nadawanie/Odbieranie)</div>
+                        <div class="toggle-desc">Monitoruj kto otrzymał lub stracił uprawnienia i role.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="logs-role-updates" {% if main_settings.logs_role_updates %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div class="log-toggle-item">
+                    <div class="toggle-info">
+                        <div class="toggle-title">Kanały Głosowe (Voice)</div>
+                        <div class="toggle-desc">Loguj dołączanie i opuszczanie kanałów głosowych przez ludzi.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="logs-voice-activity" {% if main_settings.logs_voice_activity %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div class="log-toggle-item">
+                    <div class="toggle-info">
+                        <div class="toggle-title">Zmiany Serwera & Kanałów</div>
+                        <div class="toggle-desc">Loguj tworzenie/usuwanie kanałów i zmiany w ustawieniach serwera.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="logs-guild-updates" {% if main_settings.logs_guild_updates %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div class="log-toggle-item">
+                    <div class="toggle-info">
+                        <div class="toggle-title">Wiadomości (Edycja/Usuwanie)</div>
+                        <div class="toggle-desc">Rejestruj usunięte oraz edytowane wiadomości na kanałach tekstowych.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="logs-msg-updates" {% if main_settings.logs_msg_updates %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+            </div>
+        </div>
+        <button type="button" class="btn-save" onclick="saveLogSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
+            <i class="fas fa-save"></i> ZAPISZ USTAWIENIA LOGÓW
+        </button>
+    </div>
+</div>
+
 <style>
-    .premium-card-gold {
-        border: 1px solid rgba(212, 175, 55, 0.3) !important;
-        box-shadow: 0 15px 40px rgba(212, 175, 55, 0.1) !important;
-    }
     .log-toggle-item {
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.05);
@@ -130,45 +124,10 @@
         align-items: center;
         justify-content: space-between;
         gap: 20px;
-        transition: 0.2s;
-    }
-    .log-toggle-item:hover {
-        background: rgba(255,255,255,0.05);
-        border-color: rgba(116,184,22,0.2);
     }
     .toggle-title { font-weight: 800; color: white; font-size: 0.9rem; margin-bottom: 4px; }
     .toggle-desc { font-size: 0.75rem; color: #777; line-height: 1.4; }
-
-    /* Switch Style */
-    .switch { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
-    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--accent-green); }
-    input:checked + .slider:before { transform: translateX(20px); }
-</style>
-
-<style>
-    .log-toggle-item {
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.05);
-        padding: 20px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        transition: 0.2s;
-    }
-    .log-toggle-item:hover {
-        background: rgba(255,255,255,0.05);
-        border-color: rgba(116,184,22,0.2);
-    }
-    .toggle-title { font-weight: 800; color: white; font-size: 0.9rem; margin-bottom: 4px; }
-    .toggle-desc { font-size: 0.75rem; color: #777; line-height: 1.4; }
-
-    /* Switch Style */
-    .switch { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
+    .switch { position: relative; display: inline-block; width: 42px; height: 22px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
     .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
@@ -177,70 +136,37 @@
 </style>
 
 <script>
-window.saveLogSettingsAction = async function() {
+async function saveLogSettings() {
     const btn = event.currentTarget;
-    const originalHTML = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
 
-    try {
-        const data = {
-            channel_id: document.getElementById('logs-channel-id').value,
-            join_leave: document.getElementById('logs-join-leave').checked,
-            mod_actions: document.getElementById('logs-mod-actions').checked,
-            role_updates: document.getElementById('logs-role-updates').checked,
-            voice_activity: document.getElementById('logs-voice-activity').checked,
-            guild_updates: document.getElementById('logs-guild-updates').checked,
-            msg_updates: document.getElementById('logs-msg-updates').checked
-        };
+    const payload = {
+        logs_channel_id: document.getElementById('logs-channel-id').value,
+        logs_join_leave: document.getElementById('logs-join-leave').checked,
+        logs_mod_actions: document.getElementById('logs-mod-actions').checked,
+        logs_role_updates: document.getElementById('logs-role-updates').checked,
+        logs_voice_activity: document.getElementById('logs-voice-activity').checked,
+        logs_guild_updates: document.getElementById('logs-guild-updates').checked,
+        logs_msg_updates: document.getElementById('logs-msg-updates').checked
+    };
 
-        const res = await fetch(`/api/{{ server_id }}/logs`, {
+    try {
+        const res = await fetch(`/config/{{ server_id }}/logs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(payload)
         });
-        const result = await res.json();
-
-        if (result.success) {
+        if (res.ok) {
             btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
-            btn.style.background = '#2d7d2a';
-        } else {
-            btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
-            btn.style.background = '#7d2a2a';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> ZAPISZ USTAWIENIA LOGÓW';
+            }, 2000);
         }
-
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.style.background = '';
-            btn.disabled = false;
-        }, 2000);
-    } catch (err) {
-        btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
-        btn.style.background = '#7d2a2a';
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.style.background = '';
-            btn.disabled = false;
-        }, 2000);
+    } catch(e) {
+        btn.innerHTML = 'BŁĄD';
+        setTimeout(() => { btn.disabled = false; btn.innerHTML = 'ZAPISZ USTAWIENIA LOGÓW'; }, 2000);
     }
-};
-
-// Zachowujemy funkcję dla wstecznej kompatybilności (jeśli potrzebna)
-window.saveLogSettings = async function() {
-    const data = {
-        channel_id: document.getElementById('logs-channel-id').value,
-        join_leave: document.getElementById('logs-join-leave').checked,
-        mod_actions: document.getElementById('logs-mod-actions').checked,
-        role_updates: document.getElementById('logs-role-updates').checked,
-        voice_activity: document.getElementById('logs-voice-activity').checked,
-        guild_updates: document.getElementById('logs-guild-updates').checked,
-        msg_updates: document.getElementById('logs-msg-updates').checked
-    };
-    const res = await fetch(`/api/{{ server_id }}/logs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    return await res.json();
 }
 </script>

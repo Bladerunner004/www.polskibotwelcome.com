@@ -1,55 +1,112 @@
-<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/moderation_banner_premium.png');">
-    <div class="hero-glass">
-        <div class="hero-header">
-            <h1 class="hero-title">
-                <span class="decorative-text">System</span> Moderacji
-            </h1>
-            <p class="hero-subtitle">
-                Zarządzaj bezpieczeństwem swojego serwera. Skonfiguruj komendy moderacyjne i uprawnienia dla swojej administracji.
-            </p>
-        </div>
-        <div class="hero-stats">
-            <div class="hero-stat-item">
-                <div class="stat-icon"><i class="fas fa-gavel"></i></div>
-                <div class="stat-info">
-                    <span class="stat-value">Aktywna</span>
-                    <span class="stat-label">Ochrona serwera</span>
+<div class="main-content" style="margin-left: 260px; padding: 40px; min-height: 100vh;">
+    <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/moderation_banner_premium.png');">
+        <div class="hero-glass">
+            <div class="hero-header">
+                <h1 class="hero-title">
+                    <span class="decorative-text">System</span> Moderacji
+                </h1>
+                <p class="hero-subtitle">
+                    Zarządzaj bezpieczeństwem swojego serwera. Skonfiguruj komendy moderacyjne i uprawnienia dla swojej administracji.
+                </p>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat-item">
+                    <div class="stat-icon"><i class="fas fa-gavel"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">Aktywna</span>
+                        <span class="stat-label">Ochrona serwera</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="settings-card">
+        <div class="card-header">
+            <h3><i class="fas fa-shield-alt"></i> Ustawienia Ogólne</h3>
+        </div>
+        <div class="card-body">
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-title">System Moderacji</div>
+                    <div class="setting-desc">Włącza/wyłącza wszystkie komendy moderacyjne (ban, kick, mute).</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="mod-enabled-switch" {% if main_settings.moderation_enabled %}checked{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-title">Wymagaj potwierdzenia</div>
+                    <div class="setting-desc">Bot zapyta o potwierdzenie przed banem/kickiem.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="mod-confirm-switch" {% if main_settings.moderation_confirm %}checked{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-card">
+        <div class="card-header">
+            <h3><i class="fas fa-user-shield"></i> Role Administracyjne</h3>
+        </div>
+        <div class="card-body">
+            <div class="modal-section">
+                <label class="modal-label">ROLA MODERATORA:</label>
+                <select class="modal-select" id="mod-role-id">
+                    <option value="">Wybierz rolę...</option>
+                    {% for r in roles %}
+                    <option value="{{ r.id }}" {% if main_settings.mod_role_id == r.id %}selected{% endif %}>{{ r.name }}</option>
+                    {% endfor %}
+                </select>
+                <p class="help-text" style="margin-top: 8px; font-size: 0.75rem; color: #666;">Członkowie z tą rolą będą mogli używać komend typu kick, mute, warn.</p>
+            </div>
+
+            <div class="modal-section" style="margin-top: 30px;">
+                <label class="modal-label">ROLA ADMINISTRATORA:</label>
+                <select class="modal-select" id="admin-role-id">
+                    <option value="">Wybierz rolę...</option>
+                    {% for r in roles %}
+                    <option value="{{ r.id }}" {% if main_settings.admin_role_id == r.id %}selected{% endif %}>{{ r.name }}</option>
+                    {% endfor %}
+                </select>
+                <p class="help-text" style="margin-top: 8px; font-size: 0.75rem; color: #666;">Pełne uprawnienia do konfiguracji bota przez komendy na Discordzie.</p>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn-save" onclick="saveModerationSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
+        <i class="fas fa-save"></i> ZAPISZ USTAWIENIA MODERACJI
+    </button>
 </div>
 
-<div class="settings-card">
-    <div class="card-header">
-        <h3><i class="fas fa-shield-alt"></i> Ustawienia Ogólne</h3>
-    </div>
-    <div class="card-body">
-        <div class="setting-item">
-            <div>
-                <div style="font-weight: 700;">System Moderacji</div>
-                <div style="font-size: 0.8rem; color: var(--text-gray);">Włącza/wyłącza wszystkie komendy moderacyjne (ban, kick, mute).</div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="mod-enabled-switch" {% if main_settings.moderation_enabled %}checked{% endif %}>
-                <span class="slider round"></span>
-            </label>
-        </div>
-        <div class="setting-item">
-            <div>
-                <div style="font-weight: 700;">Wymagaj potwierdzenia</div>
-                <div style="font-size: 0.8rem; color: var(--text-gray);">Bot zapyta o potwierdzenie przed banem/kickiem.</div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="mod-confirm-switch" {% if main_settings.moderation_confirm %}checked{% endif %}>
-                <span class="slider round"></span>
-            </label>
-        </div>
-        <button type="button" class="btn-save" onclick="saveModerationSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
-            <i class="fas fa-save"></i> ZAPISZ USTAWIENIA MODERACJI
-        </button>
-    </div>
-</div>
+<style>
+    .main-content { transition: margin-left 0.3s; }
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .setting-item:last-child { border-bottom: none; }
+    .setting-title { font-weight: 700; color: white; }
+    .setting-desc { font-size: 0.8rem; color: #8b8e94; margin-top: 2px; }
+    
+    .modal-label { display: block; font-size: 0.7rem; font-weight: 900; color: #8b8e94; margin-bottom: 10px; letter-spacing: 1px; }
+    .modal-select {
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: white;
+        padding: 12px;
+        border-radius: 10px;
+        outline: none;
+    }
+</style>
 
 <script>
 window.saveModerationSettings = async function() {
@@ -61,13 +118,17 @@ window.saveModerationSettings = async function() {
     try {
         const modEnabled = document.getElementById('mod-enabled-switch')?.checked ? 1 : 0;
         const modConfirm = document.getElementById('mod-confirm-switch')?.checked ? 1 : 0;
+        const modRole = document.getElementById('mod-role-id')?.value || null;
+        const adminRole = document.getElementById('admin-role-id')?.value || null;
 
         await fetch(`/config/{{ server_id }}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 moderation_enabled: modEnabled,
-                moderation_confirm: modConfirm
+                moderation_confirm: modConfirm,
+                mod_role_id: modRole,
+                admin_role_id: adminRole
             })
         });
 

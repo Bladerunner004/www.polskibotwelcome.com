@@ -1,215 +1,188 @@
-<div class="main-content" style="margin-left: 260px; padding: 40px; min-height: 100vh;">
-    <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
-        <div class="hero-glass">
-            <div class="hero-header">
-                <h1 class="hero-title">
-                    <span class="decorative-text">Auto</span> Moderacja
-                </h1>
-                <p class="hero-subtitle">
-                    Zautomatyzuj ochronę swojego serwera. Wybierz odpowiednie filtry, aby utrzymać porządek.
-                </p>
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Auto</span> Moderacja
+            </h1>
+            <p class="hero-subtitle">
+                Automatycznie chroń swój serwer przed spamem, wulgaryzmami i niebezpiecznymi linkami.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">Aktywny</span>
+                    <span class="stat-label">System ochrony</span>
+                </div>
             </div>
         </div>
     </div>
-
-    <div class="settings-card">
-        <div class="card-header">
-            <h3><i class="fas fa-shield-alt"></i> Konfiguracja Filtrów</h3>
-        </div>
-        <div class="card-body">
-            <!-- Anty-Caps (FREE) -->
-            <div class="setting-item">
-                <div class="setting-info">
-                    <div class="setting-title"><i class="fas fa-font"></i> System Anty-Caps</div>
-                    <div class="setting-desc">Usuwa wiadomości pisane DUŻYMI LITERAMI.</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="automod-anticaps-switch" {% if main_settings.automod_anticaps %}checked{% endif %} onchange="updateAutomod('anticaps')">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <!-- Anty-Spam (FREE) -->
-            <div class="setting-item">
-                <div class="setting-info">
-                    <div class="setting-title"><i class="fas fa-redo"></i> System Anty-Spam</div>
-                    <div class="setting-desc">Wykrywa powtarzające się wiadomości.</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="automod-antispam-switch" {% if main_settings.automod_antispam %}checked{% endif %} onchange="updateAutomod('antispam')">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <div class="divider"></div>
-
-            <!-- Anty-Link (PREMIUM) -->
-            <div class="setting-item {% if not main_settings.premium %}premium-locked-row{% endif %}">
-                <div class="setting-info">
-                    <div class="setting-title">
-                        <i class="fas fa-link"></i> System Anty-Link
-                        <span class="premium-tag-small"><i class="fas fa-crown"></i> PREMIUM</span>
-                    </div>
-                    <div class="setting-desc">Blokuje wysyłanie linków na czacie.</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="automod-antilink-switch" {% if main_settings.automod_antilink %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antilink')">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <!-- Anty-Badwords (PREMIUM) -->
-            <div class="setting-item {% if not main_settings.premium %}premium-locked-row{% endif %}">
-                <div class="setting-info">
-                    <div class="setting-title">
-                        <i class="fas fa-comment-slash"></i> Anty-Badwords
-                        <span class="premium-tag-small"><i class="fas fa-crown"></i> PREMIUM</span>
-                    </div>
-                    <div class="setting-desc">Automatyczne usuwanie wulgaryzmów.</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="automod-antibadwords-switch" {% if main_settings.automod_antibadwords %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antibadwords')">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <!-- Anty-Phishing (PREMIUM) -->
-            <div class="setting-item {% if not main_settings.premium %}premium-locked-row{% endif %}">
-                <div class="setting-info">
-                    <div class="setting-title">
-                        <i class="fas fa-user-shield"></i> Anty-Phishing
-                        <span class="premium-tag-small"><i class="fas fa-crown"></i> PREMIUM</span>
-                    </div>
-                    <div class="setting-desc">Chroni przed wyłudzaniem danych i fałszywymi linkami.</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="automod-antiphishing-switch" {% if main_settings.automod_antiphishing %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %} onchange="updateAutomod('antiphishing')">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-        </div>
-    </div>
-
-    <button type="button" class="btn-save" onclick="saveAutoModSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
-        <i class="fas fa-save"></i> ZAPISZ USTAWIENIA AUTO-MOD
-    </button>
 </div>
 
-<style>
-    .premium-locked-row {
-        opacity: 0.7;
-        background: rgba(212, 175, 55, 0.05) !important;
-        border: 1px solid rgba(212, 175, 55, 0.1) !important;
-    }
-    .premium-locked-row .switch {
-        cursor: not-allowed;
-    }
-    .setting-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 12px;
-        margin-bottom: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        transition: 0.2s;
-    }
-    .setting-item:hover {
-        background: rgba(255, 255, 255, 0.04);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-    .setting-title {
-        font-weight: 700;
-        color: white;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .setting-desc {
-        font-size: 0.85rem;
-        color: var(--text-gray);
-        margin-top: 5px;
-    }
-    .premium-tag-small {
-        background: rgba(212, 175, 55, 0.1);
-        color: #d4af37;
-        font-size: 0.65rem;
-        font-weight: 900;
-        padding: 2px 8px;
-        border-radius: 4px;
-        border: 1px solid rgba(212, 175, 55, 0.2);
-    }
-    .divider {
-        height: 1px;
-        background: rgba(255, 255, 255, 0.05);
-        margin: 25px 0;
-    }
-</style>
+<div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
+    <div class="card-header">
+        <h3><i class="fas fa-robot"></i> Filtry Automatyczne</h3>
+    </div>
+    <div class="card-body">
+        
+        <div class="automod-list">
+            <!-- DARMOWE FILTRY -->
+            <div class="automod-section-title">PODSTAWOWA OCHRONA (DARMOWE)</div>
+            
+            <div class="automod-row">
+                <div class="automod-info">
+                    <div class="automod-name">Filtr Anty-Caps</div>
+                    <div class="automod-desc">Blokuj wiadomości napisane samymi dużymi literami.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="automod-anti-caps" {% if main_settings.anti_caps %}checked{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
 
-        <button type="button" class="btn-save" onclick="saveAutoModSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
-            <i class="fas fa-save"></i> ZAPISZ USTAWIENIA AUTO-MOD
+            <div class="automod-row">
+                <div class="automod-info">
+                    <div class="automod-name">Filtr Anty-Spam</div>
+                    <div class="automod-desc">Wykrywaj i usuwaj serie powtarzających się wiadomości.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="automod-anti-spam" {% if main_settings.anti_spam %}checked{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <!-- PREMIUM FILTRY -->
+            <div class="automod-section-title premium-label">ZAAWANSOWANA OCHRONA <span class="badge-gold">PREMIUM</span></div>
+            
+            <div class="automod-row {% if not main_settings.premium %}premium-locked-row{% endif %}">
+                <div class="automod-info">
+                    <div class="automod-name">Filtr Anty-Link <i class="fas fa-crown gold-icon"></i></div>
+                    <div class="automod-desc">Blokuj zaproszenia do innych serwerów i podejrzane linki.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="automod-anti-link" {% if main_settings.anti_link %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="automod-row {% if not main_settings.premium %}premium-locked-row{% endif %}">
+                <div class="automod-info">
+                    <div class="automod-name">Filtr Anty-Badwords <i class="fas fa-crown gold-icon"></i></div>
+                    <div class="automod-desc">Automatycznie usuwaj wulgaryzmy i obraźliwe słowa.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="automod-anti-badwords" {% if main_settings.anti_badwords %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="automod-row {% if not main_settings.premium %}premium-locked-row{% endif %}">
+                <div class="automod-info">
+                    <div class="automod-name">Filtr Anty-Phishing <i class="fas fa-crown gold-icon"></i></div>
+                    <div class="automod-desc">Blokuj znane linki wyłudzające dane (Scam).</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="automod-anti-phishing" {% if main_settings.anti_phishing %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+
+        <button type="button" class="btn-save" onclick="updateAutomod()" style="margin-top: 30px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
+            <i class="fas fa-save"></i> ZAPISZ USTAWIENIA AUTOMODERACJI
         </button>
     </div>
 </div>
 
-<script>
-window.showPremiumModal = function(feature) {
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Wymagane Premium! 👑',
-            text: `Funkcja "${feature}" jest dostępna tylko dla subskrybentów PolskiBot Premium. Chcesz ją odblokować?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ffd700',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'ODBLOKUJ TERAZ',
-            cancelButtonText: 'PÓŹNIEJ'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = '/checkout';
-            }
-        });
-    } else {
-        if (confirm(`Funkcja "${feature}" wymaga PolskiBot Premium. Przejść do płatności?`)) {
-            window.location.href = '/checkout';
-        }
+<style>
+    .automod-section-title {
+        font-size: 0.75rem;
+        font-weight: 900;
+        color: #444;
+        margin: 30px 0 15px 0;
+        letter-spacing: 1.5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-};
 
-window.saveAutoModSettings = async function() {
+    .automod-section-title.premium-label { color: #d4af37; }
+
+    .badge-gold {
+        background: #d4af37;
+        color: black;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.6rem;
+    }
+
+    .automod-row {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        padding: 20px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        transition: 0.2s;
+    }
+
+    .automod-row:hover {
+        background: rgba(255,255,255,0.04);
+        border-color: rgba(255,255,255,0.1);
+    }
+
+    .premium-locked-row {
+        opacity: 0.7;
+        border-color: rgba(212, 175, 55, 0.2);
+    }
+
+    .automod-name { font-weight: 700; color: white; margin-bottom: 4px; }
+    .automod-desc { font-size: 0.8rem; color: #777; }
+    .gold-icon { color: #d4af37; margin-left: 5px; font-size: 0.8rem; }
+
+    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent-green); }
+    input:checked + .slider:before { transform: translateX(22px); }
+    input:disabled + .slider { opacity: 0.3; cursor: not-allowed; }
+</style>
+
+<script>
+async function updateAutomod() {
     const btn = event.currentTarget;
     const originalHTML = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
 
-    try {
-        const amAntilink = document.getElementById('automod-antilink-switch')?.checked ? 1 : 0;
-        const amAnticaps = document.getElementById('automod-anticaps-switch')?.checked ? 1 : 0;
-        const amAntispam = document.getElementById('automod-antispam-switch')?.checked ? 1 : 0;
-        const amBadwords = document.getElementById('automod-badwords-switch')?.checked ? 1 : 0;
-        const amAntiphishing = document.getElementById('automod-antiphishing-switch')?.checked ? 1 : 0;
+    const payload = {
+        anti_caps: document.getElementById('automod-anti-caps').checked,
+        anti_spam: document.getElementById('automod-anti-spam').checked,
+        anti_link: document.getElementById('automod-anti-link').checked,
+        anti_badwords: document.getElementById('automod-anti-badwords').checked,
+        anti_phishing: document.getElementById('automod-anti-phishing').checked
+    };
 
-        await fetch(`/config/{{ server_id }}`, {
+    try {
+        const res = await fetch(`/config/{{ server_id }}/automod`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                automod_antilink: amAntilink,
-                automod_anticaps: amAnticaps,
-                automod_antispam: amAntispam,
-                automod_badwords: amBadwords,
-                automod_antiphishing: amAntiphishing
-            })
+            body: JSON.stringify(payload)
         });
 
-        btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
-        btn.style.background = '#2d7d2a';
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.style.background = '';
-            btn.disabled = false;
-        }, 2000);
+        if (res.ok) {
+            btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
+            btn.style.background = '#2d7d2a';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 2000);
+        }
     } catch (err) {
         btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
         btn.style.background = '#7d2a2a';
@@ -219,5 +192,5 @@ window.saveAutoModSettings = async function() {
             btn.disabled = false;
         }, 2000);
     }
-};
+}
 </script>

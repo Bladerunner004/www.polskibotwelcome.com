@@ -266,7 +266,7 @@
 
         if (method === 'card') {
             if (blikBox) blikBox.style.display = 'none';
-            btnContainer.innerHTML = '<a href="https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00" class="btn-confirm" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">SUBSKRYBUJ TERAZ</a>';
+            btnContainer.innerHTML = '<button class="btn-confirm" onclick="window.open(\'https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00\', \'_blank\')">SUBSKRYBUJ TERAZ</button>';
             if (info) info.textContent = 'Twoja subskrypcja będzie odnawiana automatycznie co miesiąc. Możesz zrezygnować w każdej chwili.';
         } else if (method === 'blik') {
             if (blikBox) blikBox.style.display = 'block';
@@ -274,7 +274,7 @@
             if (info) info.textContent = 'Płatność jednorazowa. Premium zostanie aktywowane po weryfikacji kodu.';
         } else if (method === 'paypal') {
             if (blikBox) blikBox.style.display = 'none';
-            btnContainer.innerHTML = '<a href="https://paypal.me/nobadystrange" target="_blank" class="btn-confirm" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">PRZEJDŹ DO PAYPAL</a>';
+            btnContainer.innerHTML = '<button class="btn-confirm" onclick="window.open(\'https://paypal.me/nobadystrange\', \'_blank\')">PRZEJDŹ DO PAYPAL</button>';
             if (info) info.textContent = 'Płatność jednorazowa przez PayPal.';
         }
     }

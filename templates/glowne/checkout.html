@@ -189,21 +189,21 @@
         <div class="checkout-payment">
             <h3 style="margin-bottom: 25px; font-weight: 800;">Wybierz Metodę</h3>
             <div class="payment-methods">
-                <div class="method-card active">
+                <div class="method-card active" id="method-blik" onclick="selectMethod('blik')">
                     <div class="method-icon"><i class="fas fa-university"></i></div>
                     <div>
                         <div style="font-weight: 700; font-size: 0.95rem;">Przelew / BLIK</div>
                         <div style="font-size: 0.75rem; color: #666;">Księgowanie do 24h</div>
                     </div>
                 </div>
-                <div class="method-card">
+                <div class="method-card" id="method-stripe" onclick="selectMethod('stripe')">
                     <div class="method-icon"><i class="fab fa-cc-stripe"></i></div>
                     <div>
                         <div style="font-weight: 700; font-size: 0.95rem;">Karta / Stripe</div>
                         <div style="font-size: 0.75rem; color: #666;">Natychmiastowa aktywacja</div>
                     </div>
                 </div>
-                <div class="method-card">
+                <div class="method-card" id="method-paypal" onclick="selectMethod('paypal')">
                     <div class="method-icon"><i class="fab fa-paypal"></i></div>
                     <div>
                         <div style="font-weight: 700; font-size: 0.95rem;">PayPal</div>
@@ -212,8 +212,16 @@
                 </div>
             </div>
 
-            <button class="btn-confirm" onclick="confirmPayment()">Potwierdzam Wpłatę</button>
-            <p style="text-align: center; color: #444; font-size: 0.75rem; margin-top: 20px;">
+            <!-- Dane BLIK/Przelew – widoczne tylko po wybraniu tej metody -->
+            <div id="blik-details" style="margin-top: 20px; padding: 18px; background: rgba(0,0,0,0.4); border: 1px dashed rgba(116,184,22,0.3); border-radius: 14px;">
+                <div style="font-size: 0.7rem; color: #555; text-transform: uppercase; font-weight: 800; margin-bottom: 8px;">Numer konta / BLIK</div>
+                <div style="font-family: 'Courier New', monospace; font-size: 1rem; color: #74b816; font-weight: 700; letter-spacing: 1px; word-break: break-all;">75 1140 2004 0000 3002 8055 6866</div>
+                <div style="font-size: 0.7rem; color: #555; text-transform: uppercase; font-weight: 800; margin-top: 10px; margin-bottom: 4px;">Tytułem (ID serwera)</div>
+                <div style="font-family: 'Courier New', monospace; font-size: 0.85rem; color: #aaa;">{{ server_id }}</div>
+            </div>
+
+            <button class="btn-confirm" id="confirm-btn" onclick="confirmPayment()">Potwierdzam Wpłatę</button>
+            <p style="text-align: center; color: #444; font-size: 0.75rem; margin-top: 20px;" id="confirm-info">
                 Po dokonaniu wpłaty, system automatycznie aktywuje Premium po zaksięgowaniu środków.
             </p>
         </div>
@@ -221,22 +229,60 @@
 </div>
 
 <script>
-    async function confirmPayment() {
-        const btn = document.querySelector('.btn-confirm');
-        if (!btn) return;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PRZETWARZANIE...';
-        
-        try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            alert('✅ Twoje zgłoszenie wpłaty zostało przyjęte! System sprawdzi przelew i aktywuje pakiet PREMIUM automatycznie.');
-            window.close();
-        } catch(e) {
-            alert('Wystąpił błąd. Spróbuj ponownie później.');
-            btn.disabled = false;
-            btn.innerHTML = 'Potwierdzam Wpłatę';
+    let selectedMethod = 'blik';
+
+    function selectMethod(method) {
+        selectedMethod = method;
+
+        // Resetujemy wszystkie karty
+        document.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
+        document.getElementById('method-' + method).classList.add('active');
+
+        const blikBox = document.getElementById('blik-details');
+        const btn = document.getElementById('confirm-btn');
+        const info = document.getElementById('confirm-info');
+
+        if (method === 'blik') {
+            blikBox.style.display = 'block';
+            btn.textContent = 'Potwierdzam Wpłatę';
+            info.textContent = 'Po dokonaniu wpłaty, system aktywuje Premium automatycznie po zaksięgowaniu środków.';
+        } else if (method === 'stripe') {
+            blikBox.style.display = 'none';
+            btn.textContent = 'Przejdź do Stripe →';
+            info.textContent = 'Zostaniesz przekierowany na bezpieczną stronę płatności Stripe.';
+        } else if (method === 'paypal') {
+            blikBox.style.display = 'none';
+            btn.textContent = 'Przejdź do PayPal →';
+            info.textContent = 'Zostaniesz przekierowany na bezpieczną stronę płatności PayPal.';
         }
     }
+
+    function confirmPayment() {
+        const btn = document.getElementById('confirm-btn');
+
+        if (selectedMethod === 'stripe') {
+            // Podmień na swój link Stripe
+            window.open('https://buy.stripe.com/TWOJ_LINK', '_blank');
+            return;
+        }
+
+        if (selectedMethod === 'paypal') {
+            // Podmień na swój link PayPal
+            window.open('https://www.paypal.com/paypalme/TWOJ_NICK', '_blank');
+            return;
+        }
+
+        // Przelew / BLIK
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PRZETWARZANIE...';
+        setTimeout(() => {
+            alert('✅ Dziękujemy! Po zaksięgowaniu przelewu Premium zostanie aktywowane automatycznie (zwykle do 15 minut przy BLIK).');
+            window.close();
+        }, 1500);
+    }
+
+    // Domyślnie pokaż dane BLIK
+    selectMethod('blik');
 </script>
 </body>
 </html>

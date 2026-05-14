@@ -1,4 +1,4 @@
-<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png');">
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
     <div class="hero-glass">
         <div class="hero-header">
             <h1 class="hero-title">
@@ -10,10 +10,10 @@
         </div>
         <div class="hero-stats">
             <div class="hero-stat-item">
-                <div class="stat-icon"><i class="fas fa-gem"></i></div>
+                <div class="stat-icon" style="color: #d4af37;"><i class="fas fa-gem"></i></div>
                 <div class="stat-info">
                     <span class="stat-value">{{ "Aktywne" if main_settings.premium else "Nieaktywne" }}</span>
-                    <span class="stat-label">Premium</span>
+                    <span class="stat-label">Premium Status</span>
                 </div>
             </div>
             {% if not bot_latency %}
@@ -29,277 +29,187 @@
     </div>
 </div>
 
+<!-- STATUS PREMIUM -->
 <div class="premium-status-card {% if main_settings.premium %}is-premium{% endif %}">
     <div class="status-info">
         <div class="status-icon">
-            <i class="fas {% if main_settings.premium %}fa-check-circle{% else %}fa-star{% endif %}"></i>
+            <i class="fas {% if main_settings.premium %}fa-crown{% else %}fa-star-half-alt{% endif %}"></i>
         </div>
         <div>
-            <h3>Status: <span>{% if main_settings.premium %}AKTYWNY{% else %}BRAK PREMIUM{% endif %}</span></h3>
-            <p>{% if main_settings.premium %}Twój serwer posiada wszystkie korzyści Premium. Dziękujemy za wsparcie!{% else %}Twój serwer korzysta z darmowej wersji bota z nałożonymi limitami.{% endif %}</p>
+            <h3>TWOJA SUBSKRYPCJA: <span>{% if main_settings.premium %}PREMIUM ACTIVE{% else %}BASIC FREE{% endif %}</span></h3>
+            <p>{% if main_settings.premium %}Twój serwer jest w pełni uzbrojony w najnowsze technologie PolskiBota.{% else %}Twoja społeczność korzysta z ograniczonej wersji. Odblokuj pełną moc już dziś!{% endif %}</p>
         </div>
     </div>
     {% if not main_settings.premium %}
     <div class="status-actions">
         <button type="button" class="btn-premium-buy" onclick="scrollToPlans()">
-            <i class="fas fa-shopping-cart"></i> WYBIERZ PLAN I KUP
+            <i class="fas fa-crown"></i> ULEPSZ DO PREMIUM
         </button>
     </div>
     {% else %}
-    <div class="premium-active-badge" style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
+    <div class="premium-active-badge">
+        <div class="active-badge-inner">
             <i class="fas fa-gem"></i> SUBSKRYPCJA AKTYWNA
         </div>
-        <div style="font-size: 0.75rem; opacity: 0.7; font-weight: 400; text-align: right;">
-            Wygasa: {{ main_settings.premium_expiry or 'Bezterminowo' }}<br>
-            Typ: {{ main_settings.subscription_type|capitalize }}
+        <div class="active-badge-details">
+            Wygasa: {{ main_settings.premium_expiry or 'Bezterminowo' }} | Typ: {{ main_settings.subscription_type|capitalize }}
         </div>
     </div>
     {% endif %}
 </div>
 
-{% if not main_settings.premium %}
-<div class="premium-plans" style="display: flex; justify-content: center;">
-    <div class="plan-card" style="max-width: 400px; width: 100%;">
-        <div class="plan-badge">7 DNI ZA DARMO</div>
-        <h3>MIESIĘCZNY</h3>
-        <div class="plan-price">15.00 PLN<span>/mc</span></div>
-        <div style="color: var(--accent-green); font-size: 0.85rem; font-weight: 700; margin-top: -20px; margin-bottom: 25px;">
-            {% if main_settings.trial_used %}
-            <i class="fas fa-times-circle" style="color: #ff4757;"></i> <span style="color: #ff4757;">OKRES PRÓBNY WYKORZYSTANY</span>
-            {% else %}
-            <i class="fas fa-gift"></i> WYPRÓBUJ PRZEZ 7 DNI BEZ OPŁAT
-            {% endif %}
+<!-- SZCZEGÓŁOWA LISTA KORZYŚCI -->
+<div class="benefits-section">
+    <div class="section-header-gold">
+        <h2>DLACZEGO WARTO WYBRAĆ PREMIUM?</h2>
+        <p>Zobacz dokładnie, co zyskujesz przechodząc na wyższy poziom zarządzania.</p>
+    </div>
+
+    <div class="benefits-grid">
+        <!-- KATEGORIA: BEZPIECZEŃSTWO -->
+        <div class="benefit-card">
+            <div class="benefit-icon" style="background: rgba(255, 71, 87, 0.1); color: #ff4757;"><i class="fas fa-shield-virus"></i></div>
+            <h4>Elitarna Ochrona</h4>
+            <ul>
+                <li><i class="fas fa-check"></i> <strong>Filtr Anty-Link:</strong> Blokuj zaproszenia i spam.</li>
+                <li><i class="fas fa-check"></i> <strong>Anty-Badwords:</strong> Usuwaj wulgaryzmy.</li>
+                <li><i class="fas fa-check"></i> <strong>Anty-Phishing:</strong> Chroń przed scamem.</li>
+                <li><i class="fas fa-check"></i> <strong>Zaawansowane Logi:</strong> Historia usunięć i edycji.</li>
+            </ul>
         </div>
-        <ul class="plan-features">
-            <li><i class="fas fa-check"></i> Wszystkie limity zdjęte</li>
-            <li><i class="fas fa-check"></i> Dostęp do Analityki</li>
-            <li><i class="fas fa-check"></i> Wsparcie 24/7</li>
-            <li><i class="fas fa-check"></i> Priorytetowe aktualizacje</li>
-        </ul>
-        {% if main_settings.trial_used %}
-        <button class="btn-plan" disabled style="opacity: 0.5; cursor: not-allowed; background: rgba(255,255,255,0.05);">WYKORZYSTANO</button>
-        {% else %}
-        <button class="btn-plan" onclick="startTrial()">AKTYWUJ 7 DNI TRIAL</button>
-        <a href="/config/{{ server_id }}/checkout?plan=MIESI%C4%98CZNY&price=15.00" target="_blank" class="btn-plan" style="display:block; text-align:center; margin-top: 10px; border-color: var(--accent-gold); color: var(--accent-gold); text-decoration: none; padding: 15px;">KUP OD RAZU</a>
-        {% endif %}
+
+        <!-- KATEGORIA: CUSTOMIZACJA -->
+        <div class="benefit-card">
+            <div class="benefit-icon" style="background: rgba(212, 175, 55, 0.1); color: #d4af37;"><i class="fas fa-paint-brush"></i></div>
+            <h4>Pełna Customizacja</h4>
+            <ul>
+                <li><i class="fas fa-check"></i> <strong>RGB Embeds:</strong> Animowane paski wiadomości.</li>
+                <li><i class="fas fa-check"></i> <strong>Brak Brandingu:</strong> Usuń logo bota ze stopki.</li>
+                <li><i class="fas fa-check"></i> <strong>Własne Banery:</strong> Unikalne tła w powitaniach.</li>
+                <li><i class="fas fa-check"></i> <strong>Własne Ikony:</strong> Personalizowane reakcje i przyciski.</li>
+            </ul>
+        </div>
+
+        <!-- KATEGORIA: LIMITY -->
+        <div class="benefit-card">
+            <div class="benefit-icon" style="background: rgba(46, 213, 115, 0.1); color: #2ed573;"><i class="fas fa-infinity"></i></div>
+            <h4>Zdjęte Limity</h4>
+            <ul>
+                <li><i class="fas fa-check"></i> <strong>Embedy:</strong> Do 10 aktywnych osadzeń (zamiast 2).</li>
+                <li><i class="fas fa-check"></i> <strong>Liczniki:</strong> Do 5 liczników ról (zamiast 1).</li>
+                <li><i class="fas fa-check"></i> <strong>Powitania:</strong> Do 5 niezależnych kanałów.</li>
+                <li><i class="fas fa-check"></i> <strong>SelfRole:</strong> Do 10 opcji w jednym panelu.</li>
+            </ul>
+        </div>
+
+        <!-- KATEGORIA: FUNKCJE PRO -->
+        <div class="benefit-card">
+            <div class="benefit-icon" style="background: rgba(0, 168, 252, 0.1); color: #00a8fc;"><i class="fas fa-tools"></i></div>
+            <h4>Narzędzia PRO</h4>
+            <ul>
+                <li><i class="fas fa-check"></i> <strong>Kreator Formularzy:</strong> Rekrutacje i ankiety.</li>
+                <li><i class="fas fa-check"></i> <strong>System Ticketów:</strong> Profesjonalna obsługa.</li>
+                <li><i class="fas fa-check"></i> <strong>Monitorowanie Voice:</strong> Logi kanałów głosowych.</li>
+                <li><i class="fas fa-check"></i> <strong>Priorytet:</strong> Szybsze wsparcie i aktualizacje.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% if not main_settings.premium %}
+<!-- CENNIK -->
+<div class="premium-plans-section" id="pricing">
+    <div class="premium-plans">
+        <div class="plan-card featured">
+            <div class="plan-badge">BEST VALUE</div>
+            <h3>SUBSKRYPCJA MIESIĘCZNA</h3>
+            <div class="plan-price">15.00 PLN<span>/mc</span></div>
+            <div class="trial-info">
+                {% if main_settings.trial_used %}
+                <span class="trial-used"><i class="fas fa-times-circle"></i> OKRES PRÓBNY WYKORZYSTANY</span>
+                {% else %}
+                <span class="trial-available"><i class="fas fa-gift"></i> 7 DNI ZA DARMO NA START</span>
+                {% endif %}
+            </div>
+            <ul class="plan-features">
+                <li><i class="fas fa-check"></i> Odblokuj wszystkie funkcje PRO</li>
+                <li><i class="fas fa-check"></i> Usuń wszystkie limity</li>
+                <li><i class="fas fa-check"></i> Priorytetowe wsparcie 24/7</li>
+                <li><i class="fas fa-check"></i> Dostęp do nowych modułów w beta</li>
+            </ul>
+            <div class="plan-actions">
+                {% if not main_settings.trial_used %}
+                <button class="btn-trial" onclick="startTrial()">AKTYWUJ 7 DNI TRIAL</button>
+                {% endif %}
+                <a href="/config/{{ server_id }}/checkout?plan=MIESI%C4%98CZNY&price=15.00" class="btn-buy-now">KUP PREMIUM TERAZ</a>
+            </div>
+        </div>
     </div>
 </div>
 {% endif %}
 
-<div class="limits-grid">
-    <div class="limit-card">
-        <div class="limit-header">
-            <i class="fas fa-sort-numeric-up"></i>
-            <h4>Liczniki ról</h4>
-        </div>
-        <div class="limit-comparison">
-            <div class="limit-val free">Free: <strong>1</strong></div>
-            <div class="limit-val premium">Premium: <strong>5</strong></div>
-        </div>
-        <div class="limit-progress-bar">
-            <div class="progress" style="width: {{ (role_counters|length / (5 if main_settings.premium else 1) * 100)|round }}%;"></div>
-        </div>
-        <p class="limit-footer">Wykorzystano: {{ role_counters|length }} / {% if main_settings.premium %}5{% else %}1{% endif %}</p>
-    </div>
-
-    <div class="limit-card">
-        <div class="limit-header">
-            <i class="fas fa-bullhorn"></i>
-            <h4>Osadzenia (Embedy)</h4>
-        </div>
-        <div class="limit-comparison">
-            <div class="limit-val free">Free: <strong>2</strong></div>
-            <div class="limit-val premium">Premium: <strong>10</strong></div>
-        </div>
-        <p class="limit-footer">Większa swoboda w tworzeniu ogłoszeń.</p>
-    </div>
-
-    <div class="limit-card">
-        <div class="limit-header">
-            <i class="fas fa-door-open"></i>
-            <h4>Powitania/Pożegnania</h4>
-        </div>
-        <div class="limit-comparison">
-            <div class="limit-val free">Free: <strong>2</strong></div>
-            <div class="limit-val premium">Premium: <strong>5</strong></div>
-        </div>
-        <p class="limit-footer">Wiele kanałów powitalnych jednocześnie.</p>
-    </div>
-
-    <div class="limit-card">
-        <div class="limit-header">
-            <i class="fas fa-fingerprint"></i>
-            <h4>SelfRole (Opcje)</h4>
-        </div>
-        <div class="limit-comparison">
-            <div class="limit-val free">Free: <strong>3</strong></div>
-            <div class="limit-val premium">Premium: <strong>10</strong></div>
-        </div>
-        <p class="limit-footer">Liczba ról wewnątrz jednego panelu.</p>
-    </div>
-</div>
-
-<div class="premium-features-list">
-    <h3><i class="fas fa-plus-circle"></i> Dodatkowe korzyści</h3>
-    <div class="feature-item"><i class="fas fa-bolt"></i> <span>Priorytetowe wsparcie na serwerze Support</span></div>
-    <div class="feature-item"><i class="fas fa-rocket"></i> <span>Szybsze odświeżanie statystyk i liczników</span></div>
-    <div class="feature-item"><i class="fas fa-palette"></i> <span>Dostęp do ekskluzywnych szablonów powitań</span></div>
-    <div class="feature-item"><i class="fas fa-shield-alt"></i> <span>Brak reklam i dopisków "Powered by PolskiBot"</span></div>
-</div>
-
 <style>
+    /* TYPOGRAPHY & LAYOUT */
+    .section-header-gold { text-align: center; margin-bottom: 50px; }
+    .section-header-gold h2 { font-size: 2rem; font-weight: 900; color: white; letter-spacing: -1px; margin-bottom: 10px; }
+    .section-header-gold p { color: var(--text-gray); font-size: 1.1rem; }
+
+    /* PREMIUM STATUS CARD */
     .premium-status-card {
-        background: var(--bg2);
-        border: 1px solid var(--border-gray);
-        border-radius: 16px;
-        padding: 25px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 30px;
-        position: relative;
-        overflow: hidden;
+        background: var(--bg2); border: 1px solid var(--border-gray); border-radius: 20px;
+        padding: 35px; display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 50px; position: relative; overflow: hidden;
     }
-    .premium-status-card::before {
-        content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--text-gray);
-    }
-    .premium-status-card.is-premium::before { background: var(--accent-gold); }
-    .premium-status-card.is-premium { border-color: rgba(212, 175, 55, 0.3); background: linear-gradient(90deg, var(--bg2), rgba(212, 175, 55, 0.05)); }
+    .premium-status-card.is-premium { border-color: rgba(212, 175, 55, 0.4); background: linear-gradient(135deg, rgba(13,15,20,0.9), rgba(212, 175, 55, 0.05)); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .status-info { display: flex; align-items: center; gap: 25px; }
+    .status-icon { width: 60px; height: 60px; border-radius: 15px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--text-gray); }
+    .is-premium .status-icon { background: rgba(212, 175, 55, 0.15); color: #d4af37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+    .status-info h3 { margin: 0; font-size: 1.4rem; font-weight: 900; color: white; }
+    .status-info h3 span { color: var(--accent-gold); }
     
-    .status-info { display: flex; align-items: center; gap: 20px; }
-    .status-icon { width: 50px; height: 50px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--text-gray); }
-    .is-premium .status-icon { background: rgba(212, 175, 55, 0.1); color: var(--accent-gold); }
+    .premium-active-badge { text-align: right; }
+    .active-badge-inner { background: #d4af37; color: black; padding: 10px 25px; border-radius: 12px; font-weight: 900; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .active-badge-details { font-size: 0.8rem; color: var(--text-gray); font-weight: 500; }
+
+    /* BENEFITS GRID */
+    .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 60px; }
+    .benefit-card { background: var(--bg2); border: 1px solid var(--border-gray); border-radius: 20px; padding: 30px; transition: 0.3s; }
+    .benefit-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.15); box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+    .benefit-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 20px; }
+    .benefit-card h4 { font-size: 1.2rem; font-weight: 800; color: white; margin-bottom: 15px; }
+    .benefit-card ul { list-style: none; padding: 0; }
+    .benefit-card ul li { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; font-size: 0.9rem; color: #9ca3af; line-height: 1.4; }
+    .benefit-card ul li i { color: #d4af37; font-size: 0.8rem; margin-top: 4px; }
+    .benefit-card ul li strong { color: white; }
+
+    /* PLANS & PRICING */
+    .plan-card { background: #0c0d11; border: 2px solid var(--border-gray); border-radius: 24px; padding: 50px 40px; text-align: center; position: relative; transition: 0.4s; max-width: 500px; margin: 0 auto; }
+    .plan-card.featured { border-color: #d4af37; box-shadow: 0 20px 60px rgba(212, 175, 55, 0.15); }
+    .plan-badge { position: absolute; top: 20px; right: -40px; background: #d4af37; color: black; font-size: 0.75rem; font-weight: 900; padding: 8px 50px; transform: rotate(45deg); }
+    .plan-price { font-size: 3.5rem; font-weight: 900; color: white; margin-bottom: 20px; }
+    .plan-price span { font-size: 1.2rem; color: var(--text-gray); }
+    .trial-info { margin-bottom: 30px; }
+    .trial-available { color: #2ed573; font-weight: 800; font-size: 0.9rem; }
+    .trial-used { color: #ff4757; font-weight: 800; font-size: 0.9rem; }
     
-    .status-info h3 { font-size: 1.2rem; margin: 0; font-weight: 800; }
-    .status-info h3 span { color: var(--accent-green); }
-    .is-premium .status-info h3 span { color: var(--accent-gold); }
-    .status-info p { margin: 5px 0 0; color: var(--text-gray); font-size: 0.9rem; }
-
-    .btn-premium-buy {
-        background: linear-gradient(135deg, var(--accent-gold) 0%, #a6892c 100%);
-        color: #000; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; cursor: pointer;
-        transition: 0.3s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-    }
-    .btn-premium-buy:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5); }
-
-    .limits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
-    .limit-card { background: var(--bg2); border: 1px solid var(--border-gray); border-radius: 14px; padding: 20px; transition: 0.2s; }
-    .limit-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.1); }
-    
-    .limit-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-    .limit-header i { font-size: 1.1rem; color: var(--accent-green); }
-    .limit-header h4 { margin: 0; font-size: 1rem; color: white; }
-
-    .limit-comparison { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.85rem; }
-    .limit-val.free { color: var(--text-gray); }
-    .limit-val.premium { color: var(--accent-gold); font-weight: 700; }
-
-    .limit-progress-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
-    .limit-progress-bar .progress { height: 100%; background: var(--accent-green); border-radius: 10px; }
-    .is-premium .limit-progress-bar .progress { background: var(--accent-gold); }
-
-    .limit-footer { font-size: 0.75rem; color: var(--text-gray); margin: 0; }
-
-    .premium-features-list { background: var(--bg2); border: 1px solid var(--border-gray); border-radius: 14px; padding: 25px; }
-    .premium-features-list h3 { margin: 0 0 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
-    .feature-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; color: #d1d5db; font-size: 0.95rem; }
-    .feature-item i { color: var(--accent-gold); width: 20px; text-align: center; }
-
-    .status-actions { display: flex; gap: 15px; }
-    .btn-premium-redeem {
-        background: rgba(255,255,255,0.05);
-        color: white; border: 1px solid var(--border-gray); padding: 12px 25px; border-radius: 10px; font-weight: 700; cursor: pointer;
-        transition: 0.3s; display: flex; align-items: center; gap: 10px;
-    }
-    .btn-premium-redeem:hover { background: rgba(255,255,255,0.1); border-color: var(--text-gray); }
-
-    .premium-active-badge {
-        display: flex; align-items: center; gap: 10px; background: rgba(212, 175, 55, 0.1); color: var(--accent-gold);
-        padding: 10px 20px; border-radius: 12px; font-weight: 800; border: 1px solid rgba(212, 175, 55, 0.2);
-    }
-
-    /* PLANS */
-    .premium-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px; }
-    .plan-card {
-        background: var(--bg2); border: 1px solid var(--border-gray); border-radius: 20px; padding: 40px 30px; text-align: center;
-        position: relative; transition: 0.3s; overflow: hidden;
-    }
-    .plan-card.featured { border-color: var(--accent-gold); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.1); transform: scale(1.05); z-index: 10; }
-    .plan-badge {
-        position: absolute; top: 15px; right: -30px; background: var(--accent-gold); color: #000;
-        font-size: 0.7rem; font-weight: 900; padding: 5px 40px; transform: rotate(45deg);
-    }
-    .plan-card h3 { font-size: 1.3rem; margin-bottom: 20px; color: var(--text-gray); }
-    .plan-price { font-size: 2.5rem; font-weight: 900; margin-bottom: 30px; color: white; }
-    .plan-price span { font-size: 1rem; color: var(--text-gray); font-weight: 400; }
-    .plan-features { list-style: none; padding: 0; margin-bottom: 35px; text-align: left; }
-    .plan-features li { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 0.9rem; color: #9ca3af; }
-    .plan-features li i { color: var(--accent-green); font-size: 0.8rem; }
-    
-    .btn-plan {
-        width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border-gray); background: rgba(255,255,255,0.03);
-        color: white; font-weight: 700; cursor: pointer; transition: 0.3s;
-    }
-    .plan-card.featured .btn-plan { background: var(--accent-gold); color: #000; border: none; }
-    .btn-plan:hover { background: white; color: black; transform: translateY(-3px); }
-
-    /* Animacja aktywacji */
-    .premium-success-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9);
-        z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        animation: fadeIn 0.5s ease;
-    }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .plan-actions { display: flex; flex-direction: column; gap: 15px; }
+    .btn-buy-now { background: #d4af37; color: black; padding: 18px; border-radius: 12px; font-weight: 900; text-decoration: none; display: block; transition: 0.3s; border: none; font-size: 1.1rem; }
+    .btn-buy-now:hover { background: #e5c05b; transform: scale(1.02); box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); }
+    .btn-trial { background: rgba(255,255,255,0.05); color: white; padding: 15px; border-radius: 12px; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s; }
+    .btn-trial:hover { background: rgba(255,255,255,0.1); border-color: white; }
 </style>
 
 <script>
     function scrollToPlans() {
-        document.querySelector('.premium-plans').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function simulatePurchase(planName, price) {
-        window.location.href = `/config/{{ server_id }}/checkout?plan=${planName}&price=${price}`;
+        document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
     }
 
     async function startTrial() {
-        if (!confirm("Czy chcesz aktywować 7-dniowy okres próbny Premium dla tego serwera? Możesz to zrobić tylko raz.")) return;
-        
+        if (!confirm("Aktywować 7 dni Premium za darmo? Możesz to zrobić tylko raz na tym serwerze.")) return;
         try {
             const res = await fetch(`/api/{{ server_id }}/premium/trial`, { method: 'POST' });
-            const data = await res.json();
-            if (data.success) {
-                alert("✅ Okres próbny aktywowany! Ciesz się funkcjami Premium przez 7 dni.");
-                location.reload();
-            } else {
-                alert("❌ " + data.error);
-            }
+            if (res.ok) { alert("✅ OKRES PRÓBNY AKTYWNY! Korzystaj śmiało."); location.reload(); }
+            else { const d = await res.json(); alert("❌ " + d.error); }
         } catch(e) { alert("❌ Błąd połączenia."); }
-    }
-
-    async function activatePremium() {
-        try {
-            const response = await fetch(`/api/{{ server_id }}/premium`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: true })
-            });
-            const res = await response.json();
-            if (res.success) {
-                const overlay = document.createElement('div');
-                overlay.className = 'premium-success-overlay';
-                overlay.innerHTML = `
-                    <div style="text-align: center; color: white;">
-                        <i class="fas fa-crown" style="font-size: 5rem; color: #d4af37; margin-bottom: 20px; animation: bounce 1s infinite;"></i>
-                        <h1 style="font-size: 3rem; font-weight: 900; margin-bottom: 10px;">GRATULACJE!</h1>
-                        <p style="font-size: 1.2rem; opacity: 0.8;">Status Premium został aktywowany pomyślnie.</p>
-                        <button onclick="location.reload()" style="margin-top: 30px; background: #d4af37; color: black; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 800; cursor: pointer;">WRÓĆ DO DASHBOARDU</button>
-                    </div>
-                `;
-                document.body.appendChild(overlay);
-            }
-        } catch (err) {
-            alert('Błąd podczas aktywacji Premium: ' + err);
-        }
     }
 </script>

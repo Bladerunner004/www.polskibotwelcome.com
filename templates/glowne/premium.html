@@ -81,7 +81,7 @@
         <button class="btn-plan" disabled style="opacity: 0.5; cursor: not-allowed; background: rgba(255,255,255,0.05);">WYKORZYSTANO</button>
         {% else %}
         <button class="btn-plan" onclick="startTrial()">AKTYWUJ 7 DNI TRIAL</button>
-        <button class="btn-plan" style="margin-top: 10px; border-color: var(--accent-gold); color: var(--accent-gold);" onclick="simulatePurchase('MIESIĘCZNY', 15.00)">KUP OD RAZU</button>
+        <a href="/config/{{ server_id }}/checkout?plan=MIESI%C4%98CZNY&price=15.00" target="_blank" class="btn-plan" style="display:block; text-align:center; margin-top: 10px; border-color: var(--accent-gold); color: var(--accent-gold); text-decoration: none; padding: 15px;">KUP OD RAZU</a>
         {% endif %}
     </div>
 </div>

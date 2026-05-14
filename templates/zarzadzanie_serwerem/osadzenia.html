@@ -530,6 +530,15 @@
     // --- SYSTEM BLOKOWY ZASAD (LOGIKA) ---
     window.addRuleBlock = (imgUrl = '', text = '') => {
         const container = getE('rules-blocks-container');
+        const blocks = document.querySelectorAll('.rule-block-editor');
+        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
+        const maxBlocks = isPremium ? 10 : 1;
+
+        if (blocks.length >= maxBlocks) {
+            alert(`⚠️ Osiągnięto limit bloków w tym panelu (${maxBlocks}). ${!isPremium ? 'Odblokuj PREMIUM, aby dodać do 10 bloków!' : ''}`);
+            return;
+        }
+
         const blockId = Date.now() + Math.random();
         const div = document.createElement('div');
         div.className = 'rule-block-editor';

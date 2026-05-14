@@ -453,9 +453,9 @@
                 {% endif %}
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
-                <span id="role-counters-count" style="background: rgba(116,184,22,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--accent-green); font-weight: 700; border: 1px solid rgba(116,184,22,0.2);">{{ role_counters|length }} / {% if main_settings.premium %}15{% else %}0{% endif %}</span>
+                <span id="role-counters-count" class="stat-badge {% if main_settings.premium %}premium{% endif %}" style="background: rgba(116,184,22,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--accent-green); font-weight: 700; border: 1px solid rgba(116,184,22,0.2);">{{ role_counters|length }} / {% if main_settings.premium %}5{% else %}1{% endif %}</span>
                 <label class="toggle-row">
-                    <input type="checkbox" id="counter-roles-master-enabled" class="feature-toggle" data-target="roles-body" {% if role_counters %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
+                    <input type="checkbox" id="counter-roles-master-enabled" class="feature-toggle" data-target="roles-body" {% if role_counters %}checked{% endif %} {% if not main_settings.premium and role_counters|length >= 1 %}disabled{% endif %}>
                     <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
                 </label>
             </div>
@@ -530,6 +530,12 @@
 <style>
     .role-checkbox-item:hover { background: rgba(255,255,255,0.05); }
     .role-checkbox-item input:checked + span { color: var(--accent-green) !important; }
+    .stat-badge.premium {
+        background: rgba(255, 215, 0, 0.1) !important;
+        color: #ffd700 !important;
+        border: 1px solid rgba(255, 215, 0, 0.3) !important;
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+    }
 </style>
 
 <script>
@@ -571,7 +577,7 @@
     let currentEditingId = null;
     let stagedRoleCounters = {{ (role_counters or [])|tojson|safe }};
     const allRoles = {{ (roles or [])|tojson|safe }};
-    const roleLimit = {% if main_settings.premium %}15{% else %}0{% endif %};
+    const roleLimit = {% if main_settings.premium %}5{% else %}1{% endif %};
 
     function renderRoleCounters() {
         const list = document.getElementById('role-counters-list');

@@ -308,7 +308,7 @@
 
     function renderAll() {
         const types = ['reaction', 'button'];
-        const limits = {% if main_settings.premium %}20{% else %}2{% endif %}; 
+        const limits = {% if main_settings.premium %}10{% else %}2{% endif %}; 
 
         types.forEach(t => {
             const cont = document.getElementById(`list-${t}`);

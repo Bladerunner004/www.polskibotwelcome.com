@@ -94,25 +94,25 @@
             <h4>Liczniki ról</h4>
         </div>
         <div class="limit-comparison">
-            <div class="limit-val free">Free: <strong>3</strong></div>
-            <div class="limit-val premium">Premium: <strong>15</strong></div>
+            <div class="limit-val free">Free: <strong>1</strong></div>
+            <div class="limit-val premium">Premium: <strong>5</strong></div>
         </div>
         <div class="limit-progress-bar">
-            <div class="progress" style="width: {{ (role_counters|length / (15 if main_settings.premium else 3) * 100)|round }}%;"></div>
+            <div class="progress" style="width: {{ (role_counters|length / (5 if main_settings.premium else 1) * 100)|round }}%;"></div>
         </div>
-        <p class="limit-footer">Wykorzystano: {{ role_counters|length }} / {% if main_settings.premium %}15{% else %}3{% endif %}</p>
+        <p class="limit-footer">Wykorzystano: {{ role_counters|length }} / {% if main_settings.premium %}5{% else %}1{% endif %}</p>
     </div>
 
     <div class="limit-card">
         <div class="limit-header">
             <i class="fas fa-bullhorn"></i>
-            <h4>Osadzenia (Embeds)</h4>
+            <h4>Osadzenia (Embedy)</h4>
         </div>
         <div class="limit-comparison">
-            <div class="limit-val free">Free: <strong>5</strong></div>
-            <div class="limit-val premium">Premium: <strong>50</strong></div>
+            <div class="limit-val free">Free: <strong>2</strong></div>
+            <div class="limit-val premium">Premium: <strong>10</strong></div>
         </div>
-        <p class="limit-footer">Zwiększ limit dla lepszej komunikacji.</p>
+        <p class="limit-footer">Większa swoboda w tworzeniu ogłoszeń.</p>
     </div>
 
     <div class="limit-card">
@@ -122,21 +122,21 @@
         </div>
         <div class="limit-comparison">
             <div class="limit-val free">Free: <strong>2</strong></div>
-            <div class="limit-val premium">Premium: <strong>20</strong></div>
+            <div class="limit-val premium">Premium: <strong>5</strong></div>
         </div>
         <p class="limit-footer">Wiele kanałów powitalnych jednocześnie.</p>
     </div>
 
     <div class="limit-card">
         <div class="limit-header">
-            <i class="fas fa-photo-video"></i>
-            <h4>Media (Social)</h4>
+            <i class="fas fa-fingerprint"></i>
+            <h4>SelfRole (Opcje)</h4>
         </div>
         <div class="limit-comparison">
-            <div class="limit-val free">Free: <strong>2</strong></div>
+            <div class="limit-val free">Free: <strong>3</strong></div>
             <div class="limit-val premium">Premium: <strong>10</strong></div>
         </div>
-        <p class="limit-footer">Więcej kont społecznościowych pod kontrolą.</p>
+        <p class="limit-footer">Liczba ról wewnątrz jednego panelu.</p>
     </div>
 </div>
 

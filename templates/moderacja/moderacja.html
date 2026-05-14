@@ -20,7 +20,7 @@
     </div>
 </div>
 
-<div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
+<div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}" style="max-width: 1200px; margin: 0 auto 30px;">
     <div class="card-header">
         <h3><i class="fas fa-shield-alt"></i> Ustawienia Ogólne</h3>
     </div>
@@ -48,9 +48,11 @@
     </div>
 </div>
 
-<button type="button" class="btn-save" onclick="saveModerationSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
-    <i class="fas fa-save"></i> ZAPISZ USTAWIENIA MODERACJI
-</button>
+<div style="max-width: 1200px; margin: 0 auto;">
+    <button type="button" class="btn-save" onclick="saveModerationSettings()" style="width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
+        <i class="fas fa-save"></i> ZAPISZ USTAWIENIA MODERACJI
+    </button>
+</div>
 
 <style>
     .setting-item {
@@ -64,7 +66,6 @@
     .setting-title { font-weight: 700; color: white; }
     .setting-desc { font-size: 0.8rem; color: #8b8e94; margin-top: 2px; }
     
-    /* Switch Style */
     .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
@@ -90,74 +91,6 @@ window.saveModerationSettings = async function() {
             body: JSON.stringify({ 
                 moderation_enabled: modEnabled,
                 moderation_confirm: modConfirm
-            })
-        });
-
-        btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
-        btn.style.background = '#2d7d2a';
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.style.background = '';
-            btn.disabled = false;
-        }, 2000);
-    } catch (err) {
-        btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
-        btn.style.background = '#7d2a2a';
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.style.background = '';
-            btn.disabled = false;
-        }, 2000);
-    }
-};
-</script>
-
-<style>
-    .main-content { transition: margin-left 0.3s; }
-    .setting-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .setting-item:last-child { border-bottom: none; }
-    .setting-title { font-weight: 700; color: white; }
-    .setting-desc { font-size: 0.8rem; color: #8b8e94; margin-top: 2px; }
-    
-    .modal-label { display: block; font-size: 0.7rem; font-weight: 900; color: #8b8e94; margin-bottom: 10px; letter-spacing: 1px; }
-    .modal-select {
-        width: 100%;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.1);
-        color: white;
-        padding: 12px;
-        border-radius: 10px;
-        outline: none;
-    }
-</style>
-
-<script>
-window.saveModerationSettings = async function() {
-    const btn = event.currentTarget;
-    const originalHTML = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
-
-    try {
-        const modEnabled = document.getElementById('mod-enabled-switch')?.checked ? 1 : 0;
-        const modConfirm = document.getElementById('mod-confirm-switch')?.checked ? 1 : 0;
-        const modRole = document.getElementById('mod-role-id')?.value || null;
-        const adminRole = document.getElementById('admin-role-id')?.value || null;
-
-        await fetch(`/config/{{ server_id }}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                moderation_enabled: modEnabled,
-                moderation_confirm: modConfirm,
-                mod_role_id: modRole,
-                admin_role_id: adminRole
             })
         });
 

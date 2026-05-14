@@ -1,37 +1,174 @@
-<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/moderation_banner_premium.png');">
-    <div class="hero-glass">
-        <div class="hero-header">
-            <h1 class="hero-title">
-                <span class="decorative-text">Prace</span> Techniczne
-            </h1>
-            <p class="hero-subtitle">
-                System formularzy i ankiet jest obecnie w fazie intensywnej modernizacji.
-            </p>
+<div class="main-content">
+    <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/premium_plus_banner.png'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
+        <div class="hero-glass">
+            <div class="hero-header">
+                <h1 class="hero-title">
+                    <span class="decorative-text">Kreator</span> Formularzy
+                </h1>
+                <p class="hero-subtitle">
+                    Twórz profesjonalne podania, rekrutacje i ankiety. Wszystko w jednym miejscu, z automatycznym systemem powiadomień.
+                </p>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat-item">
+                    <div class="stat-icon" style="color: #74b816;"><i class="fas fa-edit"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">System Aktywny</span>
+                        <span class="stat-label">Obsługa zgłoszeń</span>
+                    </div>
+                </div>
+                {% if main_settings.premium %}
+                <div class="hero-stat-item">
+                    <div class="stat-icon" style="color: #d4af37;"><i class="fas fa-crown"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">PREMIUM</span>
+                        <span class="stat-label">Nielimitowane pola</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
-</div>
 
-<div class="settings-card">
-    <div class="card-body" style="text-align: center; padding: 100px 20px;">
-        <div style="font-size: 6rem; color: #74b816; margin-bottom: 40px; animation: maintenance-pulse 2s infinite;">
-            <i class="fas fa-edit"></i>
+    <div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
+        <div class="card-header">
+            <h3><i class="fas fa-tools"></i> Konfiguracja Formularza</h3>
+            <label class="switch">
+                <input type="checkbox" id="forms-enabled" {% if main_settings.forms_enabled %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
         </div>
-        <h2 style="font-weight: 900; letter-spacing: -1px; color: white; font-size: 2.5rem; margin-bottom: 20px;">MODUŁ W TRAKCIE PRAC</h2>
-        <p style="color: var(--text-gray); max-width: 600px; margin: 0 auto 40px; font-size: 1.1rem; line-height: 1.6;">
-            Projektujemy zupełnie nowy kreator formularzy z obsługą logiki warunkowej i zaawansowanych pól. Zapraszamy wkrótce do przetestowania nowej wersji!
-        </p>
-        <div style="display: flex; justify-content: center; gap: 20px;">
-            <button class="btn-sidebar-save" style="width: auto; padding: 15px 40px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;" onclick="window.open('https://discord.gg/RunF9ehW6', '_blank')">
-                <i class="fas fa-comments"></i> DOŁĄCZ DO SUPPORTU
+        <div class="card-body">
+            <div class="config-grid">
+                <!-- KANAŁ WYNIKÓW -->
+                <div class="modal-section">
+                    <label class="modal-label">KANAŁ DLA WYNIKÓW:</label>
+                    <select class="modal-select" id="forms-channel-id">
+                        <option value="">Wybierz kanał...</option>
+                        {% for ch in channels if ch.type == 0 %}
+                        <option value="{{ ch.id }}" {% if main_settings.forms_channel_id == ch.id %}selected{% endif %}># {{ ch.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="help-text">Tutaj będą trafiać wszystkie wypełnione formularze.</p>
+                </div>
+
+                <!-- ROLA MODERATORA FORMULARZY -->
+                <div class="modal-section">
+                    <label class="modal-label">KTO MOŻE ZARZĄDZAĆ:</label>
+                    <select class="modal-select" id="forms-admin-role">
+                        <option value="">Wybierz rolę...</option>
+                        {% for role in roles %}
+                        <option value="{{ role.id }}" {% if main_settings.forms_admin_role == role.id %}selected{% endif %}>@ {{ role.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="help-text">Rola, która otrzyma powiadomienia i będzie mogła akceptować/odrzucać zgłoszenia.</p>
+                </div>
+            </div>
+
+            <!-- PYTANIA W FORMULARZU -->
+            <div class="modal-section" style="margin-top: 40px;">
+                <label class="modal-label">PYTANIA W FORMULARZU:</label>
+                <div id="form-questions-container" class="questions-list">
+                    <!-- Dynamicznie ładowane pytania -->
+                    {% set questions = main_settings.forms_questions|from_json if main_settings.forms_questions else [] %}
+                    {% for q in questions %}
+                    <div class="question-item">
+                        <div class="q-index">{{ loop.index }}</div>
+                        <input type="text" class="modal-input q-input" value="{{ q }}" placeholder="Wpisz treść pytania...">
+                        <button class="btn-del-q" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn-add-q" onclick="addQuestion()">
+                    <i class="fas fa-plus"></i> DODAJ NOWE PYTANIE
+                </button>
+            </div>
+
+            <button type="button" class="btn-save" onclick="saveFormSettings()" style="margin-top: 30px; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
+                <i class="fas fa-save"></i> ZAPISZ KREATOR FORMULARZY
             </button>
         </div>
     </div>
 </div>
 
 <style>
-@keyframes maintenance-pulse {
-    0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(116, 184, 22, 0)); }
-    50% { transform: scale(1.05); opacity: 0.8; filter: drop-shadow(0 0 20px rgba(116, 184, 22, 0.3)); }
-    100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(116, 184, 22, 0)); }
-}
+    .main-content { margin-left: 280px; padding: 40px; width: calc(100% - 280px); box-sizing: border-box; }
+    .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; }
+    .modal-label { font-size: 0.7rem; font-weight: 900; color: #555; margin-bottom: 10px; display: block; letter-spacing: 1.5px; }
+    .modal-select { width: 100%; background: #1a1c23; border: 1px solid rgba(255,255,255,0.05); color: white; padding: 15px; border-radius: 10px; font-family: 'Inter', sans-serif; }
+    .help-text { font-size: 0.7rem; color: #666; margin-top: 8px; }
+    .premium-card-gold { border: 1px solid rgba(212, 175, 55, 0.3) !important; box-shadow: 0 15px 40px rgba(212, 175, 55, 0.1) !important; }
+    
+    .questions-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+    .question-item { display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+    .q-index { background: var(--accent-green); color: black; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; }
+    .q-input { flex: 1; border: none !important; background: transparent !important; padding: 5px !important; }
+    .btn-del-q { background: rgba(250, 82, 82, 0.1); color: #fa5252; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; }
+    .btn-add-q { width: 100%; background: rgba(116, 184, 22, 0.1); color: var(--accent-green); border: 2px dashed rgba(116, 184, 22, 0.2); padding: 15px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .btn-add-q:hover { background: rgba(116, 184, 22, 0.15); border-color: var(--accent-green); }
+
+    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent-green); }
+    input:checked + .slider:before { transform: translateX(22px); }
 </style>
+
+<script>
+function addQuestion() {
+    const cont = document.getElementById('form-questions-container');
+    const idx = cont.children.length + 1;
+    const div = document.createElement('div');
+    div.className = 'question-item';
+    div.innerHTML = `
+        <div class="q-index">${idx}</div>
+        <input type="text" class="modal-input q-input" placeholder="Wpisz treść pytania...">
+        <button class="btn-del-q" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+    `;
+    cont.appendChild(div);
+}
+
+async function saveFormSettings() {
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
+
+    const questions = [];
+    document.querySelectorAll('.q-input').forEach(input => {
+        if (input.value.trim()) questions.push(input.value.trim());
+    });
+
+    const payload = {
+        forms_enabled: document.getElementById('forms-enabled').checked,
+        forms_channel_id: document.getElementById('forms-channel-id').value,
+        forms_admin_role: document.getElementById('forms-admin-role').value,
+        forms_questions: JSON.stringify(questions)
+    };
+
+    try {
+        const res = await fetch(`/config/{{ server_id }}/forms`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
+            btn.style.background = '#2d7d2a';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> ZAPISZ KREATOR FORMULARZY';
+                btn.style.background = '';
+            }, 2000);
+        }
+    } catch(e) {
+        btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+        btn.style.background = '#7d2a2a';
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> ZAPISZ KREATOR FORMULARZY';
+            btn.style.background = '';
+        }, 2000);
+    }
+}
+</script>

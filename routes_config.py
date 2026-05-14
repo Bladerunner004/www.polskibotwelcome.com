@@ -146,8 +146,6 @@ def premium_checkout(server_id):
     plan_price = request.args.get('price', '15.00')
     return render_template('glowne/checkout.html', server_id=server_id, plan_name=plan_name, plan_price=plan_price)
 
-@config_bp.route('/config/<server_id>/checkout')
-def premium_checkout(server_id):
     if 'user' not in session or server_id == 'None':
         return redirect(url_for('dashboard.dashboard'))
     plan_name = request.args.get('plan', 'PREMIUM')
@@ -312,8 +310,6 @@ def config(server_id):
         member_count=guild['member_count']
     )
 
-@config_bp.route('/config/<server_id>/checkout')
-def checkout_route(server_id):
     if 'user' not in session:
         return redirect(url_for('home.index'))
     

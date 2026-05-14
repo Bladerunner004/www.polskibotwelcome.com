@@ -382,7 +382,7 @@
         <div class="sidebar">
                 <div class="sidebar-scroll-area">
                 <div class="sidebar-header">
-                    <div class="server-pfp-large" {% if guild.icon %} style="background-image: url('{{ guild.icon.url }}'); background-size: cover;" {% endif %}>
+                    <div class="server-pfp-large" {% if guild.icon %} style="background-image: url('https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png'); background-size: cover;" {% endif %}>
                         {% if not guild.icon %}<span style="font-size: 1.5rem; color: #888;">{{ guild.name[0] }}</span>{% endif %}
                     </div>
                     <div style="font-weight: 800; font-size: 0.95rem;">{{ guild.name }}</div>

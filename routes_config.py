@@ -138,6 +138,14 @@ def api_debug_sync():
         "bot_log_tail": bot_log_tail
     })
 
+@config_bp.route('/config/<server_id>/checkout')
+def checkout(server_id):
+    if 'user' not in session or server_id == 'None':
+        return redirect(url_for('dashboard.dashboard'))
+    plan_name = request.args.get('plan', 'PREMIUM')
+    plan_price = request.args.get('price', '15.00')
+    return render_template('glowne/checkout.html', server_id=server_id, plan_name=plan_name, plan_price=plan_price)
+
 @config_bp.route('/config/<server_id>', methods=['GET', 'POST'])
 def config(server_id):
     if 'user' not in session or server_id == 'None':
@@ -297,7 +305,7 @@ def config(server_id):
     )
 
 @config_bp.route('/config/<server_id>/checkout')
-def checkout(server_id):
+def checkout_route(server_id):
     if 'user' not in session:
         return redirect(url_for('home.index'))
     

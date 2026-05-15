@@ -1,10 +1,13 @@
 import os
-import stripe
-import uuid
+import sqlite3
 import requests
 import json
 import time
-import sqlite3
+try:
+    import stripe
+except ImportError:
+    stripe = None
+import uuid
 from datetime import datetime, timedelta
 
 # Ścieżka do statusu (dla PythonAnywhere)
@@ -19,7 +22,8 @@ from werkzeug.utils import secure_filename
 config_bp = Blueprint('config', __name__)
 
 # --- STRIPE CONFIGURATION ---
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+if stripe:
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 # --- WEWNĘTRZNA KOMUNIKACJA Z BOTEM ---
@@ -151,11 +155,7 @@ def premium_checkout(server_id):
     plan_price = request.args.get('price', '15.00')
     return render_template('glowne/checkout.html', server_id=server_id, plan_name=plan_name, plan_price=plan_price)
 
-    if 'user' not in session or server_id == 'None':
-        return redirect(url_for('dashboard.dashboard'))
-    plan_name = request.args.get('plan', 'PREMIUM')
-    plan_price = request.args.get('price', '15.00')
-    return render_template('glowne/checkout.html', server_id=server_id, plan_name=plan_name, plan_price=plan_price)
+
 
 @config_bp.route('/config/<server_id>', methods=['GET', 'POST'])
 def config(server_id):

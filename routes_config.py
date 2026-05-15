@@ -1,4 +1,5 @@
 import os
+import stripe
 import uuid
 import requests
 import json
@@ -16,6 +17,10 @@ from database import get_settings, save_settings, get_command_settings, save_com
 from werkzeug.utils import secure_filename
 
 config_bp = Blueprint('config', __name__)
+
+# --- STRIPE CONFIGURATION ---
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 # --- WEWNĘTRZNA KOMUNIKACJA Z BOTEM ---
 BOT_API_URL = "http://127.0.0.1:5006"
@@ -709,18 +714,66 @@ def api_sync_custom_bot(guild_id):
 # --- WEBHOOKS (Stripe/PayPal) ---
 @config_bp.route('/webhook/stripe', methods=['POST'])
 def stripe_webhook():
-    """Placeholder dla automatycznej aktywacji po płatności."""
-    # W realnym systemie tutaj sprawdzamy sygnaturę Stripe
-    data = request.json
-    guild_id = data.get('guild_id') # Przekazane w metadata sesji Stripe
-    event_type = data.get('type')
-    
-    if event_type == 'checkout.session.completed' and guild_id:
-        from database import set_premium
-        set_premium(guild_id, True)
-        return jsonify({'status': 'success', 'message': 'Premium activated via webhook'})
+    """Automatyczna aktywacja premium po otrzymaniu sygnału ze Stripe."""
+    payload = request.get_data()
+    sig_header = request.environ.get('HTTP_STRIPE_SIGNATURE')
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError as e:
+        # Invalid payload
+        return jsonify({'error': 'Invalid payload'}), 400
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return jsonify({'error': 'Invalid signature'}), 400
+
+    # Obsługa zdarzenia zakończenia płatności
+    if event['type'] == 'checkout.session.completed':
+        session_obj = event['data']['object']
+        guild_id = session_obj.get('metadata', {}).get('guild_id')
+        
+        if guild_id:
+            from database import set_premium
+            set_premium(guild_id, True)
+            print(f"✅ [STRIPE] Aktywowano Premium dla serwera: {guild_id}")
+            return jsonify({'status': 'success', 'message': 'Premium activated'})
     
     return jsonify({'status': 'ignored'}), 200
+
+@config_bp.route('/api/<server_id>/create-checkout-session', methods=['POST'])
+def create_checkout_session(server_id):
+    """Tworzy dynamiczną sesję Stripe Checkout."""
+    if 'user' not in session:
+        return jsonify({'error': 'Zaloguj się'}), 401
+        
+    try:
+        # Wybór planu (na razie domyślny 15 PLN)
+        plan_name = request.args.get('plan', 'PREMIUM')
+        
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card', 'blik', 'p24', 'google_pay', 'paypal'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'pln',
+                    'product_data': {
+                        'name': f'PolskiBot {plan_name} - Serwer {server_id}',
+                        'description': 'Dostęp do wszystkich zaawansowanych funkcji bota na 30 dni.',
+                    },
+                    'unit_amount': 1500, # 15.00 PLN w groszach
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            metadata={'guild_id': server_id}, # Przekazujemy ID serwera do webhooka
+            success_url=url_for('config.config', server_id=server_id, _external=True) + '?payment=success',
+            cancel_url=url_for('config.config', server_id=server_id, _external=True) + '?payment=cancel',
+        )
+        return jsonify({'url': checkout_session.url})
+    except Exception as e:
+        print(f"❌ [STRIPE] Błąd tworzenia sesji: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @config_bp.route('/api/<guild_id>/premium', methods=['POST'])
 def api_set_premium(guild_id):

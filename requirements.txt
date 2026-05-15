@@ -5,3 +5,4 @@ python-dotenv
 aiohttp
 pillow
 werkzeug
+stripe

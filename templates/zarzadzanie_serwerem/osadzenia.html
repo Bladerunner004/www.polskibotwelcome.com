@@ -549,7 +549,7 @@
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
         
-        const isPremium = window.mainSettings.premium;
+        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
         const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
         if (isGif && !isPremium) {
             alert('⚠️ Animowane obrazy (GIF) są dostępne tylko dla serwerów z aktywnym pakietem PREMIUM!');
@@ -580,7 +580,7 @@
         if (!input.files || !input.files[0]) return;
         
         const file = input.files[0];
-        const isPremium = window.mainSettings.premium;
+        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
         const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
 
         if (isGif && !isPremium) {
@@ -783,7 +783,27 @@
         const hasPersonalization = !isRules && getE(p + 'p-toggle');
         const isPersonalized = hasPersonalization ? getE(p + 'p-toggle').checked : false;
 
+        const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
         const oldCfg = window.localEmbedConfigs.find(c => c.id === editingId);
+        
+        // Dodatkowa blokada GIF przed zapisem dla bezpieczeństwa
+        const thumbUrl = isRules ? '' : getV(p + '-thumb-url');
+        const largeUrl = isRules ? '' : getV(p + '-large-url');
+        
+        if (!isPremium) {
+            if (thumbUrl.toLowerCase().endsWith('.gif') || largeUrl.toLowerCase().endsWith('.gif')) {
+                alert('⚠️ Twoja konfiguracja zawiera animowane obrazy (GIF), które są funkcją PREMIUM. Usuń je lub kup Premium, aby zapisać.');
+                return;
+            }
+            if (isRules) {
+                const blocks = JSON.parse(finalDesc);
+                if (blocks.some(b => b.image.toLowerCase().endsWith('.gif'))) {
+                    alert('⚠️ Jeden z bloków zasad zawiera GIF, co wymaga statusu PREMIUM.');
+                    return;
+                }
+            }
+        }
+
         const config = {
             id: editingId || Date.now(),
             category: type,
@@ -798,8 +818,8 @@
             footer: isRules ? '' : getT(p + 'e-footer'),
             color: isPersonalized ? getV(p + '-color') : '',
             link_color: isPersonalized ? getV(p + '-link-color') : '',
-            thumbnail_url: isRules ? '' : getV(p + '-thumb-url'),
-            image_url: isRules ? '' : getV(p + '-large-url'),
+            thumbnail_url: thumbUrl,
+            image_url: largeUrl,
             reaction_emoji: isRules ? getV('r-reaction-emoji') : '',
             reaction_role_id: isRules ? getV('r-reaction-role') : '',
             timestamp: getE(p + '-timestamp') ? (getE(p + '-timestamp').checked ? 1 : 0) : 0,

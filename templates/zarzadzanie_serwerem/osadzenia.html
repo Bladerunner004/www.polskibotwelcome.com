@@ -221,33 +221,7 @@
     }
 </style>
 
-{% if main_settings.premium %}
-<div class="osadzenia-container" style="margin-bottom: 0; padding-bottom: 0;">
-    <div class="settings-card" style="background: linear-gradient(90deg, rgba(212, 175, 55, 0.1), transparent); border-color: rgba(212, 175, 55, 0.3);">
-        <div class="card-body" style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 20px;">
-                <div style="width: 50px; height: 50px; background: rgba(212, 175, 55, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #d4af37;">
-                    <i class="fas fa-crown"></i>
-                </div>
-                <div>
-                    <h4 style="margin: 0; color: #d4af37; font-weight: 800;">AKTYWNA SUBSKRYPCJA PREMIUM</h4>
-                    <p style="margin: 5px 0 0; color: #888; font-size: 0.85rem;">Korzystasz z planu: <strong>{{ main_settings.subscription_type|capitalize }}</strong></p>
-                </div>
-            </div>
-            <div style="text-align: right;">
-                <div style="font-size: 1.2rem; font-weight: 900; color: white;">
-                    {% if days_left is not none %}
-                        {{ days_left }} dni
-                    {% else %}
-                        Bez limitu
-                    {% endif %}
-                </div>
-                <div style="font-size: 0.7rem; color: #666; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Pozostało do końca</div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
+
 
 <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('/static/uploads/embeds_banner_premium.png');">
     <div class="hero-glass">
@@ -311,7 +285,7 @@
             <h3 style="margin:0; font-size: 0.9rem; color: var(--accent-green);">STATUS OSADZENIA:</h3>
             <label class="toggle-row">
                 <input type="checkbox" id="g-enabled" checked>
-                <div class="toggle-switch"></div>
+                <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
             </label>
         </div>
         
@@ -344,10 +318,10 @@
             </div>
 
             <div class="upload-controls" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-                <button type="button" class="tag-btn" style="width: 100%; padding: 12px; text-align: center;" onclick="document.getElementById('gu-thumb').click()">
+                <button type="button" class="tag-btn {% if main_settings.premium %}premium-frame{% endif %}" style="width: 100%; padding: 12px; text-align: center;" onclick="document.getElementById('gu-thumb').click()">
                     <i class="fas fa-image"></i> ZMIEŃ MINIATURKĘ (JPG, PNG, GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
                 </button>
-                <button type="button" class="tag-btn" style="width: 100%; padding: 12px; text-align: center;" onclick="document.getElementById('gu-large').click()">
+                <button type="button" class="tag-btn {% if main_settings.premium %}premium-frame{% endif %}" style="width: 100%; padding: 12px; text-align: center;" onclick="document.getElementById('gu-large').click()">
                     <i class="fas fa-expand"></i> ZMIEŃ DUŻY OBRAZ (JPG, PNG, GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
                 </button>
                 <input type="file" id="gu-thumb" hidden onchange="uploadImage('thumb', 'g')" accept="image/*">
@@ -362,7 +336,7 @@
                 <h3 style="margin:0; font-size:0.9rem;"><i class="fas fa-palette"></i> PERSONALIZACJA</h3>
                 <label class="toggle-row">
                     <input type="checkbox" id="gp-toggle" onchange="togglePersonalizacja('g'); updatePreviewStyles('g');">
-                    <div class="toggle-switch"></div>
+                    <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
                 </label>
             </div>
             <div id="gp-body" class="ux-body" style="display:none;">
@@ -383,7 +357,7 @@
                 <div style="margin-top: 10px;">
                     <label class="toggle-row" style="justify-content: flex-start; gap: 10px;">
                         <input type="checkbox" id="g-timestamp">
-                        <div class="toggle-switch"></div>
+                        <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
                         <span style="font-size: 0.8rem; color: var(--text-gray);">POKAŻ CZAS (TIMESTAMP)</span>
                     </label>
                 </div>
@@ -407,7 +381,7 @@
             <h3 style="margin:0; font-size: 0.9rem; color: var(--accent-green);">STATUS ZASAD:</h3>
             <label class="toggle-row">
                 <input type="checkbox" id="r-enabled" checked>
-                <div class="toggle-switch"></div>
+                <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
             </label>
         </div>
         

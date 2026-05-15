@@ -337,6 +337,29 @@
         }
         .custom-checkbox input:checked + .cb-box i { color: black; }
 
+        /* ===== PREMIUM ACCENTS ===== */
+        .premium-slider {
+            background: rgba(212, 175, 55, 0.1) !important;
+            border: 1px solid rgba(212, 175, 55, 0.3) !important;
+        }
+        input:checked + .premium-slider {
+            background: linear-gradient(135deg, #d4af37, #f1c40f) !important;
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.4) !important;
+        }
+        input:checked + .premium-slider:before {
+            background: #000 !important;
+        }
+
+        .premium-frame {
+            border: 1px solid rgba(212, 175, 55, 0.4) !important;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05), transparent) !important;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.1) !important;
+        }
+        .premium-frame:hover {
+            border-color: #d4af37 !important;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2) !important;
+        }
+
         /* ===== DASHBOARD OVERVIEW ===== */
         .dashboard-overview { margin-bottom: 30px; }
     </style>

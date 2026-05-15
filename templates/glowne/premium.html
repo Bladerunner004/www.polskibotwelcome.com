@@ -141,7 +141,12 @@
                 {% if not main_settings.trial_used %}
                 <button class="btn-trial" onclick="startTrial()">AKTYWUJ 7 DNI TRIAL</button>
                 {% endif %}
-                <a href="/config/{{ server_id }}/checkout?plan=MIESI%C4%98CZNY&price=15.00" class="btn-buy-now">KUP PREMIUM TERAZ</a>
+                <a href="/config/{{ server_id }}/checkout?plan=MIESI%C4%98CZNY&price=15.00" class="btn-buy-now">
+                    <i class="fas fa-credit-card"></i> KUP PRZEZ STRIPE
+                </a>
+                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YOUR_PAYPAL_ID" class="btn-paypal" target="_blank">
+                    <i class="fab fa-paypal"></i> KUP PRZEZ PAYPAL
+                </a>
             </div>
         </div>
     </div>
@@ -195,8 +200,8 @@
     .plan-actions { display: flex; flex-direction: column; gap: 15px; }
     .btn-buy-now { background: #d4af37; color: black; padding: 18px; border-radius: 12px; font-weight: 900; text-decoration: none; display: block; transition: 0.3s; border: none; font-size: 1.1rem; }
     .btn-buy-now:hover { background: #e5c05b; transform: scale(1.02); box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); }
-    .btn-trial { background: rgba(255,255,255,0.05); color: white; padding: 15px; border-radius: 12px; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s; }
-    .btn-trial:hover { background: rgba(255,255,255,0.1); border-color: white; }
+    .btn-paypal { background: #0070ba; color: white; padding: 18px; border-radius: 12px; font-weight: 900; text-decoration: none; display: block; transition: 0.3s; border: none; font-size: 1.1rem; margin-top: 5px; }
+    .btn-paypal:hover { background: #005ea6; transform: scale(1.02); box-shadow: 0 10px 30px rgba(0, 112, 186, 0.3); }
 </style>
 
 <script>

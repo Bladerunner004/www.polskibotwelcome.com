@@ -363,7 +363,7 @@
                 </div>
             </div>
         </div>
-                    <button type="button" class="btn-save" onclick="saveConfig('general', true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
+                    <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveConfig('general', true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
                     <button type="button" onclick="saveConfig('general', false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px; border-radius:10px; cursor:pointer; margin-top:8px; font-weight:bold;">TYLKO ZAPISZ</button>
                     <button type="button" onclick="closeModal('general')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:12px; font-weight:bold;">ANULUJ</button>
     </div>
@@ -430,7 +430,7 @@
         <input type="hidden" id="r-thumb-url">
         <input type="hidden" id="r-large-url">
 
-        <button type="button" class="btn-save" onclick="saveConfig('rules', true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
+        <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveConfig('rules', true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
         <button type="button" onclick="saveConfig('rules', false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px; border-radius:10px; cursor:pointer; margin-top:8px; font-weight:bold;">TYLKO ZAPISZ</button>
         <button type="button" onclick="closeModal('rules')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:12px; font-weight:bold;">ANULUJ</button>
     </div>

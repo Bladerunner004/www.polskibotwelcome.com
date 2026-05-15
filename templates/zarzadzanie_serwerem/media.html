@@ -36,10 +36,10 @@
         </div>
 
         <!-- TikTok -->
-        <div class="platform-card tiktok {% if not main_settings.premium %}premium-locked{% endif %}" onclick="{% if main_settings.premium %}openMediaModal('tiktok'){% else %}alert('Ta platforma wymaga subskrypcji PREMIUM!'){% endif %}">
+        <div class="platform-card tiktok {% if not main_settings.premium %}premium-locked{% else %}is-premium-feature{% endif %}" onclick="{% if main_settings.premium %}openMediaModal('tiktok'){% else %}alert('Ta platforma wymaga subskrypcji PREMIUM!'){% endif %}">
             <div class="platform-icon"><i class="fab fa-tiktok"></i></div>
             <div class="platform-info">
-                <span class="platform-name">TikTok {% if not main_settings.premium %}<i class="fas fa-crown" style="color: #ffd700; font-size: 0.8rem;"></i>{% endif %}</span>
+                <span class="platform-name">TikTok <span class="premium-badge-gold">PREMIUM</span></span>
                 <span class="platform-status" id="count-tiktok">{% if not main_settings.premium %}Zablokowane{% else %}0/3 kont{% endif %}</span>
                 <div class="platform-preview" id="preview-tiktok"></div>
             </div>
@@ -47,10 +47,10 @@
         </div>
 
         <!-- Kick -->
-        <div class="platform-card kick {% if not main_settings.premium %}premium-locked{% endif %}" onclick="{% if main_settings.premium %}openMediaModal('kick'){% else %}alert('Ta platforma wymaga subskrypcji PREMIUM!'){% endif %}">
+        <div class="platform-card kick {% if not main_settings.premium %}premium-locked{% else %}is-premium-feature{% endif %}" onclick="{% if main_settings.premium %}openMediaModal('kick'){% else %}alert('Ta platforma wymaga subskrypcji PREMIUM!'){% endif %}">
             <div class="platform-icon"><i class="fas fa-bolt"></i></div>
             <div class="platform-info">
-                <span class="platform-name">Kick {% if not main_settings.premium %}<i class="fas fa-crown" style="color: #ffd700; font-size: 0.8rem;"></i>{% endif %}</span>
+                <span class="platform-name">Kick <span class="premium-badge-gold">PREMIUM</span></span>
                 <span class="platform-status" id="count-kick">{% if not main_settings.premium %}Zablokowane{% else %}0/3 kont{% endif %}</span>
                 <div class="platform-preview" id="preview-kick"></div>
             </div>

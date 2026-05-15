@@ -378,7 +378,7 @@
                 <input type="checkbox" id="counter-humans-thousands" {% if main_settings.counter_humans_thousands %}checked{% endif %}>
                 Zaokrąglanie dużych liczb do tysięcy
             </label>
-            <button type="button" class="btn-save" onclick="saveSingleCounter('humans')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
+            <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveSingleCounter('humans')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
         </div>
     </div>
 
@@ -408,7 +408,7 @@
                 <input type="checkbox" id="counter-bots-thousands" {% if main_settings.counter_bots_thousands %}checked{% endif %}>
                 Zaokrąglanie dużych liczb do tysięcy
             </label>
-            <button type="button" class="btn-save" onclick="saveSingleCounter('bots')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
+            <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveSingleCounter('bots')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
         </div>
     </div>
 
@@ -433,7 +433,7 @@
             </div>
             <input type="text" id="counter-bans-name-input" class="modal-select" 
                    placeholder="Bans: {count}" value="{{ main_settings.counter_bans_name }}">
-            <button type="button" class="btn-save" onclick="saveSingleCounter('bans')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
+            <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveSingleCounter('bans')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
         </div>
     </div>
 
@@ -456,7 +456,7 @@
                 <span id="role-counters-count" class="stat-badge {% if main_settings.premium %}premium{% endif %}" style="background: rgba(116,184,22,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--accent-green); font-weight: 700; border: 1px solid rgba(116,184,22,0.2);">{{ role_counters|length }} / {% if main_settings.premium %}5{% else %}1{% endif %}</span>
                 <label class="toggle-row">
                     <input type="checkbox" id="counter-roles-master-enabled" class="feature-toggle" data-target="roles-body" {% if role_counters %}checked{% endif %} {% if not main_settings.premium and role_counters|length >= 1 %}disabled{% endif %}>
-                    <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
+                    <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
                 </label>
             </div>
         </div>
@@ -490,7 +490,7 @@
                     <label style="margin:0; color: var(--accent-green); font-weight: 800;">LICZNIK AKTYWNY:</label>
                     <label class="toggle-row">
                         <input type="checkbox" id="modal-enabled" checked>
-                        <div class="toggle-switch"></div>
+                        <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
                     </label>
                 </div>
 
@@ -520,7 +520,9 @@
                     </div>
                 </div>
 
-                <button type="button" class="btn-save" onclick="saveCurrentRoleCounter(true)">Zapisz i Wyślij na Discord</button>
+                <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveCurrentRoleCounter(true)">
+                    <i class="fas fa-paper-plane"></i> Zapisz i Wyślij na Discord
+                </button>
                 <button type="button" onclick="saveCurrentRoleCounter(false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:12px; border-radius:12px; cursor:pointer; margin-top:8px; font-weight:bold;">Tylko Zapisz</button>
             </div>
         </div>

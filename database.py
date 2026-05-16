@@ -106,7 +106,13 @@ def init_db():
         ("level_up_msg_enabled", "INTEGER DEFAULT 1"),
         ("counter_toplevel_enabled", "INTEGER DEFAULT 0"),
         ("counter_toplevel_channel_id", "TEXT"),
-        ("counter_toplevel_name", "TEXT DEFAULT 'Top Level: {count}'")
+        ("counter_toplevel_name", "TEXT DEFAULT 'Top Level: {count}'"),
+        ("ticket_category_id", "TEXT"),
+        ("ticket_staff_role_id", "TEXT"),
+        ("ticket_logs_channel_id", "TEXT"),
+        ("ticket_msg_title", "TEXT DEFAULT '📢 Nowe Zgłoszenie'"),
+        ("ticket_msg_desc", "TEXT DEFAULT 'Witaj {user}! Nasza administracja zaraz Ci pomoże.'"),
+        ("ticket_limit", "INTEGER DEFAULT 1")
     ]
     for col_name, col_type in needed_columns:
         try:

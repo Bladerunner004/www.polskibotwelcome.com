@@ -3,12 +3,14 @@ from discord.ext import commands
 import datetime
 import json
 import re
+import asyncio
 from database import get_settings, add_audit_log, log_message_activity, log_join_activity, add_warning, get_warnings, clear_warnings
 from badwords_list import GLOBAL_BADWORDS
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.spam_control = {} # {user_id: [timestamps]}
 
     async def send_log(self, guild, category, embed):
         settings = get_settings(str(guild.id))
@@ -86,16 +88,51 @@ class Moderation(commands.Cog):
         if message.author.bot or not message.guild: return
         settings = get_settings(str(message.guild.id))
         
-        # Automatyczna Moderacja: Wulgaryzmy
-        if settings.get("automod_badwords"):
+        # Ignoruj administrację w AutoModzie
+        if message.author.guild_permissions.manage_messages:
+            log_message_activity(message.guild.id, message.channel.id)
+            return
+
+        is_violating = False
+        violation_reason = ""
+
+        # 1. Antylink
+        if settings.get("automod_antilink"):
+            if re.search(r'(https?://|www\.)[^\s]+', message.content):
+                is_violating = True
+                violation_reason = "Linki są niedozwolone!"
+
+        # 2. Anticaps
+        if not is_violating and settings.get("automod_anticaps"):
+            if len(message.content) > 10 and sum(1 for c in message.content if c.isupper()) / len(message.content) > 0.7:
+                is_violating = True
+                violation_reason = "Nie krzycz! (Zbyt dużo dużych liter)"
+
+        # 3. Antispam
+        if not is_violating and settings.get("automod_antispam"):
+            uid = message.author.id
+            now = datetime.datetime.now().timestamp()
+            if uid not in self.spam_control: self.spam_control[uid] = []
+            self.spam_control[uid] = [t for t in self.spam_control[uid] if now - t < 5]
+            self.spam_control[uid].append(now)
+            if len(self.spam_control[uid]) > 5:
+                is_violating = True
+                violation_reason = "Przestań spamować!"
+
+        # 4. Badwords
+        if not is_violating and settings.get("automod_badwords"):
             custom_list = settings.get("automod_badwords_list", [])
             all_bad = GLOBAL_BADWORDS + custom_list
             if any(word.lower() in message.content.lower() for word in all_bad):
-                if not message.author.guild_permissions.manage_messages:
-                    try:
-                        await message.delete()
-                        await message.channel.send(f"⚠️ {message.author.mention}, Twoja wiadomość zawierała niedozwolone słowa!", delete_after=5)
-                    except: pass
+                is_violating = True
+                violation_reason = "Twoja wiadomość zawierała niedozwolone słowa!"
+
+        if is_violating:
+            try:
+                await message.delete()
+                await message.channel.send(f"⚠️ {message.author.mention}, {violation_reason}", delete_after=5)
+            except: pass
+            return
 
         # Logowanie aktywności (statystyki)
         log_message_activity(message.guild.id, message.channel.id)

@@ -41,7 +41,11 @@ class PolskiBot(commands.Bot):
             'cogs.counters',
             'cogs.media_radar',
             'cogs.selfrole',
-            'cogs.moderation'
+            'cogs.moderation',
+            'cogs.tickets',
+            'cogs.levels',
+            'cogs.fun',
+            'cogs.general'
         ]
 
     async def setup_hook(self):

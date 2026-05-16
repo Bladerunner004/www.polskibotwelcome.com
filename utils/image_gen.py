@@ -63,14 +63,23 @@ async def generate_welcome_card(bg_url, avatar_url, line1, line2, font_name='ari
         
         # Rysowanie tekstu
         draw = ImageDraw.Draw(bg)
-        try:
-            # Fallback czcionek dla różnych systemów
-            font_path = font_name if os.path.exists(font_name) else "arialbd.ttf"
-            f1 = ImageFont.truetype(font_path, 60)
-            f2 = ImageFont.truetype(font_path, 40)
-        except:
-            f1 = ImageFont.load_default()
-            f2 = ImageFont.load_default()
+        
+        def load_smart_font(size):
+            """Próbuje załadować czcionkę z wielu ścieżek fallback."""
+            font_names = [font_name, "arialbd.ttf", "Arial_Bold.ttf", "DejaVuSans-Bold.ttf", "FreeSansBold.ttf", "arial.ttf"]
+            # Ścieżki systemowe
+            sys_paths = ["", "C:/Windows/Fonts/", "/usr/share/fonts/truetype/dejavu/", "/usr/share/fonts/truetype/freefont/"]
+            
+            for f in font_names:
+                for p in sys_paths:
+                    path = os.path.join(p, f)
+                    if os.path.exists(path):
+                        try: return ImageFont.truetype(path, size)
+                        except: pass
+            return ImageFont.load_default()
+
+        f1 = load_smart_font(60)
+        f2 = load_smart_font(40)
             
         def draw_center(text, y, font, color):
             bbox = draw.textbbox((0, 0), text, font=font)

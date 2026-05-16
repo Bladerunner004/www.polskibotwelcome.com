@@ -36,22 +36,23 @@ async def generate_framed_image(image_url, width=600, height=300):
         return None
 
 async def generate_welcome_card(bg_url, avatar_url, line1, line2, font_name='arialbd.ttf', text_color='#ffffff', has_frame=0):
-    """Generuje profesjonalną kartę powitalną."""
+    """Generuje profesjonalną kartę powitalną (Cover & Center)."""
     try:
         width, height = 1000, 400
         bg = None
         
-        # Pobieranie tła
+        # Pobieranie tła (z kadrowaniem do środka)
         if bg_url:
             async with aiohttp.ClientSession() as session:
                 async with session.get(fix_url(bg_url)) as resp:
                     if resp.status == 200:
-                        bg = Image.open(io.BytesIO(await resp.read())).convert("RGBA")
+                        bg_data = await resp.read()
+                        bg = Image.open(io.BytesIO(bg_data)).convert("RGBA")
         
         if not bg: bg = Image.new("RGBA", (width, height), (20, 22, 26, 255))
-        bg = ImageOps.fit(bg, (width, height), Image.Resampling.LANCZOS)
+        bg = ImageOps.fit(bg, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
         
-        # Pobieranie i formatowanie awatara
+        # Pobieranie i formatowanie awatara (zawsze okrągły i wyśrodkowany)
         async with aiohttp.ClientSession() as session:
             async with session.get(str(avatar_url).replace('.webp', '.png') + "?size=256") as resp:
                 if resp.status == 200:
@@ -61,15 +62,11 @@ async def generate_welcome_card(bg_url, avatar_url, line1, line2, font_name='ari
                     ImageDraw.Draw(mask).ellipse((0, 0, 160, 160), fill=255)
                     bg.paste(avatar, (width // 2 - 80, 50), mask)
         
-        # Rysowanie tekstu
+        # Rysowanie tekstu z centrowaniem
         draw = ImageDraw.Draw(bg)
-        
         def load_smart_font(size):
-            """Próbuje załadować czcionkę z wielu ścieżek fallback."""
-            font_names = [font_name, "arialbd.ttf", "Arial_Bold.ttf", "DejaVuSans-Bold.ttf", "FreeSansBold.ttf", "arial.ttf"]
-            # Ścieżki systemowe
-            sys_paths = ["", "C:/Windows/Fonts/", "/usr/share/fonts/truetype/dejavu/", "/usr/share/fonts/truetype/freefont/"]
-            
+            font_names = [font_name, "arialbd.ttf", "DejaVuSans-Bold.ttf", "arial.ttf"]
+            sys_paths = ["", "C:/Windows/Fonts/", "/usr/share/fonts/truetype/dejavu/"]
             for f in font_names:
                 for p in sys_paths:
                     path = os.path.join(p, f)
@@ -89,7 +86,9 @@ async def generate_welcome_card(bg_url, avatar_url, line1, line2, font_name='ari
         draw_center(line1, 230, f1, text_color)
         draw_center(line2, 300, f2, text_color)
         
-        if has_frame: bg = ImageOps.expand(bg, border=10, fill=text_color)
+        # Ekskluzywna ramka (jeśli włączona)
+        if has_frame:
+            bg = ImageOps.expand(bg, border=10, fill=text_color)
 
         buf = io.BytesIO()
         bg.save(buf, format="PNG")

@@ -657,6 +657,14 @@ def api_embeds(guild_id):
         return jsonify({'success': True, 'id': new_id})
     return jsonify({'success': False, 'error': 'Błąd zapisu'}), 500
 
+@config_bp.route('/api/<guild_id>/embeds/<int:config_id>/test', methods=['POST'])
+def api_embed_test(guild_id, config_id):
+    ok = call_bot_api("/test_embed", method="POST", data={
+        'guild_id': guild_id,
+        'config_id': config_id
+    })
+    return jsonify({'success': ok})
+
 
 
 # --- SELFROLE ---

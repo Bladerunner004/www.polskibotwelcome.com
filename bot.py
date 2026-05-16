@@ -1826,7 +1826,8 @@ async def handle_send_embed(request):
     data = await request.json()
     guild_id = data.get('guild_id')
     config_id = data.get('config_id')
-    print(f"[API] Proba wyslania embedu: guild={guild_id}, config={config_id}")
+    is_test = data.get('is_test', False)
+    print(f"[API] Proba wyslania embedu (test={is_test}): guild={guild_id}, config={config_id}")
     
     from database import get_embed_configs, DB_NAME
     import sqlite3
@@ -1909,7 +1910,8 @@ async def handle_send_embed(request):
         outer_text = cfg.get('outer_text')
         content_val = outer_text if outer_text and outer_text.strip() else None
 
-        if last_msg_id:
+        # W trybie TEST nie edytujemy starej wiadomości i nie zapisujemy nowej
+        if not is_test and last_msg_id:
             try:
                 print(f"[API] Proba edycji wiadomosci: {last_msg_id}")
                 old_msg = await channel.fetch_message(int(last_msg_id))
@@ -1924,14 +1926,14 @@ async def handle_send_embed(request):
             try:
                 print(f"[API] Proba wyslania nowej wiadomosci na kanal {channel.id}")
                 msg = await channel.send(content=content_val, embeds=embeds)
-                print(f"[API] Wyslano nowa wiadomosc: {msg.id}")
-                try:
-                    conn = sqlite3.connect(DB_NAME)
-                    conn.cursor().execute("UPDATE embed_configs SET last_message_id = ? WHERE id = ?", (str(msg.id), config_id))
-                    conn.commit()
-                    conn.close()
-                except Exception as db_e:
-                    print(f"[API] Blad zapisu last_message_id do bazy: {db_e}")
+                if not is_test:
+                    try:
+                        conn = sqlite3.connect(DB_NAME)
+                        conn.cursor().execute("UPDATE embed_configs SET last_message_id = ? WHERE id = ?", (str(msg.id), config_id))
+                        conn.commit()
+                        conn.close()
+                    except Exception as db_e:
+                        print(f"[API] Blad zapisu last_message_id do bazy: {db_e}")
             except Exception as send_e:
                 print(f"[API] Blad krytyczny wysylania wiadomosci: {send_e}")
                 return web.json_response({'success': False, 'error': f'Discord error: {send_e}'}, status=500)
@@ -1949,7 +1951,7 @@ async def handle_send_embed(request):
         print(f"[API] Blad globalny w handle_send_embed: {global_e}")
         return web.json_response({'success': False, 'error': str(global_e)}, status=500)
 
-async def send_selfrole_panel(channel, cfg):
+async def send_selfrole_panel(channel, cfg, is_test=False):
     import json
     import discord
     from discord import ui
@@ -1973,8 +1975,8 @@ async def send_selfrole_panel(channel, cfg):
     msg = None
     existing_msg_id = cfg.get('message_id')
     
-    # PrĂłba edycji istniejÄ…cej wiadomoĹ›ci
-    if existing_msg_id:
+    # Próba edycji istniejącej wiadomości (Tylko w trybie produkcyjnym)
+    if not is_test and existing_msg_id:
         try:
             msg = await channel.fetch_message(int(existing_msg_id))
         except: pass
@@ -1984,15 +1986,16 @@ async def send_selfrole_panel(channel, cfg):
             await msg.edit(embed=emb)
         else:
             msg = await channel.send(embed=emb)
-            # Zapisujemy message_id w bazie
-            from database import DB_NAME
-            import sqlite3
-            try:
-                conn = sqlite3.connect(DB_NAME)
-                conn.cursor().execute("UPDATE self_role_configs SET message_id = ? WHERE id = ?", (str(msg.id), cfg['id']))
-                conn.commit()
-                conn.close()
-            except: pass
+            # Zapisujemy message_id w bazie (Tylko w trybie produkcyjnym)
+            if not is_test:
+                from database import DB_NAME
+                import sqlite3
+                try:
+                    conn = sqlite3.connect(DB_NAME)
+                    conn.cursor().execute("UPDATE self_role_configs SET message_id = ? WHERE id = ?", (str(msg.id), cfg['id']))
+                    conn.commit()
+                    conn.close()
+                except: pass
         
         # Aktualizacja reakcji
         for r in roles_data:
@@ -2016,19 +2019,21 @@ async def send_selfrole_panel(channel, cfg):
             await msg.edit(embed=emb, view=RoleView())
         else:
             msg = await channel.send(embed=emb, view=RoleView())
-            from database import DB_NAME
-            import sqlite3
-            try:
-                conn = sqlite3.connect(DB_NAME)
-                conn.cursor().execute("UPDATE self_role_configs SET message_id = ? WHERE id = ?", (str(msg.id), cfg['id']))
-                conn.commit()
-                conn.close()
-            except: pass
+            if not is_test:
+                from database import DB_NAME
+                import sqlite3
+                try:
+                    conn = sqlite3.connect(DB_NAME)
+                    conn.cursor().execute("UPDATE self_role_configs SET message_id = ? WHERE id = ?", (str(msg.id), cfg['id']))
+                    conn.commit()
+                    conn.close()
+                except: pass
 
 async def handle_send_selfrole(request):
     data = await request.json()
     guild_id = data.get('guild_id')
     config_id = data.get('config_id')
+    is_test = data.get('is_test', False)
     
     from database import get_selfrole_configs
     configs = get_selfrole_configs(guild_id)
@@ -2041,9 +2046,122 @@ async def handle_send_selfrole(request):
     channel = guild.get_channel(int(cfg['channel_id']))
     if not channel: return web.json_response({'success': False, 'error': 'Brak kanału'}, status=404)
 
-    await send_selfrole_panel(channel, cfg)
+    await send_selfrole_panel(channel, cfg, is_test=is_test)
     return web.json_response({'success': True})
         
+    return web.json_response({'success': True})
+
+async def handle_test_embed(request):
+    # Wrapper dla handle_send_embed z wymuszonym is_test=True
+    try:
+        data = await request.json()
+        data['is_test'] = True
+        
+        # Tworzymy atrapę requestu lub po prostu wywołujemy logikę
+        # Najprościej: przenieść logikę do funkcji pomocniczej
+        return await _do_send_embed(data)
+    except Exception as e:
+        return web.json_response({'success': False, 'error': str(e)}, status=500)
+
+async def handle_test_selfrole(request):
+    try:
+        data = await request.json()
+        data['is_test'] = True
+        return await _do_send_selfrole(data)
+    except Exception as e:
+        return web.json_response({'success': False, 'error': str(e)}, status=500)
+
+async def _do_send_embed(data):
+    # Skopiowana logika z handle_send_embed (uproszczona)
+    guild_id = data.get('guild_id')
+    config_id = data.get('config_id')
+    is_test = data.get('is_test', False)
+    
+    from database import get_embed_configs, DB_NAME
+    import sqlite3
+    configs = get_embed_configs(guild_id)
+    cfg = next((c for c in configs if str(c['id']) == str(config_id)), None)
+    if not cfg: return web.json_response({'success': False, 'error': 'Nie znaleziono configu'}, status=404)
+    
+    guild = bot.get_guild(int(guild_id))
+    if not guild: return web.json_response({'success': False, 'error': 'Bot poza serwerem'}, status=404)
+    
+    channel = guild.get_channel(int(cfg['channel_id']))
+    if not channel: return web.json_response({'success': False, 'error': 'Brak kanału'}, status=404)
+
+    import discord
+    custom_color = cfg.get('color')
+    if custom_color and custom_color.strip():
+        try: embed_color = int(custom_color.replace('#', ''), 16)
+        except: embed_color = get_embed_color(guild)
+    else: embed_color = get_embed_color(guild)
+
+    embeds = []
+    if cfg.get('category') == 'rules':
+        import json
+        try:
+            blocks = json.loads(cfg.get('description', '[]'))
+            for block in blocks:
+                e = discord.Embed(description=block.get('text', ''), color=embed_color)
+                if block.get('image'): e.set_image(url=fix_url(block['image']))
+                embeds.append(e)
+        except: pass
+    else:
+        e = discord.Embed(description=cfg.get('description', ''), color=embed_color)
+        if cfg.get('thumbnail_url'): e.set_thumbnail(url=fix_url(cfg['thumbnail_url']))
+        if cfg.get('image_url'): e.set_image(url=fix_url(cfg['image_url']))
+        if cfg.get('footer'): e.set_footer(text=cfg['footer'])
+        if cfg.get('author'): e.set_author(name=cfg['author'], url=cfg.get('author_url'))
+        if cfg.get('title'): e.title = cfg['title']
+        if cfg.get('title_url'): e.url = cfg['title_url']
+        if cfg.get('timestamp'): e.timestamp = datetime.datetime.now()
+        embeds.append(e)
+
+    msg = None
+    last_msg_id = cfg.get('last_message_id')
+    outer_text = cfg.get('outer_text')
+    content_val = outer_text if outer_text and outer_text.strip() else None
+
+    if not is_test and last_msg_id:
+        try:
+            old_msg = await channel.fetch_message(int(last_msg_id))
+            await old_msg.edit(content=content_val, embeds=embeds)
+            msg = old_msg
+        except: pass
+
+    if not msg:
+        msg = await channel.send(content=content_val, embeds=embeds)
+        if not is_test:
+            try:
+                conn = sqlite3.connect(DB_NAME)
+                conn.cursor().execute("UPDATE embed_configs SET last_message_id = ? WHERE id = ?", (str(msg.id), config_id))
+                conn.commit()
+                conn.close()
+            except: pass
+            
+    if cfg.get('category') == 'rules' and cfg.get('reaction_emoji'):
+        try: await msg.add_reaction(cfg['reaction_emoji'])
+        except: pass
+
+    return web.json_response({'success': True})
+
+async def _do_send_selfrole(data):
+    guild_id = data.get('guild_id')
+    config_id = data.get('config_id')
+    is_test = data.get('is_test', False)
+    
+    from database import get_selfrole_configs
+    configs = get_selfrole_configs(guild_id)
+    cfg = next((c for c in configs if str(c['id']) == str(config_id)), None)
+    if not cfg: return web.json_response({'success': False, 'error': 'Nie znaleziono configu'}, status=404)
+    
+    guild = bot.get_guild(int(guild_id))
+    if not guild: return web.json_response({'success': False, 'error': 'Bot poza serwerem'}, status=404)
+    
+    channel = guild.get_channel(int(cfg['channel_id']))
+    if not channel: return web.json_response({'success': False, 'error': 'Brak kanału'}, status=404)
+
+    await send_selfrole_panel(channel, cfg, is_test=is_test)
     return web.json_response({'success': True})
 
 async def run_internal_api():
@@ -2061,6 +2179,8 @@ async def run_internal_api():
         web.get('/guilds/{guild_id}/channels', handle_guild_channels),
         web.get('/guilds/{guild_id}/roles', handle_guild_roles),
         web.post('/test_welcome', handle_test_welcome),
+        web.post('/test_embed', handle_test_embed),
+        web.post('/test_selfrole', handle_test_selfrole),
         web.post('/guilds/{guild_id}/sync_counters', handle_sync_counters),
         web.post('/guilds/{guild_id}/sync_boosters', handle_sync_boosters),
         web.post('/send_embed', handle_send_embed),

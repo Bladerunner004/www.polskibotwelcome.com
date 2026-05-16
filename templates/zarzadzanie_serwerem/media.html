@@ -75,9 +75,11 @@
             <i class="fas fa-plus"></i> Dodaj nowe konto
         </div>
 
-        <button type="button" class="btn-save" style="margin-top: 30px;" onclick="saveMediaLocal()">
-            <i class="fas fa-save"></i> ZAPISZ KONFIGURACJĘ
-        </button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 30px;">
+            <button type="button" class="btn-save" style="padding: 14px; font-size: 0.8rem;" onclick="saveMediaLocal()">ZAPISZ I WYŚLIJ NA SERWER</button>
+            <button type="button" class="tag-btn" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); font-weight: bold;" onclick="saveMediaLocal()">WYŚLIJ TEST <i class="fas fa-vial"></i></button>
+        </div>
+        <button type="button" onclick="saveMediaLocal()" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#888; padding:10px; border-radius:12px; cursor:pointer; margin-top:8px; font-size: 0.75rem;">TYLKO ZAPISZ</button>
     </div>
 </div>
 

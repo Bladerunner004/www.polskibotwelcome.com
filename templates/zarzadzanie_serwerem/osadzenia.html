@@ -430,9 +430,11 @@
         <input type="hidden" id="r-thumb-url">
         <input type="hidden" id="r-large-url">
 
-        <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveConfig('rules', true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
-        <button type="button" onclick="saveConfig('rules', false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px; border-radius:10px; cursor:pointer; margin-top:8px; font-weight:bold;">TYLKO ZAPISZ</button>
-        <button type="button" onclick="closeModal('rules')" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:12px; font-weight:bold;">ANULUJ</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+            <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" style="padding: 14px; font-size: 0.8rem;" onclick="saveConfig('{{ type }}', true)">ZAPISZ I WYŚLIJ NA SERWER</button>
+            <button type="button" class="tag-btn" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); font-weight: bold;" onclick="saveConfig('{{ type }}', true, true)">WYŚLIJ TEST <i class="fas fa-vial"></i></button>
+        </div>
+        <button type="button" onclick="saveConfig('{{ type }}', false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#888; padding:10px; border-radius:10px; cursor:pointer; margin-top:8px; font-size: 0.75rem;">TYLKO ZAPISZ</button>
     </div>
 </div>
 
@@ -755,7 +757,7 @@
         }
     };
 
-    window.saveConfig = async function(type, shouldSync) {
+    window.saveConfig = async function(type, shouldSync, shouldTest) {
         const p = type === 'rules' ? 'r' : 'g';
         let name = getV(p + '-name');
         
@@ -839,7 +841,10 @@
             });
             const data = await res.json();
             if (data.success) {
-                if (shouldSync) {
+                if (shouldTest) {
+                    // Wywołanie TESTU (nie edytuje starej wiadomości)
+                    await fetch(`${API}/embeds/${data.id || config.id}/test`, { method: 'POST' });
+                } else if (shouldSync) {
                     // Wywołanie synchronizacji konkretnego embeda
                     await fetch(`${API}/embeds/${data.id || config.id}/sync`, { method: 'POST' });
                 }

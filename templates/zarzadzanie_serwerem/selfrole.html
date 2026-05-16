@@ -255,9 +255,11 @@
 
 
 
-        <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save-modal{% endif %}" onclick="saveSelfroleLocal(true)">ZAPISZ I WYŚLIJ NA DISCORD</button>
-        <button type="button" onclick="saveSelfroleLocal(false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:12px; border-radius:12px; cursor:pointer; margin-top:8px; font-weight:bold;">TYLKO ZAPISZ</button>
-        <button type="button" onclick="closeSRModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:12px; font-weight:bold;">ANULUJ</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+            <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save-modal{% endif %}" style="padding: 14px; font-size: 0.8rem;" onclick="saveSRConfig(true)">ZAPISZ I WYŚLIJ NA SERWER</button>
+            <button type="button" class="tag-btn" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); font-weight: bold;" onclick="saveSRConfig(true, true)">WYŚLIJ TEST <i class="fas fa-vial"></i></button>
+        </div>
+        <button type="button" onclick="saveSRConfig(false)" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#888; padding:10px; border-radius:12px; cursor:pointer; margin-top:8px; font-size: 0.75rem;">TYLKO ZAPISZ</button>
     </div>
 </div>
 
@@ -498,7 +500,7 @@
         }
     };
 
-    window.saveSelfroleLocal = async function(shouldSync) {
+    window.saveSelfroleLocal = async function(shouldSync, shouldTest) {
         const name = document.getElementById('sr-name').value;
         const config = {
             id: editingId,
@@ -532,7 +534,9 @@
             });
             const data = await res.json();
             if (data.success) {
-                if (shouldSync) {
+                if (shouldTest) {
+                    await fetch(`${API}/selfrole/${data.id || config.id}/test`, { method: 'POST' });
+                } else if (shouldSync) {
                     await fetch(`${API}/selfrole/${data.id || config.id}/sync`, { method: 'POST' });
                 }
                 loadAll();

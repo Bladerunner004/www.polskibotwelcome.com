@@ -501,6 +501,10 @@
     };
 
     window.saveSelfroleLocal = async function(shouldSync, shouldTest) {
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Czekaj...';
+        btn.disabled = true;
         const name = document.getElementById('sr-name').value;
         const config = {
             id: editingId,
@@ -546,6 +550,9 @@
             }
         } catch(e) {
             alert('Błąd komunikacji z serwerem');
+        } finally {
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
         }
     };
 

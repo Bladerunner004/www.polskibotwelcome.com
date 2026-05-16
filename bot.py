@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 import re
 import json
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+from badwords_list import GLOBAL_BADWORDS
 
 # Ścieżka do statusu (dla PythonAnywhere)
 STATUS_FILE_PATH = "/home/BLADERUNNER009/AntigravityProjekt/bot_status.json"
@@ -33,8 +34,13 @@ BASE_URL = "https://BLADERUNNER009.pythonanywhere.com"
 
 def fix_url(url):
     if not url: return url
-    if url.startswith('/static/'):
-        return f"{BASE_URL}{url}"
+    if isinstance(url, str):
+        if url.startswith('http'):
+            return url
+        if url.startswith('/static/'):
+            return f"{BASE_URL}{url}"
+        if url.startswith('static/'):
+            return f"{BASE_URL}/{url}"
     return url
 
 def check_badwords(text, custom_words=None):
@@ -487,12 +493,20 @@ async def create_welcome_image(bg_url, avatar_url, line1, line2, font_name='aria
                             bg = Image.open(io.BytesIO(bg_data)).convert("RGBA")
             else:
                 # Lokalna ścieżka (np. /static/uploads/...)
-                # Czyścimy ścieżkę, aby pasowała do struktury plików
-                local_path = bg_url.lstrip('/')
-                if os.path.exists(local_path):
-                    bg = Image.open(local_path).convert("RGBA")
-                elif os.path.exists(os.path.join('static', 'uploads', os.path.basename(bg_url))):
-                    bg = Image.open(os.path.join('static', 'uploads', os.path.basename(bg_url))).convert("RGBA")
+                # Próbujemy kilka wariantów ścieżki dla maksymalnej kompatybilności
+                clean_path = bg_url.lstrip('/')
+                possible_paths = [
+                    clean_path,
+                    os.path.join(SYNC_DIR, clean_path),
+                    os.path.join(SYNC_DIR, 'static', 'uploads', os.path.basename(bg_url))
+                ]
+                
+                for path in possible_paths:
+                    if os.path.exists(path):
+                        try:
+                            bg = Image.open(path).convert("RGBA")
+                            break
+                        except: continue
         
         # Jeśli tła nadal brak, stwórz ciemny, profesjonalny baner
         if not bg:
@@ -668,9 +682,16 @@ async def send_welcome_message(guild: discord.Guild, member: discord.Member, con
                                     if resp.status == 200:
                                         file = discord.File(fp=io.BytesIO(await resp.read()), filename="welcome.gif")
                         else:
-                            local_path = bg_url.lstrip('/')
-                            if os.path.exists(local_path):
-                                file = discord.File(fp=local_path, filename="welcome.gif")
+                            clean_path = bg_url.lstrip('/')
+                            possible_paths = [
+                                clean_path,
+                                os.path.join(SYNC_DIR, clean_path),
+                                os.path.join(SYNC_DIR, 'static', 'uploads', os.path.basename(bg_url))
+                            ]
+                            for path in possible_paths:
+                                if os.path.exists(path):
+                                    file = discord.File(fp=path, filename="welcome.gif")
+                                    break
                         
                         if file and embed:
                             embed.set_image(url="attachment://welcome.gif")
@@ -1943,9 +1964,9 @@ async def send_selfrole_panel(channel, cfg):
         color=get_embed_color(channel.guild)
     )
     if cfg.get('thumbnail_url'):
-        emb.set_thumbnail(url=cfg['thumbnail_url'])
+        emb.set_thumbnail(url=fix_url(cfg['thumbnail_url']))
     if cfg.get('image_url'):
-        emb.set_image(url=cfg['image_url'])
+        emb.set_image(url=fix_url(cfg['image_url']))
     
     try:
         roles_data = json.loads(cfg.get('roles_json', '[]'))

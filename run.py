@@ -34,7 +34,8 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SECURE=True,
     PERMANENT_SESSION_LIFETIME=604800,
-    PREFERRED_URL_SCHEME='https'
+    PREFERRED_URL_SCHEME='https',
+    MAX_CONTENT_LENGTH=16 * 1024 * 1024 # 16MB limit
 )
 
 @app.after_request

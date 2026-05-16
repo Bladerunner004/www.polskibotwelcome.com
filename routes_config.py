@@ -21,6 +21,36 @@ from werkzeug.utils import secure_filename
 
 config_bp = Blueprint('config', __name__)
 
+def check_guild_access(guild_id):
+    """Sprawdza czy zalogowany użytkownik ma dostęp do zarządzania danym serwerem."""
+    if 'user' not in session: return False
+    managed_guilds = session.get('user_guilds', [])
+    # Porównujemy ID serwerów jako stringi
+    return any(str(g.get('id')) == str(guild_id) for g in managed_guilds)
+
+@config_bp.before_request
+def security_check():
+    """Globalne zabezpieczenie dla wszystkich ścieżek API i konfiguracji."""
+    # Jeśli to ścieżka /api/<guild_id>/..., sprawdź uprawnienia
+    if request.path.startswith('/api/'):
+        # Wyjątki dla statusu bota
+        if request.path.startswith('/api/bot/'): return
+        if request.path.startswith('/api/debug/'): return # Opcjonalnie zablokować też to
+        
+        parts = request.path.split('/')
+        if len(parts) >= 3:
+            guild_id = parts[2]
+            # Sprawdzamy czy to wygląda na ID serwera (same cyfry)
+            if guild_id.isdigit() and len(guild_id) > 15:
+                if not check_guild_access(guild_id):
+                    return jsonify({'success': False, 'error': 'Nie masz uprawnień do zarządzania tym serwerem!'}), 403
+    
+    # Dla ścieżki /config/<guild_id> (główna strona)
+    if request.endpoint == 'config.config':
+        guild_id = request.view_args.get('server_id')
+        if guild_id and not check_guild_access(guild_id):
+            return redirect(url_for('dashboard.dashboard'))
+
 # --- STRIPE CONFIGURATION ---
 if stripe:
     stripe.api_key = os.getenv("STRIPE_SECRET_KEY")

@@ -727,7 +727,18 @@ async def send_welcome_message(guild: discord.Guild, member: discord.Member, con
 
 @bot.event
 async def on_member_update(before, after):
-    # Wykrywanie boosta
+    # --- 1. LOGOWANIE ZMIAN RÓL ---
+    if before.roles != after.roles:
+        added = [r.mention for r in after.roles if r not in before.roles]
+        removed = [r.mention for r in before.roles if r not in after.roles]
+        if added or removed:
+            embed = discord.Embed(title="🛡️ Zmiana ról użytkownika", color=get_embed_color(before.guild), timestamp=datetime.datetime.now())
+            embed.add_field(name="Użytkownik", value=f"{after} ({after.id})")
+            if added: embed.add_field(name="Nadano", value=", ".join(added), inline=False)
+            if removed: embed.add_field(name="Odebrano", value=", ".join(removed), inline=False)
+            await send_log(after.guild, "role_updates", embed)
+
+    # --- 2. LOGIKA BOOSTERÓW ---
     if not before.premium_since and after.premium_since:
         # Ktoś właśnie zaczął ulepszać
         settings = get_settings(str(after.guild.id))
@@ -960,14 +971,21 @@ async def on_member_unban(guild, user):
 @bot.event
 async def on_member_join(member):
     print(f"📥 [EVENT] Nowy użytkownik dołączył: {member.name} (ID: {member.id}) na serwerze {member.guild.name}")
-    # 1. AKTUALIZACJA LICZNIKÓW I STATYSTYK
-    await update_counters(member.guild)
-    log_join_activity(member.guild.id)
     
-    # 2. POWITANIE
+    # 1. LOGI SERWEROWE (LOGGING)
+    log_join_activity(member.guild.id)
+    embed_log = discord.Embed(title="📥 Użytkownik dołączył", color=get_embed_color(member.guild), timestamp=datetime.datetime.now())
+    embed_log.add_field(name="Użytkownik", value=f"{member} ({member.id})")
+    embed_log.set_thumbnail(url=member.display_avatar.url)
+    await send_log(member.guild, "join_leave", embed_log)
+
+    # 2. AKTUALIZACJA LICZNIKÓW
+    await update_counters(member.guild)
+    
+    # 3. POWITANIE
     await send_welcome_message(member.guild, member, 'powitanie')
     
-    # 3. AUTOROLE I PRZYWRACANIE RANG
+    # 4. AUTOROLE I PRZYWRACANIE RANG
     settings = get_settings(str(member.guild.id))
     
     # A. PRZYWRACANIE RANG (jeśli są w bazie)
@@ -1035,10 +1053,15 @@ async def on_member_join(member):
 
 @bot.event
 async def on_member_remove(member):
-    # 1. AKTUALIZACJA LICZNIKÓW
+    # 1. LOGI SERWEROWE (LOGGING)
+    embed_log = discord.Embed(title="📤 Użytkownik opuścił serwer", color=get_embed_color(member.guild), timestamp=datetime.datetime.now())
+    embed_log.add_field(name="Użytkownik", value=f"{member} ({member.id})")
+    await send_log(member.guild, "join_leave", embed_log)
+
+    # 2. AKTUALIZACJA LICZNIKÓW
     await update_counters(member.guild)
 
-    # 2. POŻEGNANIE
+    # 3. POŻEGNANIE
     await send_welcome_message(member.guild, member, 'pozegnanie')
     
     # 3. ZAPIS RANG PRZED WYJŚCIEM
@@ -1617,19 +1640,6 @@ async def on_message_edit(before, after):
     await send_log(before.guild, "msg_updates", embed)
 
 @bot.event
-async def on_member_join(member):
-    embed = discord.Embed(title="📥 Użytkownik dołączył", color=get_embed_color(member.guild), timestamp=datetime.datetime.now())
-    embed.add_field(name="Użytkownik", value=f"{member} ({member.id})")
-    embed.set_thumbnail(url=member.display_avatar.url)
-    await send_log(member.guild, "join_leave", embed)
-
-@bot.event
-async def on_member_remove(member):
-    embed = discord.Embed(title="📤 Użytkownik opuścił serwer", color=get_embed_color(member.guild), timestamp=datetime.datetime.now())
-    embed.add_field(name="Użytkownik", value=f"{member} ({member.id})")
-    await send_log(member.guild, "join_leave", embed)
-
-@bot.event
 async def on_member_ban(guild, user):
     embed = discord.Embed(title="🔨 Zbanowano użytkownika", color=get_embed_color(guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Użytkownik", value=f"{user} ({user.id})")
@@ -1640,19 +1650,6 @@ async def on_member_unban(guild, user):
     embed = discord.Embed(title="✅ Odbanowano użytkownika", color=get_embed_color(guild), timestamp=datetime.datetime.now())
     embed.add_field(name="Użytkownik", value=f"{user} ({user.id})")
     await send_log(guild, "mod_actions", embed)
-
-@bot.event
-async def on_member_update(before, after):
-    # Role updates
-    if before.roles != after.roles:
-        added = [r.mention for r in after.roles if r not in before.roles]
-        removed = [r.mention for r in before.roles if r not in after.roles]
-        if added or removed:
-            embed = discord.Embed(title="🛡️ Zmiana ról użytkownika", color=get_embed_color(before.guild), timestamp=datetime.datetime.now())
-            embed.add_field(name="Użytkownik", value=f"{after} ({after.id})")
-            if added: embed.add_field(name="Nadano", value=", ".join(added), inline=False)
-            if removed: embed.add_field(name="Odebrano", value=", ".join(removed), inline=False)
-            await send_log(after.guild, "role_updates", embed)
 
 @bot.event
 async def on_guild_channel_create(channel):

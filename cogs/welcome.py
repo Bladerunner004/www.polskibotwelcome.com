@@ -1,0 +1,93 @@
+import discord
+from discord.ext import commands
+import io
+import aiohttp
+from utils.image_gen import generate_welcome_card, fix_url
+
+class Welcome(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    async def send_welcome_message(self, guild: discord.Guild, member: discord.Member, config_type: str, target_id=None):
+        from database import get_welcome_configs, get_settings
+        configs = get_welcome_configs(str(guild.id), config_type)
+        if not configs: return
+
+        if target_id is not None:
+            configs = [c for c in configs if str(c['id']) == str(target_id)]
+            if not configs: return
+
+        tag_map = {
+            "{nick}": member.name,
+            "{mention}": member.mention,
+            "{tag}": str(member),
+            "{server}": guild.name,
+            "{count}": str(guild.member_count),
+        }
+
+        sent_channels = set()
+        for cfg in configs:
+            if not cfg.get('is_enabled', 1): continue
+            ch_id_str = str(cfg.get('channel_id', ''))
+            if ch_id_str in sent_channels: continue
+            
+            channel = guild.get_channel(int(ch_id_str)) if ch_id_str.isdigit() else None
+            if not channel: continue
+            
+            sent_channels.add(ch_id_str)
+            content = (cfg.get('plain_text') or '')
+            for tag, val in tag_map.items(): content = content.replace(tag, val)
+
+            try:
+                embed = None
+                if cfg.get('is_embed'):
+                    desc = (cfg.get('description') or '')
+                    for tag, val in tag_map.items(): desc = desc.replace(tag, val)
+                    title = (cfg.get('title') or '')
+                    for tag, val in tag_map.items(): title = title.replace(tag, val)
+                    footer = (cfg.get('footer') or '')
+                    for tag, val in tag_map.items(): footer = footer.replace(tag, val)
+                    
+                    color_hex = cfg.get('color', '#74b816').replace('#', '')
+                    embed = discord.Embed(title=title, description=desc, color=int(color_hex, 16))
+                    if footer: embed.set_footer(text=footer)
+                
+                file = None
+                if cfg.get('has_image'):
+                    bg_url = cfg.get('bg_url', '')
+                    if bg_url.lower().endswith('.gif'):
+                        # Dla GIFów pobieramy surowy plik
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(fix_url(bg_url)) as resp:
+                                if resp.status == 200:
+                                    file = discord.File(fp=io.BytesIO(await resp.read()), filename="welcome.gif")
+                                    if embed: embed.set_image(url="attachment://welcome.gif")
+                    else:
+                        # Dla obrazków generujemy kartę z awatarem
+                        img_buffer = await generate_welcome_card(
+                            bg_url, 
+                            member.display_avatar.url, 
+                            (cfg.get('line1') or 'WITAJ').replace('{nick}', member.name),
+                            (cfg.get('line2') or member.name).replace('{nick}', member.name),
+                            font_name=cfg.get('font_name', 'arialbd.ttf'),
+                            text_color=cfg.get('img_text_color', '#ffffff'),
+                            has_frame=cfg.get('has_frame', 0)
+                        )
+                        if img_buffer:
+                            file = discord.File(fp=img_buffer, filename="welcome.png")
+                            if embed: embed.set_image(url="attachment://welcome.png")
+
+                await channel.send(content=content if content else None, embed=embed, file=file)
+            except Exception as e:
+                print(f"⚠️ [COGS/WELCOME] Błąd: {e}")
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        await self.send_welcome_message(member.guild, member, 'powitanie')
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):
+        await self.send_welcome_message(member.guild, member, 'pozegnanie')
+
+async def setup(bot):
+    await bot.add_cog(Welcome(bot))

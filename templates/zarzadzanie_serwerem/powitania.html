@@ -643,6 +643,11 @@
     window.closeWelcomeModal = () => document.getElementById('modal-welcome').classList.remove('active');
 
     window.saveWelcomeConfig = async function(shouldTest) {
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Czekaj...';
+        btn.disabled = true;
+
         const channelSelect = document.getElementById('m-channel');
         const selectedOption = channelSelect.options[channelSelect.selectedIndex];
         
@@ -691,7 +696,12 @@
             } else {
                 alert('Błąd: ' + (data.error || 'Nieznany błąd'));
             }
-        } catch(e) { alert('Błąd komunikacji z serwerem'); }
+        } catch(e) { 
+            alert('Błąd komunikacji z serwerem'); 
+        } finally {
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        }
     };
 
     window.deleteWelcomeConfig = async function(id, type) {

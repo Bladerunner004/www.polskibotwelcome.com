@@ -758,6 +758,10 @@
     };
 
     window.saveConfig = async function(type, shouldSync, shouldTest) {
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Czekaj...';
+        btn.disabled = true;
         const p = type === 'rules' ? 'r' : 'g';
         let name = getV(p + '-name');
         
@@ -855,6 +859,9 @@
             }
         } catch(e) {
             alert('Błąd komunikacji z serwerem');
+        } finally {
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
         }
     };
 

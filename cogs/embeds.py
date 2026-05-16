@@ -77,7 +77,16 @@ class Embeds(commands.Cog):
         
         # STANDARDOWY EMBED
         else:
-            e = discord.Embed(title=replace_tags(cfg.get('title', '')), description=replace_tags(cfg.get('description', '')), color=embed_color)
+            title_val = replace_tags(cfg.get('title', ''))
+            desc_val = replace_tags(cfg.get('description', ''))
+            e = discord.Embed(title=title_val, description=desc_val, color=embed_color)
+            
+            if cfg.get('title_url'): e.url = fix_url(cfg['title_url'])
+            
+            author_name = replace_tags(cfg.get('author', ''))
+            if author_name:
+                e.set_author(name=author_name, url=fix_url(cfg.get('author_url', '')))
+                
             img_url = cfg.get('image_url')
             if cfg.get('has_frame') and img_url:
                 img_data = await generate_framed_image(img_url)

@@ -1236,5 +1236,64 @@ def get_global_color(guild_id):
     try: return int(color_hex, 16)
     except: return 0x74b816
 
+# =============================================
+# FUNKCJE – Self Role & Media Radar
+# =============================================
+
+def get_selfrole_configs(guild_id):
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT * FROM self_role_configs WHERE guild_id=?', (str(guild_id),))
+        rows = c.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except: return []
+
+def sync_selfrole_configs(guild_id, configs):
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        for cfg in configs:
+            c.execute('''
+                INSERT INTO self_role_configs (guild_id, type, name, description, image_url, thumbnail_url, roles_json, enabled)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    type=excluded.type, name=excluded.name, description=excluded.description,
+                    image_url=excluded.image_url, thumbnail_url=excluded.thumbnail_url,
+                    roles_json=excluded.roles_json, enabled=excluded.enabled
+            ''', (
+                str(guild_id), cfg.get('type', 'button'), cfg.get('name', ''),
+                cfg.get('description', ''), cfg.get('image_url', ''), cfg.get('thumbnail_url', ''),
+                json.dumps(cfg.get('roles', [])), 1 if cfg.get('enabled', True) else 0
+            ))
+        conn.commit(); conn.close()
+        return True
+    except: return False
+
+def get_media_configs(guild_id):
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT * FROM media_configs WHERE guild_id=?', (str(guild_id),))
+        rows = c.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except: return []
+
+def sync_media_configs(guild_id, configs):
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('DELETE FROM media_configs WHERE guild_id=?', (str(guild_id),))
+        for cfg in configs:
+            c.execute('INSERT INTO media_configs (guild_id, platform, account_id, discord_channel_id, message, enabled) VALUES (?, ?, ?, ?, ?, ?)',
+                     (str(guild_id), cfg['platform'], cfg['account_id'], cfg['discord_channel_id'], cfg['message'], 1 if cfg.get('enabled', True) else 0))
+        conn.commit(); conn.close()
+        return True
+    except: return False
+
 init_db()
 

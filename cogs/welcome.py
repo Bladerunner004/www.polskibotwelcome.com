@@ -8,7 +8,7 @@ class Welcome(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def send_welcome_message(self, guild: discord.Guild, member: discord.Member, config_type: str, target_id=None):
+    async def send_welcome_message(self, guild: discord.Guild, member: discord.Member, config_type: str, target_id=None, is_test=False):
         from database import get_welcome_configs, get_settings, get_global_color
         configs = get_welcome_configs(str(guild.id), config_type)
         if not configs: return
@@ -41,8 +41,7 @@ class Welcome(commands.Cog):
             if not channel: continue
             
             sent_channels.add(ch_id_str)
-            content = (cfg.get('plain_text') or '')
-            for tag, val in tag_map.items(): content = content.replace(tag, val)
+            content = replace_tags(cfg.get('plain_text', ''))
 
             try:
                 embed = None
@@ -57,6 +56,7 @@ class Welcome(commands.Cog):
                         except: pass
                         
                     embed = discord.Embed(title=title, description=desc, color=color_val)
+                    if cfg.get('author'): embed.set_author(name=replace_tags(cfg['author']))
                     if footer: embed.set_footer(text=footer)
                 
                 file = None
@@ -82,7 +82,8 @@ class Welcome(commands.Cog):
                             file = discord.File(fp=img_buffer, filename="welcome.png")
                             if embed: embed.set_image(url="attachment://welcome.png")
 
-                await channel.send(content=content if content else None, embed=embed, file=file)
+                prefix = "🧪 **TEST: **" if is_test else ""
+                await channel.send(content=f"{prefix}{content}" if content or prefix else None, embed=embed, file=file)
             except Exception as e:
                 print(f"⚠️ [COGS/WELCOME] Błąd: {e}")
 

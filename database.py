@@ -101,7 +101,12 @@ def init_db():
         ("logs_role_updates", "INTEGER DEFAULT 0"),
         ("logs_voice_activity", "INTEGER DEFAULT 0"),
         ("logs_guild_updates", "INTEGER DEFAULT 0"),
-        ("logs_msg_updates", "INTEGER DEFAULT 0")
+        ("logs_msg_updates", "INTEGER DEFAULT 0"),
+        ("level_up_channel_id", "TEXT"),
+        ("level_up_msg_enabled", "INTEGER DEFAULT 1"),
+        ("counter_toplevel_enabled", "INTEGER DEFAULT 0"),
+        ("counter_toplevel_channel_id", "TEXT"),
+        ("counter_toplevel_name", "TEXT DEFAULT 'Top Level: {count}'")
     ]
     for col_name, col_type in needed_columns:
         try:

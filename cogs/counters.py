@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands, tasks
 import asyncio
+import sqlite3
+from database import DB_NAME
 
 class Counters(commands.Cog):
     def __init__(self, bot):
@@ -69,6 +71,27 @@ class Counters(commands.Cog):
             await process_stat("humans", settings.get("counter_humans_enabled"), settings.get("counter_humans_name", "Humans: {count}"), settings.get("counter_humans_channel_id"), 0)
             await process_stat("bots", settings.get("counter_bots_enabled"), settings.get("counter_bots_name", "Bots: {count}"), settings.get("counter_bots_channel_id"), 1)
             await process_stat("bans", settings.get("counter_bans_enabled"), settings.get("counter_bans_name", "Bans: {count}"), settings.get("counter_bans_channel_id"), 2)
+
+            # --- 1a. LICZNIK TOP LEVEL (Zintegrowany z XP) ---
+            if settings.get("counter_toplevel_enabled"):
+                try:
+                    conn = sqlite3.connect(DB_NAME)
+                    c = conn.cursor()
+                    c.execute("SELECT MAX(level) FROM user_levels WHERE guild_id = ?", (guild_id,))
+                    max_lvl = c.fetchone()[0] or 0
+                    conn.close()
+                    
+                    name_format = settings.get("counter_toplevel_name", "Top Level: {count}")
+                    new_name = name_format.replace("{count}", str(max_lvl))
+                    ch_id = settings.get("counter_toplevel_channel_id")
+                    channel = guild.get_channel(int(ch_id)) if ch_id and str(ch_id).isdigit() else None
+                    
+                    if not channel:
+                        channel = await guild.create_voice_channel(name=new_name, overwrites={guild.default_role: discord.PermissionOverwrite(connect=False)})
+                        update_counter_channel_id(guild.id, "toplevel", channel.id)
+                    elif channel.name != new_name:
+                        await channel.edit(name=new_name)
+                except: pass
 
             # --- 2. DYNAMICZNE LICZNIKI RÓL ---
             role_configs = get_role_counters(guild.id)

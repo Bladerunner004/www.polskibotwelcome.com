@@ -9,9 +9,9 @@ class SelfRole(commands.Cog):
         self.bot = bot
 
     async def send_selfrole_panel(self, channel, cfg, is_test=False):
-        from database import DB_NAME
+        from database import DB_NAME, get_global_color
         from utils.image_gen import generate_framed_image, fix_url
-        emb = discord.Embed(title=cfg.get('name', 'Panel Ról'), description=cfg.get('description', ''), color=0x74b816)
+        emb = discord.Embed(title=cfg.get('name', 'Panel Ról'), description=cfg.get('description', ''), color=get_global_color(channel.guild.id))
         
         file = None
         img_url = cfg.get('image_url')

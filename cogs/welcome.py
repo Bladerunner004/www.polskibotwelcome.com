@@ -9,7 +9,7 @@ class Welcome(commands.Cog):
         self.bot = bot
 
     async def send_welcome_message(self, guild: discord.Guild, member: discord.Member, config_type: str, target_id=None):
-        from database import get_welcome_configs, get_settings
+        from database import get_welcome_configs, get_settings, get_global_color
         configs = get_welcome_configs(str(guild.id), config_type)
         if not configs: return
 
@@ -48,8 +48,12 @@ class Welcome(commands.Cog):
                     footer = (cfg.get('footer') or '')
                     for tag, val in tag_map.items(): footer = footer.replace(tag, val)
                     
-                    color_hex = cfg.get('color', '#74b816').replace('#', '')
-                    embed = discord.Embed(title=title, description=desc, color=int(color_hex, 16))
+                    color_val = get_global_color(guild.id)
+                    if cfg.get('color'):
+                        try: color_val = int(cfg['color'].replace('#', ''), 16)
+                        except: pass
+                        
+                    embed = discord.Embed(title=title, description=desc, color=color_val)
                     if footer: embed.set_footer(text=footer)
                 
                 file = None

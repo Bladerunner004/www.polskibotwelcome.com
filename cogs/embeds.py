@@ -12,7 +12,7 @@ class Embeds(commands.Cog):
 
     async def do_process_embed_logic(self, data):
         """Zunifikowana logika wysyłania embedów (z ramkami, zasadami itp.)"""
-        from database import get_embed_configs, DB_NAME, get_settings
+        from database import get_embed_configs, DB_NAME, get_settings, get_global_color
         
         guild_id = data.get('guild_id')
         config_id = data.get('config_id')
@@ -28,8 +28,8 @@ class Embeds(commands.Cog):
         channel = guild.get_channel(int(cfg['channel_id']))
         if not channel: return {'success': False, 'error': 'Kanał nie istnieje'}
 
-        # Pobieranie koloru (z bazy lub domyślny)
-        embed_color = 0x74b816
+        # Pobieranie koloru (z bazy lub domyślny globalny)
+        embed_color = get_global_color(guild_id)
         if cfg.get('color'):
             try: embed_color = int(cfg['color'].replace('#', ''), 16)
             except: pass

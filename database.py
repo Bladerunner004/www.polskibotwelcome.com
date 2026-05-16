@@ -632,7 +632,6 @@ def get_settings(guild_id):
                     except: res[key] = []
                 else: res[key] = []
             
-            # Mapowanie 1/0 na True/False dla wybranych pól
             bool_fields = ['ticket_enabled', 'moderation_enabled', 'moderation_confirm', 
                            'automod_antilink', 'automod_anticaps', 'automod_antispam', 'automod_badwords', 'automod_antiphishing',
                            'levels_enabled', 'premium', 'trial_used',
@@ -1221,6 +1220,16 @@ def get_audit_logs(guild_id, limit=50):
     except Exception as e:
         print(f"❌ [DB] Błąd get_audit_logs: {e}")
         return []
+
+def get_global_color(guild_id):
+    """Pobiera globalny kolor embedów dla serwera (z obsługą RGB)."""
+    import random
+    settings = get_settings(guild_id)
+    if settings.get('rgb_mode'):
+        return random.randint(0, 0xFFFFFF)
+    color_hex = settings.get('embed_color', '#74b816').replace('#', '')
+    try: return int(color_hex, 16)
+    except: return 0x74b816
 
 init_db()
 

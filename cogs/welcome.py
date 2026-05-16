@@ -25,6 +25,12 @@ class Welcome(commands.Cog):
             "{count}": str(guild.member_count),
         }
 
+        def replace_tags(text):
+            if not text: return ""
+            for tag, val in tag_map.items():
+                text = text.replace(tag, val)
+            return text
+
         sent_channels = set()
         for cfg in configs:
             if not cfg.get('is_enabled', 1): continue
@@ -41,12 +47,9 @@ class Welcome(commands.Cog):
             try:
                 embed = None
                 if cfg.get('is_embed'):
-                    desc = (cfg.get('description') or '')
-                    for tag, val in tag_map.items(): desc = desc.replace(tag, val)
-                    title = (cfg.get('title') or '')
-                    for tag, val in tag_map.items(): title = title.replace(tag, val)
-                    footer = (cfg.get('footer') or '')
-                    for tag, val in tag_map.items(): footer = footer.replace(tag, val)
+                    desc = replace_tags(cfg.get('description', ''))
+                    title = replace_tags(cfg.get('title', ''))
+                    footer = replace_tags(cfg.get('footer', ''))
                     
                     color_val = get_global_color(guild.id)
                     if cfg.get('color'):
@@ -60,19 +63,17 @@ class Welcome(commands.Cog):
                 if cfg.get('has_image'):
                     bg_url = cfg.get('bg_url', '')
                     if bg_url.lower().endswith('.gif'):
-                        # Dla GIFów pobieramy surowy plik
                         async with aiohttp.ClientSession() as session:
                             async with session.get(fix_url(bg_url)) as resp:
                                 if resp.status == 200:
                                     file = discord.File(fp=io.BytesIO(await resp.read()), filename="welcome.gif")
                                     if embed: embed.set_image(url="attachment://welcome.gif")
                     else:
-                        # Dla obrazków generujemy kartę z awatarem
                         img_buffer = await generate_welcome_card(
                             bg_url, 
                             member.display_avatar.url, 
-                            (cfg.get('line1') or 'WITAJ').replace('{nick}', member.name),
-                            (cfg.get('line2') or member.name).replace('{nick}', member.name),
+                            replace_tags(cfg.get('line1', 'WITAJ')),
+                            replace_tags(cfg.get('line2', '{nick}')),
                             font_name=cfg.get('font_name', 'arialbd.ttf'),
                             text_color=cfg.get('img_text_color', '#ffffff'),
                             has_frame=cfg.get('has_frame', 0)

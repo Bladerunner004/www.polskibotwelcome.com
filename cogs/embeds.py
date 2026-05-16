@@ -28,11 +28,22 @@ class Embeds(commands.Cog):
         channel = guild.get_channel(int(cfg['channel_id']))
         if not channel: return {'success': False, 'error': 'Kanał nie istnieje'}
 
-        # Pobieranie koloru (z bazy lub domyślny globalny)
         embed_color = get_global_color(guild_id)
         if cfg.get('color'):
             try: embed_color = int(cfg['color'].replace('#', ''), 16)
             except: pass
+
+        tag_map = {
+            "{server}": guild.name,
+            "{count}": str(guild.member_count),
+            "{date}": datetime.datetime.now().strftime("%d.%m.%Y")
+        }
+
+        def replace_tags(text):
+            if not text: return ""
+            for tag, val in tag_map.items():
+                text = text.replace(tag, val)
+            return text
 
         embeds = []
         files = []
@@ -42,10 +53,10 @@ class Embeds(commands.Cog):
             try:
                 blocks = json.loads(cfg.get('description', '[]'))
                 for i, block in enumerate(blocks):
-                    eb = discord.Embed(description=block.get('text', ''), color=embed_color)
+                    eb = discord.Embed(description=replace_tags(block.get('text', '')), color=embed_color)
                     if i == 0:
-                        eb.title = cfg.get('name', 'Regulamin')
-                        if cfg.get('author'): eb.set_author(name=cfg['author'])
+                        eb.title = replace_tags(cfg.get('name', 'Regulamin'))
+                        if cfg.get('author'): eb.set_author(name=replace_tags(cfg['author']))
                     
                     if block.get('image'):
                         if cfg.get('has_frame'):
@@ -58,7 +69,7 @@ class Embeds(commands.Cog):
                         else: eb.set_image(url=fix_url(block['image']))
                     
                     if i == len(blocks) - 1:
-                        if cfg.get('footer'): eb.set_footer(text=cfg['footer'])
+                        if cfg.get('footer'): eb.set_footer(text=replace_tags(cfg['footer']))
                         if cfg.get('timestamp'): eb.timestamp = datetime.datetime.now()
                     embeds.append(eb)
             except Exception as e:
@@ -66,7 +77,7 @@ class Embeds(commands.Cog):
         
         # STANDARDOWY EMBED
         else:
-            e = discord.Embed(title=cfg.get('title', ''), description=cfg.get('description', ''), color=embed_color)
+            e = discord.Embed(title=replace_tags(cfg.get('title', '')), description=replace_tags(cfg.get('description', '')), color=embed_color)
             img_url = cfg.get('image_url')
             if cfg.get('has_frame') and img_url:
                 img_data = await generate_framed_image(img_url)
@@ -77,11 +88,11 @@ class Embeds(commands.Cog):
             elif img_url: e.set_image(url=fix_url(img_url))
             
             if cfg.get('thumbnail_url'): e.set_thumbnail(url=fix_url(cfg['thumbnail_url']))
-            if cfg.get('footer'): e.set_footer(text=cfg['footer'])
+            if cfg.get('footer'): e.set_footer(text=replace_tags(cfg['footer']))
             if cfg.get('timestamp'): e.timestamp = datetime.datetime.now()
             embeds.append(e)
 
-        content_val = cfg.get('outer_text') if cfg.get('outer_text', '').strip() else None
+        content_val = replace_tags(cfg.get('outer_text')) if cfg.get('outer_text', '').strip() else None
         msg = None
         
         # Próba edycji starej wiadomości (jeśli to nie test)

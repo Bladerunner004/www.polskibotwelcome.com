@@ -3,7 +3,7 @@ import requests
 import urllib.parse
 import datetime
 from flask import Blueprint, render_template, session, redirect, url_for
-from base import BOT_TOKEN, CLIENT_ID
+from base import BOT_TOKEN, CLIENT_ID, REDIRECT_URI
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -84,8 +84,8 @@ def dashboard():
             ext = 'gif' if av_hash.startswith('a_') else 'png'
             user_avatar = f"https://cdn.discordapp.com/avatars/{uid}/{av_hash}.{ext}"
 
-    # Link zaproszenia bota
-    discord_invite = f"https://discord.com/oauth2/authorize?client_id={CLIENT_ID}&permissions=8&scope=bot%20applications.commands"
+    # Link zaproszenia bota z przekierowaniem z powrotem na stronę
+    discord_invite = f"https://discord.com/oauth2/authorize?client_id={CLIENT_ID}&permissions=8&scope=bot%20applications.commands&redirect_uri={urllib.parse.quote(REDIRECT_URI)}&response_type=code"
 
     return render_template(
         'dashboard.html', 

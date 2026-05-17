@@ -107,6 +107,14 @@ if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
 
 @app.route('/callback')
 def callback():
+    # Sprawdzamy, czy to powrót z zaproszenia bota na serwer (zawiera parametr guild_id)
+    if 'guild_id' in request.args:
+        print(f"🤖 [BOT INVITE] Bot został pomyślnie dodany do serwera o ID: {request.args.get('guild_id')}")
+        # Resetujemy cache obecności serwerów bota, by nowy serwer natychmiast pokazał się jako połączony!
+        import routes_dashboard
+        routes_dashboard._bot_guilds_last_update = 0
+        return redirect(url_for('dashboard.dashboard'))
+
     code = request.args.get('code')
     if not code: return redirect(url_for('home.index'))
 

@@ -2,7 +2,7 @@ import os
 import requests
 import urllib.parse
 import datetime
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, session, redirect, url_for, request
 from base import BOT_TOKEN, CLIENT_ID, REDIRECT_URI
 
 dashboard_bp = Blueprint('dashboard', __name__)
@@ -32,6 +32,11 @@ def get_bot_guilds_cached():
 
 @dashboard_bp.route('/dashboard')
 def dashboard():
+    global _bot_guilds_last_update
+    if request.args.get('refresh') == 'true':
+        _bot_guilds_last_update = 0
+        session.pop('user_guilds', None)
+
     # 1. Sprawdzamy sesję
     if 'user' not in session or 'access_token' not in session:
         return redirect(url_for('home.index'))

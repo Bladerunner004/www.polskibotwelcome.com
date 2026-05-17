@@ -137,6 +137,12 @@ bot = PolskiBot()
 @bot.event
 async def on_ready():
     print(f"🚀 PolskiBot (Modularny) zalogowany jako {bot.user}")
+    try:
+        print("[SYSTEM] Synchronizuję komendy (hybrid/slash) globalnie z Discordem...")
+        synced = await bot.tree.sync()
+        print(f"✅ Zsynchronizowano pomyślnie {len(synced)} komend globalnie!")
+    except Exception as e:
+        print(f"❌ Błąd synchronizacji komend: {e}")
 
 if __name__ == "__main__":
     asyncio.run(bot.start(TOKEN))

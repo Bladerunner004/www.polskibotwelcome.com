@@ -233,10 +233,9 @@ def config(server_id):
         return redirect(url_for('dashboard.dashboard'))
     guild_data = guild_resp.json()
 
-    # Pobieramy kanały
     channels_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/channels", headers=headers)
     all_channels = channels_resp.json() if channels_resp.status_code == 200 else []
-    channels = [{"id": str(c['id']), "name": c['name']} for c in all_channels if c['type'] == 0] # Tylko tekstowe
+    channels = [{"id": str(c['id']), "name": c['name']} for c in all_channels if c['type'] in (0, 5)] # Tekstowe i ogłoszeniowe
     
     # Pobieramy role
     roles_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/roles", headers=headers)
@@ -448,7 +447,7 @@ def api_channels(guild_id):
     resp = requests.get(f"https://discord.com/api/v10/guilds/{guild_id}/channels", headers=headers)
     if resp.status_code == 200:
         all_channels = resp.json()
-        channels = [{"id": str(c['id']), "name": c['name']} for c in all_channels if c['type'] == 0]
+        channels = [{"id": str(c['id']), "name": c['name']} for c in all_channels if c['type'] in (0, 5)]
         return jsonify(channels)
     return jsonify([])
 

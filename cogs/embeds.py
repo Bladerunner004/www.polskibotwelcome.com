@@ -53,21 +53,32 @@ class Embeds(commands.Cog):
             try:
                 blocks = json.loads(cfg.get('description', '[]'))
                 for i, block in enumerate(blocks):
-                    eb = discord.Embed(description=replace_tags(block.get('text', '')), color=embed_color)
-                    if i == 0:
-                        eb.title = replace_tags(cfg.get('name', 'Regulamin'))
-                        if cfg.get('author'): eb.set_author(name=replace_tags(cfg['author']))
-                    
+                    # Jeśli jest zdjęcie w bloku, wysyłamy je w osobnym embedzie PRZED tekstem,
+                    # by renderowało się na samej górze bloku, tak jak w panelu!
                     if block.get('image'):
+                        img_eb = discord.Embed(color=embed_color)
+                        if i == 0:
+                            img_eb.title = replace_tags(cfg.get('name', 'Regulamin'))
+                            if cfg.get('author'): img_eb.set_author(name=replace_tags(cfg['author']))
+                        
                         if cfg.get('has_frame'):
                             res = await generate_framed_image(block['image'], width=600, height=200)
                             if res:
                                 img_data, ext = res
                                 fname = f"rule_{i}.{ext}"
                                 files.append(discord.File(img_data, filename=fname))
-                                eb.set_image(url=f"attachment://{fname}")
-                            else: eb.set_image(url=fix_url(block['image']))
-                        else: eb.set_image(url=fix_url(block['image']))
+                                img_eb.set_image(url=f"attachment://{fname}")
+                            else: img_eb.set_image(url=fix_url(block['image']))
+                        else: img_eb.set_image(url=fix_url(block['image']))
+                        embeds.append(img_eb)
+                        
+                        # Embed z tekstem (bez tytułu, bo tytuł poszedł już na obrazku na samej górze)
+                        eb = discord.Embed(description=replace_tags(block.get('text', '')), color=embed_color)
+                    else:
+                        eb = discord.Embed(description=replace_tags(block.get('text', '')), color=embed_color)
+                        if i == 0:
+                            eb.title = replace_tags(cfg.get('name', 'Regulamin'))
+                            if cfg.get('author'): eb.set_author(name=replace_tags(cfg['author']))
                     
                     if i == len(blocks) - 1:
                         if cfg.get('footer'): eb.set_footer(text=replace_tags(cfg['footer']))

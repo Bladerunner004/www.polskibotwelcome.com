@@ -107,80 +107,98 @@ if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
 
 @app.route('/callback')
 def callback():
-    # Sprawdzamy, czy to powrót z zaproszenia bota na serwer (zawiera parametr guild_id)
-    if 'guild_id' in request.args:
-        print(f"🤖 [BOT INVITE] Bot został pomyślnie dodany do serwera o ID: {request.args.get('guild_id')}")
-        # Resetujemy cache obecności serwerów bota, by nowy serwer natychmiast pokazał się jako połączony!
+    code = request.args.get('code')
+    guild_id = request.args.get('guild_id')
+
+    # Zapis logowania/diagnostyki zaproszenia
+    import datetime
+    with open("auth_debug.log", "a", encoding="utf-8") as f:
+        f.write(f"\n[{datetime.datetime.now()}] callback() start:\n")
+        f.write(f"  Code: {code[:10] if code else 'None'}...\n")
+        f.write(f"  Guild ID: {guild_id if guild_id else 'None'}\n")
+        f.write(f"  Redirect URI: {REDIRECT_URI}\n")
+
+    # Jeśli jest code, to zawsze wymieniamy go na token, aby zalogować użytkownika / zsynchronizować jego serwery!
+    if code:
+        print(f"🔗 [AUTH] Wymiana kodu w callback. Redirect URI: {REDIRECT_URI}")
+        data = {
+            'client_id': CLIENT_ID,
+            'client_secret': CLIENT_SECRET,
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': REDIRECT_URI,
+            'scope': 'identify guilds'
+        }
+        try:
+            token_resp = requests.post("https://discord.com/api/v10/oauth2/token", data=data, timeout=10)
+            token_data = token_resp.json()
+            
+            with open("auth_debug.log", "a", encoding="utf-8") as f:
+                f.write(f"  Status tokena: {token_resp.status_code}\n")
+                f.write(f"  Token dane: {token_data}\n")
+
+            if token_resp.status_code == 200:
+                access_token = token_data.get('access_token')
+                user_resp = requests.get("https://discord.com/api/v10/users/@me", headers={"Authorization": f"Bearer {access_token}"})
+                user_data = user_resp.json()
+                print(f"👤 [AUTH] Zalogowano użytkownika: {user_data.get('username')} (ID: {user_data.get('id')})")
+
+                # Pobieramy najświeższe serwery użytkownika z Discorda
+                guilds_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers={"Authorization": f"Bearer {access_token}"})
+                all_guilds = guilds_resp.json() if guilds_resp.status_code == 200 else []
+                print(f"📊 [AUTH] Pobrano {len(all_guilds)} serwerów użytkownika")
+                
+                # Filtrujemy serwery (admin/owner)
+                managed_guilds = [g for g in all_guilds if (int(g.get('permissions', 0)) & 0x8) == 0x8 or g.get('owner')]
+
+                session.permanent = True
+                session['user'] = {'id': user_data['id'], 'username': user_data['username'], 'avatar': user_data['avatar']}
+                session['user_avatar'] = get_user_avatar(session['user'])
+                session['user_guilds'] = managed_guilds
+                session['access_token'] = access_token
+                session.modified = True
+            else:
+                print(f"⚠️ [AUTH] Błąd tokena: {token_data}")
+        except Exception as e:
+            print(f"❌ [AUTH] Błąd krytyczny przy wymianie tokena: {e}")
+            with open("auth_debug.log", "a", encoding="utf-8") as f:
+                f.write(f"  Blad krytyczny tokena: {e}\n")
+
+    # Obsługa dodania bota (powrót z zaproszenia bota na serwer)
+    if guild_id:
+        print(f"🤖 [BOT INVITE] Bot został pomyślnie dodany do serwera o ID: {guild_id}")
+        
+        # Resetujemy natychmiast cache serwerów bota na podstronie dashboardu!
         import routes_dashboard
         routes_dashboard._bot_guilds_last_update = 0
+        session.pop('user_guilds', None) # Wyczyszczenie starej listy serwerów sesji, by wymusić świeże pobranie z Discorda
+        
+        # Jeżeli użytkownik jest poprawnie zalogowany, sprawdźmy czy ma prawa do tego serwera
+        if 'user' in session:
+            user_guilds = session.get('user_guilds') or []
+            if not user_guilds and session.get('access_token'):
+                try:
+                    # Pobieramy awaryjnie w locie jeśli go nie było w sesji
+                    g_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers={"Authorization": f"Bearer {session['access_token']}"})
+                    if g_resp.status_code == 200:
+                        user_guilds = [g for g in g_resp.json() if (int(g.get('permissions', 0)) & 0x8) == 0x8 or g.get('owner')]
+                        session['user_guilds'] = user_guilds
+                        session.modified = True
+                except: pass
+            
+            has_access = any(str(g.get('id')) == str(guild_id) for g in user_guilds)
+            if has_access:
+                print(f"🚀 [BOT INVITE] Użytkownik posiada uprawnienia! Przekierowanie bezpośrednie do /config/{guild_id}")
+                return redirect(url_for('config.config', server_id=guild_id))
+        
         return redirect(url_for('dashboard.dashboard'))
 
-    code = request.args.get('code')
-    if not code: return redirect(url_for('home.index'))
-
-    print(f"🔗 [AUTH] Próba logowania. Redirect URI: {REDIRECT_URI}")
-    
-    data = {
-        'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET,
-        'grant_type': 'authorization_code',
-        'code': code,
-        'redirect_uri': REDIRECT_URI,
-        'scope': 'identify guilds'
-    }
-    
-    try:
-        token_resp = requests.post("https://discord.com/api/v10/oauth2/token", data=data, timeout=10)
-        print(f"📩 [AUTH] Status odpowiedzi Discord: {token_resp.status_code}")
-        token_data = token_resp.json()
-        
-        # Zapis diagnostyczny logowania do pliku
-        import datetime
-        with open("auth_debug.log", "a", encoding="utf-8") as f:
-            f.write(f"\n[{datetime.datetime.now()}] callback() start:\n")
-            f.write(f"  Code: {code[:10] if code else 'None'}...\n")
-            f.write(f"  Redirect URI: {REDIRECT_URI}\n")
-            f.write(f"  Status odpowiedzi Discord: {token_resp.status_code}\n")
-            f.write(f"  Dane odpowiedzi: {token_data}\n")
-            
-        if token_resp.status_code != 200:
-            print(f"⚠️ [AUTH] Błąd od Discorda: {token_data}")
-            return redirect(url_for('home.index'))
-            
-        access_token = token_data.get('access_token')
-
-        user_resp = requests.get("https://discord.com/api/v10/users/@me", headers={"Authorization": f"Bearer {access_token}"})
-        user_data = user_resp.json()
-        print(f"👤 [AUTH] Zalogowano użytkownika: {user_data.get('username')} (ID: {user_data.get('id')})")
-        
-        with open("auth_debug.log", "a", encoding="utf-8") as f:
-            f.write(f"  Zalogowano użytkownika: {user_data.get('username')} (ID: {user_data.get('id')})\n")
-
-        # Pobieramy serwery
-        guilds_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers={"Authorization": f"Bearer {access_token}"})
-        all_guilds = guilds_resp.json() if guilds_resp.status_code == 200 else []
-        print(f"📊 [AUTH] Pobrano {len(all_guilds)} serwerów")
-        
-        # Filtrujemy serwery (admin/owner)
-        managed_guilds = [g for g in all_guilds if (int(g.get('permissions', 0)) & 0x8) == 0x8 or g.get('owner')]
-
-        session.permanent = True
-        session['user'] = {'id': user_data['id'], 'username': user_data['username'], 'avatar': user_data['avatar']}
-        session['user_avatar'] = get_user_avatar(session['user'])
-        session['user_guilds'] = managed_guilds
-        session['access_token'] = access_token
-        session.modified = True # Wymuszamy zapis sesji
-        
-        print("✅ [AUTH] Sesja zapisana. Przekierowuję do dashboardu.")
+    # Jeśli to standardowe logowanie (bez guild_id)
+    if 'user' in session:
+        print("✅ [AUTH] Pomyślne logowanie standardowe. Przekierowuję do dashboardu.")
         return redirect(url_for('dashboard.dashboard'))
-    except Exception as e:
-        print(f"❌ [AUTH] Błąd krytyczny: {e}")
-        import traceback
-        with open("auth_debug.log", "a", encoding="utf-8") as f:
-            f.write(f"[{datetime.datetime.now()}] Błąd krytyczny: {e}\n")
-            f.write(traceback.format_exc() + "\n")
-        traceback.print_exc()
-        return redirect(url_for('home.index'))
+        
+    return redirect(url_for('home.index'))
 
 @app.route('/dev_login')
 def dev_login():

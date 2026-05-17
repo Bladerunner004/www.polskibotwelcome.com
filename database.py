@@ -734,29 +734,6 @@ def save_settings(guild_id, ticket, moderation, levels, prefix="!", language="pl
     except Exception as e:
         print(f"[ERROR] BĹ‚Ä…d zapisu bazy: {e}")
 
-def add_audit_log(guild_id, category, user_name, user_id, action, details):
-    try:
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO audit_logs (guild_id, category, user_name, user_id, action, details) VALUES (?, ?, ?, ?, ?, ?)",
-                     (str(guild_id), category, user_name, str(user_id), action, details))
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"❌ [DB] Błąd zapisu audit_log: {e}")
-
-def get_audit_logs(guild_id, limit=100):
-    try:
-        conn = sqlite3.connect(DB_NAME)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM audit_logs WHERE guild_id = ? ORDER BY timestamp DESC LIMIT ?", (str(guild_id), limit))
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(r) for r in rows]
-    except:
-        return []
-
 def get_prefix(guild_id):
     settings = get_settings(guild_id)
     return settings.get("prefix", "!")

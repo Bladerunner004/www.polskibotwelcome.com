@@ -76,10 +76,10 @@
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 30px;">
-            <button type="button" class="btn-save" style="padding: 14px; font-size: 0.8rem;" onclick="saveMediaLocal()">ZAPISZ I WYŚLIJ NA SERWER</button>
-            <button type="button" class="tag-btn" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); font-weight: bold;" onclick="saveMediaLocal()">WYŚLIJ TEST <i class="fas fa-vial"></i></button>
+            <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" style="padding: 14px; font-size: 0.8rem;" onclick="saveMediaLocal()">ZAPISZ I WYŚLIJ NA SERWER</button>
+            <button type="button" class="btn-save-secondary" style="margin-top: 0 !important; font-weight: 800 !important; background: rgba(116, 184, 22, 0.08) !important; border: 1px solid rgba(116, 184, 22, 0.2) !important; color: var(--accent-green) !important;" onclick="saveMediaLocal()">WYŚLIJ TEST <i class="fas fa-vial"></i></button>
         </div>
-        <button type="button" onclick="saveMediaLocal()" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#888; padding:10px; border-radius:12px; cursor:pointer; margin-top:8px; font-size: 0.75rem;">TYLKO ZAPISZ</button>
+        <button type="button" onclick="saveMediaLocal()" class="btn-save-secondary">TYLKO ZAPISZ</button>
     </div>
 </div>
 

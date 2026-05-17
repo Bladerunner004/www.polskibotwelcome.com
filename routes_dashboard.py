@@ -39,16 +39,21 @@ def dashboard():
     user_data = session.get('user')
     access_token = session.get('access_token')
     
-    # 2. Pobieramy serwery użytkownika (Timeout 5s)
+    # 2. Pobieramy serwery użytkownika (z obsługą cache i ochroną przed wylogowaniem przy Rate Limitach/Timeoutach)
+    user_guilds = session.get('user_guilds', [])
     user_headers = {"Authorization": f"Bearer {access_token}"}
     try:
         user_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=user_headers, timeout=5)
-        if user_resp.status_code != 200:
-            return redirect(url_for('logout'))
-        user_guilds = user_resp.json()
+        if user_resp.status_code == 200:
+            user_guilds = user_resp.json()
+            session['user_guilds'] = user_guilds
+            session.modified = True
+        elif user_resp.status_code == 429:
+            print("⚠️ [DASHBOARD] Discord Rate Limit (429). Korzystam z serwerów zapisanych w sesji.")
+        else:
+            print(f"⚠️ [DASHBOARD] Błąd Discord API ({user_resp.status_code}). Korzystam z serwerów w sesji.")
     except Exception as e:
-        print(f"⚠️ Błąd pobierania serwerów użytkownika: {e}")
-        user_guilds = []
+        print(f"⚠️ [DASHBOARD] Błąd połączenia z Discord API ({e}). Korzystam z serwerów w sesji.")
 
     user_servers = []
     bot_guild_ids = get_bot_guilds_cached()

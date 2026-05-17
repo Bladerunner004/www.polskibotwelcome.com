@@ -49,11 +49,11 @@ def dashboard():
             session['user_guilds'] = user_guilds
             session.modified = True
         elif user_resp.status_code == 429:
-            print("⚠️ [DASHBOARD] Discord Rate Limit (429). Korzystam z serwerów zapisanych w sesji.")
+            print("[DASHBOARD] Discord Rate Limit (429). Korzystam z serwerow zapisanych w sesji.")
         else:
-            print(f"⚠️ [DASHBOARD] Błąd Discord API ({user_resp.status_code}). Korzystam z serwerów w sesji.")
+            print(f"[DASHBOARD] Blad Discord API ({user_resp.status_code}). Korzystam z serwerow w sesji.")
     except Exception as e:
-        print(f"⚠️ [DASHBOARD] Błąd połączenia z Discord API ({e}). Korzystam z serwerów w sesji.")
+        print(f"[DASHBOARD] Blad polaczenia z Discord API ({e}). Korzystam z serwerow w sesji.")
 
     user_servers = []
     bot_guild_ids = get_bot_guilds_cached()

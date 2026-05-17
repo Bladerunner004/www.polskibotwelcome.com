@@ -182,6 +182,26 @@ def callback():
         traceback.print_exc()
         return redirect(url_for('home.index'))
 
+@app.route('/dev_login')
+def dev_login():
+    session['user'] = {
+        'id': '1234567890',
+        'username': 'PolskiBotDev',
+        'avatar': 'a_1234567890abcdef'
+    }
+    session['access_token'] = 'mock_token'
+    session['user_guilds'] = [
+        {
+            'id': '1489771395163623527',
+            'name': 'Testowy Serwer PolskiBot',
+            'permissions': 8,
+            'owner': True,
+            'icon': None
+        }
+    ]
+    session.modified = True
+    return redirect(url_for('dashboard.dashboard'))
+
 @app.route('/logout')
 def logout():
     session.clear()

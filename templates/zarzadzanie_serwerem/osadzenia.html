@@ -540,13 +540,13 @@
                 <i class="fas fa-times" style="color: #ff4444; cursor: pointer;" onclick="removeRuleBlock('${blockId}')"></i>
             </div>
             <div class="discord-embed" style="border-left-color: #74b816;">
-                <div class="ee-large-img" id="rb-img-${blockId}" style="height: 120px; margin-top: 0; background-image: ${imgUrl ? `url('${imgUrl}')` : 'none'};" onclick="triggerBlockUpload('${blockId}')">
+                <div class="ee-desc" id="rb-text-${blockId}" contenteditable="true" placeholder="Opis do tego bloku..." style="min-height: 40px; outline: none;">${text}</div>
+
+                <div class="ee-large-img" id="rb-img-${blockId}" style="height: 120px; margin-top: 15px; background-image: ${imgUrl ? `url('${imgUrl}')` : 'none'};" onclick="triggerBlockUpload('${blockId}')">
                     <i class="fas fa-image" style="display: ${imgUrl ? 'none' : 'block'};"></i>
                 </div>
                 <input type="file" id="rb-input-${blockId}" hidden accept="image/*" onchange="uploadBlockImage('${blockId}')">
                 <input type="hidden" id="rb-url-${blockId}" value="${imgUrl}">
-                
-                <div class="ee-desc" id="rb-text-${blockId}" contenteditable="true" placeholder="Opis do tego bloku..." style="margin-top: 15px; min-height: 40px; outline: none;">${text}</div>
             </div>
         `;
         container.appendChild(div);

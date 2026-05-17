@@ -62,25 +62,20 @@ class Welcome(commands.Cog):
                 file = None
                 if cfg.get('has_image'):
                     bg_url = cfg.get('bg_url', '')
-                    if bg_url.lower().endswith('.gif'):
-                        async with aiohttp.ClientSession() as session:
-                            async with session.get(fix_url(bg_url)) as resp:
-                                if resp.status == 200:
-                                    file = discord.File(fp=io.BytesIO(await resp.read()), filename="welcome.gif")
-                                    if embed: embed.set_image(url="attachment://welcome.gif")
-                    else:
-                        img_buffer = await generate_welcome_card(
-                            bg_url, 
-                            member.display_avatar.url, 
-                            replace_tags(cfg.get('line1', 'WITAJ')),
-                            replace_tags(cfg.get('line2', '{nick}')),
-                            font_name=cfg.get('font_name', 'arialbd.ttf'),
-                            text_color=cfg.get('img_text_color', '#ffffff'),
-                            has_frame=cfg.get('has_frame', 0)
-                        )
-                        if img_buffer:
-                            file = discord.File(fp=img_buffer, filename="welcome.png")
-                            if embed: embed.set_image(url="attachment://welcome.png")
+                    res = await generate_welcome_card(
+                        bg_url, 
+                        member.display_avatar.url, 
+                        replace_tags(cfg.get('line1', 'WITAJ')),
+                        replace_tags(cfg.get('line2', '{nick}')),
+                        font_name=cfg.get('font_name', 'arialbd.ttf'),
+                        text_color=cfg.get('img_text_color', '#ffffff'),
+                        has_frame=cfg.get('has_frame', 0)
+                    )
+                    if res:
+                        img_buffer, ext = res
+                        fname = f"welcome.{ext}"
+                        file = discord.File(fp=img_buffer, filename=fname)
+                        if embed: embed.set_image(url=f"attachment://{fname}")
 
                 prefix = "🧪 **TEST: **" if is_test else ""
                 await channel.send(content=f"{prefix}{content}" if content or prefix else None, embed=embed, file=file)

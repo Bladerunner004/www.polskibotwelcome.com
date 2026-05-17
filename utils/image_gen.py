@@ -16,54 +16,81 @@ def fix_url(url):
     return url
 
 async def generate_framed_image(image_url, width=600, height=300):
-    """Generuje obraz idealnie dopasowany do ramki (Crop & Center)."""
+    """Generuje obraz idealnie dopasowany do ramki (Crop & Center) z pełnym wsparciem dla animowanych GIF-ów."""
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(fix_url(image_url)) as resp:
                 if resp.status != 200: return None
                 data = await resp.read()
-                img = Image.open(io.BytesIO(data)).convert("RGBA")
+                img = Image.open(io.BytesIO(data))
                 
-                # Inteligentne dopasowanie: Wypełnij ramkę i wyśrodkuj (Cover)
-                img = ImageOps.fit(img, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
-                
-                buf = io.BytesIO()
-                img.save(buf, format="PNG")
-                buf.seek(0)
-                return buf
+                is_animated = getattr(img, "is_animated", False)
+                if is_animated:
+                    from PIL import ImageSequence
+                    frames = []
+                    duration = img.info.get('duration', 100)
+                    loop = img.info.get('loop', 0)
+                    
+                    for frame in ImageSequence.Iterator(img):
+                        p_frame = frame.convert("RGBA")
+                        p_frame = ImageOps.fit(p_frame, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+                        frames.append(p_frame)
+                    
+                    buf = io.BytesIO()
+                    frames[0].save(
+                        buf,
+                        format="GIF",
+                        save_all=True,
+                        append_images=frames[1:],
+                        duration=duration,
+                        loop=loop,
+                        disposal=2
+                    )
+                    buf.seek(0)
+                    return buf, "gif"
+                else:
+                    img = img.convert("RGBA")
+                    img = ImageOps.fit(img, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+                    
+                    buf = io.BytesIO()
+                    img.save(buf, format="PNG")
+                    buf.seek(0)
+                    return buf, "png"
     except Exception as e:
         print(f"❌ [UTILS] Błąd generowania ramki: {e}")
         return None
 
 async def generate_welcome_card(bg_url, avatar_url, line1, line2, font_name='arialbd.ttf', text_color='#ffffff', has_frame=0):
-    """Generuje profesjonalną kartę powitalną (Cover & Center)."""
+    """Generuje profesjonalną kartę powitalną (Cover & Center) z pełnym wsparciem dla animowanych GIF-ów."""
     try:
         width, height = 1000, 400
         bg = None
         
-        # Pobieranie tła (z kadrowaniem do środka)
+        # Pobieranie tła
         if bg_url:
             async with aiohttp.ClientSession() as session:
                 async with session.get(fix_url(bg_url)) as resp:
                     if resp.status == 200:
                         bg_data = await resp.read()
-                        bg = Image.open(io.BytesIO(bg_data)).convert("RGBA")
-        
-        if not bg: bg = Image.new("RGBA", (width, height), (20, 22, 26, 255))
-        bg = ImageOps.fit(bg, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+                        bg = Image.open(io.BytesIO(bg_data))
         
         # Pobieranie i formatowanie awatara (zawsze okrągły i wyśrodkowany)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(str(avatar_url).replace('.webp', '.png') + "?size=256") as resp:
-                if resp.status == 200:
-                    avatar = Image.open(io.BytesIO(await resp.read())).convert("RGBA")
-                    avatar = avatar.resize((160, 160), Image.Resampling.LANCZOS)
-                    mask = Image.new("L", (160, 160), 0)
-                    ImageDraw.Draw(mask).ellipse((0, 0, 160, 160), fill=255)
-                    bg.paste(avatar, (width // 2 - 80, 50), mask)
+        avatar = None
+        avatar_mask = None
+        if avatar_url:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(str(avatar_url).replace('.webp', '.png') + "?size=256") as resp:
+                        if resp.status == 200:
+                            avatar_data = await resp.read()
+                            avatar = Image.open(io.BytesIO(avatar_data)).convert("RGBA")
+                            avatar = avatar.resize((160, 160), Image.Resampling.LANCZOS)
+                            avatar_mask = Image.new("L", (160, 160), 0)
+                            ImageDraw.Draw(avatar_mask).ellipse((0, 0, 160, 160), fill=255)
+            except Exception as ae:
+                print(f"⚠️ [UTILS] Błąd pobierania awatara: {ae}")
         
-        # Rysowanie tekstu z centrowaniem
-        draw = ImageDraw.Draw(bg)
+        # Rysowanie tekstu i nakładanie awatara
         def load_smart_font(size):
             font_names = [font_name, "arialbd.ttf", "DejaVuSans-Bold.ttf", "arial.ttf"]
             sys_paths = ["", "C:/Windows/Fonts/", "/usr/share/fonts/truetype/dejavu/"]
@@ -78,22 +105,62 @@ async def generate_welcome_card(bg_url, avatar_url, line1, line2, font_name='ari
         f1 = load_smart_font(60)
         f2 = load_smart_font(40)
             
-        def draw_center(text, y, font, color):
-            bbox = draw.textbbox((0, 0), text, font=font)
-            w = bbox[2] - bbox[0]
-            draw.text((width // 2 - w/2, y), text, font=font, fill=color)
+        def draw_frame_content(bg_frame):
+            if avatar and avatar_mask:
+                bg_frame.paste(avatar, (width // 2 - 80, 50), avatar_mask)
+                
+            draw = ImageDraw.Draw(bg_frame)
+            def draw_center(text, y, font, color):
+                bbox = draw.textbbox((0, 0), text, font=font)
+                w = bbox[2] - bbox[0]
+                draw.text((width // 2 - w/2, y), text, font=font, fill=color)
 
-        draw_center(line1, 230, f1, text_color)
-        draw_center(line2, 300, f2, text_color)
-        
-        # Ekskluzywna ramka (jeśli włączona)
-        if has_frame:
-            bg = ImageOps.expand(bg, border=10, fill=text_color)
+            draw_center(line1, 230, f1, text_color)
+            draw_center(line2, 300, f2, text_color)
+            
+            # Ekskluzywna ramka (jeśli włączona)
+            if has_frame:
+                bg_frame = ImageOps.expand(bg_frame, border=10, fill=text_color)
+            return bg_frame
 
-        buf = io.BytesIO()
-        bg.save(buf, format="PNG")
-        buf.seek(0)
-        return buf
+        is_gif = bg is not None and getattr(bg, "is_animated", False)
+        if is_gif:
+            from PIL import ImageSequence
+            frames = []
+            duration = bg.info.get('duration', 100)
+            loop = bg.info.get('loop', 0)
+            
+            for frame in ImageSequence.Iterator(bg):
+                p_frame = frame.convert("RGBA")
+                p_frame = ImageOps.fit(p_frame, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+                p_frame = draw_frame_content(p_frame)
+                frames.append(p_frame)
+                
+            buf = io.BytesIO()
+            frames[0].save(
+                buf,
+                format="GIF",
+                save_all=True,
+                append_images=frames[1:],
+                duration=duration,
+                loop=loop,
+                disposal=2
+            )
+            buf.seek(0)
+            return buf, "gif"
+        else:
+            if not bg:
+                bg = Image.new("RGBA", (width, height), (20, 22, 26, 255))
+            else:
+                bg = bg.convert("RGBA")
+            
+            bg = ImageOps.fit(bg, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+            bg = draw_frame_content(bg)
+            
+            buf = io.BytesIO()
+            bg.save(buf, format="PNG")
+            buf.seek(0)
+            return buf, "png"
     except Exception as e:
         print(f"❌ [UTILS] Błąd Pillow: {e}")
         return None

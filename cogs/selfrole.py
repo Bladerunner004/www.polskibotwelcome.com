@@ -18,10 +18,12 @@ class SelfRole(commands.Cog):
         
         if img_url:
             if cfg.get('has_frame'):
-                img_data = await generate_framed_image(img_url)
-                if img_data:
-                    file = discord.File(img_data, filename="selfrole_img.png")
-                    emb.set_image(url="attachment://selfrole_img.png")
+                res = await generate_framed_image(img_url)
+                if res:
+                    img_data, ext = res
+                    fname = f"selfrole_img.{ext}"
+                    file = discord.File(img_data, filename=fname)
+                    emb.set_image(url=f"attachment://{fname}")
                 else: emb.set_image(url=fix_url(img_url))
             else:
                 emb.set_image(url=fix_url(img_url))

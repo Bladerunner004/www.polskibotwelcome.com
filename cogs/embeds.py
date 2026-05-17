@@ -60,9 +60,10 @@ class Embeds(commands.Cog):
                     
                     if block.get('image'):
                         if cfg.get('has_frame'):
-                            img_data = await generate_framed_image(block['image'], width=600, height=200)
-                            if img_data:
-                                fname = f"rule_{i}.png"
+                            res = await generate_framed_image(block['image'], width=600, height=200)
+                            if res:
+                                img_data, ext = res
+                                fname = f"rule_{i}.{ext}"
                                 files.append(discord.File(img_data, filename=fname))
                                 eb.set_image(url=f"attachment://{fname}")
                             else: eb.set_image(url=fix_url(block['image']))
@@ -89,10 +90,12 @@ class Embeds(commands.Cog):
                 
             img_url = cfg.get('image_url')
             if cfg.get('has_frame') and img_url:
-                img_data = await generate_framed_image(img_url)
-                if img_data:
-                    files.append(discord.File(img_data, filename="embed_img.png"))
-                    e.set_image(url="attachment://embed_img.png")
+                res = await generate_framed_image(img_url)
+                if res:
+                    img_data, ext = res
+                    fname = f"embed_img.{ext}"
+                    files.append(discord.File(img_data, filename=fname))
+                    e.set_image(url=f"attachment://{fname}")
                 else: e.set_image(url=fix_url(img_url))
             elif img_url: e.set_image(url=fix_url(img_url))
             

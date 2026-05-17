@@ -11,7 +11,8 @@ home_bp = Blueprint('home', __name__)
 def index():
     user_data = session.get('user')
     from base import get_login_url
-    login_url = get_login_url()
+    from flask import request
+    login_url = get_login_url(request)
 
     
     # --- LOGIKA AWATARA ---

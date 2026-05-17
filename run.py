@@ -28,13 +28,18 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 app.secret_key = os.getenv("FLASK_SECRET", "polskibot-fixed-key-12345")
 
+# Wykrywanie środowiska developerskiego (lokalnego na Windowsie lub z localhost w URI)
+import sys
+redirect_uri_val = os.getenv("DISCORD_REDIRECT_URI", "")
+is_local_dev = (sys.platform == 'win32') or ("127.0.0.1" in redirect_uri_val) or ("localhost" in redirect_uri_val)
+
 app.config.update(
     SESSION_COOKIE_NAME='polskibot_session',
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SECURE=not is_local_dev, # Wyłączone dla localhost na HTTP, włączone dla HTTPS (produkcja)
     PERMANENT_SESSION_LIFETIME=604800,
-    PREFERRED_URL_SCHEME='https',
+    PREFERRED_URL_SCHEME='http' if is_local_dev else 'https',
     MAX_CONTENT_LENGTH=16 * 1024 * 1024 # 16MB limit
 )
 
@@ -54,7 +59,7 @@ def inject_global_vars():
         'user': user,
         'user_avatar': avatar,
         'user_guilds': session.get('user_guilds', []), # Pobieramy z sesji (stabilność)
-        'login_url': get_login_url(),
+        'login_url': get_login_url(request),
         'discord_invite': DISCORD_INVITE_URL
     }
 
@@ -105,14 +110,21 @@ def callback():
     code = request.args.get('code')
     if not code: return redirect(url_for('home.index'))
 
-    print(f"🔗 [AUTH] Próba logowania. Redirect URI: {REDIRECT_URI}")
+    # Dynamiczny Redirect URI dla obsługi localhost i produkcji
+    host = request.headers.get('Host', '')
+    if 'localhost' in host or '127.0.0.1' in host:
+        current_redirect = f"http://{host}/callback"
+    else:
+        current_redirect = REDIRECT_URI
+
+    print(f"🔗 [AUTH] Próba logowania. Redirect URI: {current_redirect}")
     
     data = {
         'client_id': CLIENT_ID,
         'client_secret': CLIENT_SECRET,
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': REDIRECT_URI,
+        'redirect_uri': current_redirect,
         'scope': 'identify guilds'
     }
     

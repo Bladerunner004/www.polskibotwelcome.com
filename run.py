@@ -59,7 +59,7 @@ def inject_global_vars():
         'user': user,
         'user_avatar': avatar,
         'user_guilds': session.get('user_guilds', []), # Pobieramy z sesji (stabilność)
-        'login_url': get_login_url(request),
+        'login_url': get_login_url(),
         'discord_invite': DISCORD_INVITE_URL
     }
 
@@ -110,21 +110,14 @@ def callback():
     code = request.args.get('code')
     if not code: return redirect(url_for('home.index'))
 
-    # Dynamiczny Redirect URI dla obsługi localhost i produkcji
-    host = request.headers.get('Host', '')
-    if 'localhost' in host or '127.0.0.1' in host:
-        current_redirect = f"http://{host}/callback"
-    else:
-        current_redirect = REDIRECT_URI
-
-    print(f"🔗 [AUTH] Próba logowania. Redirect URI: {current_redirect}")
+    print(f"🔗 [AUTH] Próba logowania. Redirect URI: {REDIRECT_URI}")
     
     data = {
         'client_id': CLIENT_ID,
         'client_secret': CLIENT_SECRET,
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': current_redirect,
+        'redirect_uri': REDIRECT_URI,
         'scope': 'identify guilds'
     }
     

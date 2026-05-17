@@ -24,18 +24,12 @@ DISCORD_LINK = "https://discord.gg/RunF9ehW6"
 
 # --- FUNKCJE GENERUJĄCE ---
 
-def get_login_url(current_request=None):
-    """Generuje URL do logowania bez /api/ dla lepszej stabilności sesji (z dynamiczną obsługą localhost)"""
-    redirect_uri = REDIRECT_URI
-    if current_request:
-        host = current_request.headers.get('Host', '')
-        if 'localhost' in host or '127.0.0.1' in host:
-            redirect_uri = f"http://{host}/callback"
-            
+def get_login_url():
+    """Generuje URL do logowania bez /api/ dla lepszej stabilności sesji"""
     return (
         f"https://discord.com/oauth2/authorize"
         f"?client_id={CLIENT_ID}"
-        f"&redirect_uri={quote(redirect_uri)}"
+        f"&redirect_uri={quote(REDIRECT_URI)}"
         f"&response_type=code"
         f"&scope=identify%20guilds"
     )

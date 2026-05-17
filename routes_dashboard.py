@@ -67,12 +67,16 @@ def dashboard():
             guild_id = str(guild.get('id')) 
             bot_present = guild_id in bot_guild_ids
 
+            from database import is_premium
+            premium_status = is_premium(guild_id) if bot_present else False
+
             user_servers.append({
                 "id": guild_id,
                 "name": guild.get('name'),
                 "role": "Właściciel" if guild.get('owner') else "Administrator",
                 "icon": guild.get('icon'),
-                "has_bot": bot_present
+                "has_bot": bot_present,
+                "premium": premium_status
             })
 
     # 5. Przygotowanie danych awatara

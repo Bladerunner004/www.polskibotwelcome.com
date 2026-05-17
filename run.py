@@ -126,6 +126,15 @@ def callback():
         print(f"📩 [AUTH] Status odpowiedzi Discord: {token_resp.status_code}")
         token_data = token_resp.json()
         
+        # Zapis diagnostyczny logowania do pliku
+        import datetime
+        with open("auth_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"\n[{datetime.datetime.now()}] callback() start:\n")
+            f.write(f"  Code: {code[:10] if code else 'None'}...\n")
+            f.write(f"  Redirect URI: {REDIRECT_URI}\n")
+            f.write(f"  Status odpowiedzi Discord: {token_resp.status_code}\n")
+            f.write(f"  Dane odpowiedzi: {token_data}\n")
+            
         if token_resp.status_code != 200:
             print(f"⚠️ [AUTH] Błąd od Discorda: {token_data}")
             return redirect(url_for('home.index'))
@@ -136,6 +145,9 @@ def callback():
         user_data = user_resp.json()
         print(f"👤 [AUTH] Zalogowano użytkownika: {user_data.get('username')} (ID: {user_data.get('id')})")
         
+        with open("auth_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"  Zalogowano użytkownika: {user_data.get('username')} (ID: {user_data.get('id')})\n")
+
         # Pobieramy serwery
         guilds_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers={"Authorization": f"Bearer {access_token}"})
         all_guilds = guilds_resp.json() if guilds_resp.status_code == 200 else []
@@ -156,6 +168,9 @@ def callback():
     except Exception as e:
         print(f"❌ [AUTH] Błąd krytyczny: {e}")
         import traceback
+        with open("auth_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"[{datetime.datetime.now()}] Błąd krytyczny: {e}\n")
+            f.write(traceback.format_exc() + "\n")
         traceback.print_exc()
         return redirect(url_for('home.index'))
 

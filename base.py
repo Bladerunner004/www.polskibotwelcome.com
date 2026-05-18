@@ -29,7 +29,7 @@ def get_login_url():
     return (
         f"https://discord.com/oauth2/authorize"
         f"?client_id={CLIENT_ID}"
-        f"&redirect_uri={quote(REDIRECT_URI)}"
+        f"&redirect_uri={quote(REDIRECT_URI, safe='')}"
         f"&response_type=code"
         f"&scope=identify%20guilds"
     )

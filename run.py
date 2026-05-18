@@ -26,6 +26,23 @@ app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 # Fix dla PythonAnywhere (HTTPS przez Proxy)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
+# Custom Prefix Middleware dla proxy podścieżki Serveo
+class ServeoPrefixMiddleware:
+    def __init__(self, wsgi_app, prefix):
+        self.wsgi_app = wsgi_app
+        self.prefix = prefix
+
+    def __call__(self, environ, start_response):
+        redirect_uri_val = os.getenv("DISCORD_REDIRECT_URI", "")
+        if "serveousercontent.com" in redirect_uri_val:
+            environ['SCRIPT_NAME'] = self.prefix
+            path = environ.get('PATH_INFO', '')
+            if path.startswith(self.prefix):
+                environ['PATH_INFO'] = path[len(self.prefix):]
+        return self.wsgi_app(environ, start_response)
+
+app.wsgi_app = ServeoPrefixMiddleware(app.wsgi_app, '/apps/POLSKIBOT.com')
+
 app.secret_key = os.getenv("FLASK_SECRET", "polskibot-fixed-key-12345")
 
 # Wykrywanie środowiska developerskiego (lokalnego na Windowsie lub z localhost w URI)

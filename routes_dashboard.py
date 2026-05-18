@@ -51,7 +51,17 @@ def dashboard():
         user_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=user_headers, timeout=5)
         if user_resp.status_code == 200:
             user_guilds = user_resp.json()
-            session['user_guilds'] = user_guilds
+            # Optimize to prevent Flask cookie size overflow (limit 4KB)
+            optimized_guilds = []
+            for g in user_guilds:
+                optimized_guilds.append({
+                    'id': g.get('id'),
+                    'name': g.get('name'),
+                    'icon': g.get('icon'),
+                    'permissions': g.get('permissions'),
+                    'owner': g.get('owner')
+                })
+            session['user_guilds'] = optimized_guilds
             session.modified = True
         elif user_resp.status_code == 429:
             print("[DASHBOARD] Discord Rate Limit (429). Korzystam z serwerow zapisanych w sesji.")

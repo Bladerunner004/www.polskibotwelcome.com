@@ -165,8 +165,18 @@ def callback():
                 all_guilds = guilds_resp.json() if guilds_resp.status_code == 200 else []
                 print(f"📊 [AUTH] Pobrano {len(all_guilds)} serwerów użytkownika")
                 
-                # Filtrujemy serwery (admin/owner)
-                managed_guilds = [g for g in all_guilds if (int(g.get('permissions', 0)) & 0x8) == 0x8 or g.get('owner')]
+                # Filtrujemy i optymalizujemy serwery (admin/owner), aby zapobiec przepełnieniu ciasteczka sesji (limit 4KB)
+                managed_guilds = []
+                for g in all_guilds:
+                    is_admin = (int(g.get('permissions', 0)) & 0x8) == 0x8 or g.get('owner')
+                    if is_admin:
+                        managed_guilds.append({
+                            'id': g.get('id'),
+                            'name': g.get('name'),
+                            'icon': g.get('icon'),
+                            'permissions': g.get('permissions'),
+                            'owner': g.get('owner')
+                        })
 
                 session.permanent = True
                 session['user'] = {'id': user_data['id'], 'username': user_data['username'], 'avatar': user_data['avatar']}

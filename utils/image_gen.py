@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 
 # --- KONFIGURACJA URL ---
-BASE_URL = "https://BLADERUNNER009.pythonanywhere.com"
+BASE_URL = os.getenv("BASE_URL", "https://BLADERUNNER009.pythonanywhere.com")
 
 def fix_url(url):
     if not url: return url

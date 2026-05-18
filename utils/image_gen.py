@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 
 # --- KONFIGURACJA URL ---
-BASE_URL = "https://laphost-daniel.serveousercontent.com/apps/POLSKIBOT.com"
+BASE_URL = "https://laphost-daniel.serveousercontent.com"
 
 def fix_url(url):
     if not url: return url

@@ -60,7 +60,7 @@
             background-image: 
                 radial-gradient(circle at 50% 50%, rgba(116, 184, 22, 0.05), transparent 70%),
                 linear-gradient(180deg, rgba(3, 4, 6, 0.4) 0%, var(--bg) 100%),
-                url('/static/uploads/home_banner_premium.png');
+                url('{{ url_for('static', filename='uploads/home_banner_premium.png') }}');
             background-size: cover;
             background-position: center;
             padding: 0 20px;

@@ -1,6 +1,30 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
+    <script>
+    // Global fetch interceptor to handle subpath proxying
+    (function() {
+        const originalFetch = window.fetch;
+        window.fetch = function(input, init) {
+            const prefix = '/apps/POLSKIBOT.com';
+            if (typeof input === 'string') {
+                if ((input.startsWith('/api/') || input.startsWith('/config/') || input.startsWith('/static/')) && !input.startsWith(prefix)) {
+                    input = prefix + input;
+                }
+            } else if (input instanceof Request) {
+                const url = input.url;
+                const origin = window.location.origin;
+                if (url.startsWith(origin)) {
+                    const path = url.substring(origin.length);
+                    if ((path.startsWith('/api/') || path.startsWith('/config/') || path.startsWith('/static/')) && !path.startsWith(prefix)) {
+                        input = new Request(origin + prefix + path, input);
+                    }
+                }
+            }
+            return originalFetch(input, init);
+        };
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Panel zarządzania serwerem Discord - PolskiBot">
@@ -107,7 +131,7 @@
         .module-banner {
             width: 100%;
             height: 180px;
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url('/static/uploads/default_header.png');
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url('{{ url_for('static', filename='uploads/default_header.png') }}');
             background-size: cover;
             background-position: center;
             border-radius: 20px;
@@ -358,7 +382,8 @@
             transform: translateX(20px);
             background: #000 !important;
         }
-        /* Gold Button for Premium */
+
+        /* Gold Button for Premium */
         .btn-premium-gold {
             background: linear-gradient(135deg, #d4af37, #f1c40f) !important;
             color: black !important;

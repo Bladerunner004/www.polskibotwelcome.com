@@ -2,6 +2,30 @@
 <html lang="pl">
 
 <head>
+    <script>
+    // Global fetch interceptor to handle subpath proxying
+    (function() {
+        const originalFetch = window.fetch;
+        window.fetch = function(input, init) {
+            const prefix = '/apps/POLSKIBOT.com';
+            if (typeof input === 'string') {
+                if ((input.startsWith('/api/') || input.startsWith('/config/') || input.startsWith('/static/')) && !input.startsWith(prefix)) {
+                    input = prefix + input;
+                }
+            } else if (input instanceof Request) {
+                const url = input.url;
+                const origin = window.location.origin;
+                if (url.startsWith(origin)) {
+                    const path = url.substring(origin.length);
+                    if ((path.startsWith('/api/') || path.startsWith('/config/') || path.startsWith('/static/')) && !path.startsWith(prefix)) {
+                        input = new Request(origin + prefix + path, input);
+                    }
+                }
+            }
+            return originalFetch(input, init);
+        };
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - POLSKIBOT</title>

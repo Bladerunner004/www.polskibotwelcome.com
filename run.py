@@ -1,3 +1,9 @@
+import sys
+import io
+# Wymuszenie kodowania UTF-8 dla konsoli Windows, aby zapobiec crashom przy printowaniu emoji (np. 🔗)
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 import datetime
 import os
 import requests

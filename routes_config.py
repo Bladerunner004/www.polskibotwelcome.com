@@ -236,20 +236,36 @@ def config(server_id):
         return redirect(url_for('dashboard.dashboard'))
     guild_data = guild_resp.json()
 
-    channels_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/channels", headers=headers)
-    all_channels = channels_resp.json() if channels_resp.status_code == 200 else []
-    channels = [{"id": str(c['id']), "name": c['name']} for c in all_channels if c['type'] in (0, 5)] # Tekstowe i ogłoszeniowe
-    
-    # Pobieramy role
-    roles_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/roles", headers=headers)
-    all_roles = roles_resp.json() if roles_resp.status_code == 200 else []
+    # Pobieramy kanały i role
+    channels = []
     roles = []
-    for r in all_roles:
-        if r['name'] != "@everyone" and not r.get('managed'):
-            # Konwersja koloru z int na hex
-            color_int = r.get('color', 0)
-            color_hex = f"#{color_int:06x}" if color_int != 0 else "#b5bac1"
-            roles.append({"id": str(r['id']), "name": r['name'], "color": color_hex})
+    
+    # 1. Próbujemy pobrać z lokalnego API bota (szybciej, brak limitów)
+    try:
+        c_resp = requests.get(f"http://127.0.0.1:5006/guilds/{server_id}/channels", timeout=1.0)
+        r_resp = requests.get(f"http://127.0.0.1:5006/guilds/{server_id}/roles", timeout=1.0)
+        if c_resp.status_code == 200 and r_resp.status_code == 200:
+            channels = c_resp.json()
+            roles = r_resp.json()
+    except Exception as e:
+        pass
+
+    # 2. Fallback: Jeśli lokalne API nie odpowiedziało, odpytujemy bezpośrednio Discorda
+    if not channels or not roles:
+        if not channels:
+            channels_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/channels", headers=headers)
+            all_channels = channels_resp.json() if channels_resp.status_code == 200 else []
+            channels = [{"id": str(c['id']), "name": c['name']} for c in all_channels if c['type'] in (0, 5)]
+        
+        if not roles:
+            roles_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/roles", headers=headers)
+            all_roles = roles_resp.json() if roles_resp.status_code == 200 else []
+            roles = []
+            for r in all_roles:
+                if r['name'] != "@everyone" and not r.get('managed'):
+                    color_int = r.get('color', 0)
+                    color_hex = f"#{color_int:06x}" if color_int != 0 else "#b5bac1"
+                    roles.append({"id": str(r['id']), "name": r['name'], "color": color_hex})
     
     # Pobieramy statystyki (najpierw próbujemy z pliku statusu bota)
     bot_latency = None
@@ -444,8 +460,15 @@ def api_premium_trial(guild_id):
 
 @config_bp.route('/api/<guild_id>/channels')
 def api_channels(guild_id):
-    # Na PythonAnywhere nie możemy połączyć się z localhost:5006, 
-    # więc pobieramy dane bezpośrednio z Discorda
+    # Najpierw próbujemy z lokalnego API bota
+    try:
+        resp = requests.get(f"http://127.0.0.1:5006/guilds/{guild_id}/channels", timeout=1.0)
+        if resp.status_code == 200:
+            return jsonify(resp.json())
+    except:
+        pass
+
+    # Fallback do bezpośredniego API Discorda
     headers = {"Authorization": f"Bot {BOT_TOKEN}"}
     resp = requests.get(f"https://discord.com/api/v10/guilds/{guild_id}/channels", headers=headers)
     if resp.status_code == 200:
@@ -456,6 +479,15 @@ def api_channels(guild_id):
 
 @config_bp.route('/api/<guild_id>/roles')
 def api_roles(guild_id):
+    # Najpierw próbujemy z lokalnego API bota
+    try:
+        resp = requests.get(f"http://127.0.0.1:5006/guilds/{guild_id}/roles", timeout=1.0)
+        if resp.status_code == 200:
+            return jsonify(resp.json())
+    except:
+        pass
+
+    # Fallback do bezpośredniego API Discorda
     headers = {"Authorization": f"Bot {BOT_TOKEN}"}
     resp = requests.get(f"https://discord.com/api/v10/guilds/{guild_id}/roles", headers=headers)
     if resp.status_code == 200:

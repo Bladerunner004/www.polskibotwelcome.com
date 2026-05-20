@@ -124,6 +124,8 @@ class PolskiBot(commands.Bot):
         app.add_routes([
             web.get('/latency', lambda r: web.json_response({'latency': round(self.latency * 1000)})),
             web.get('/guilds', self.handle_api_get_guilds),
+            web.get('/guilds/{guild_id}/channels', self.handle_api_guild_channels),
+            web.get('/guilds/{guild_id}/roles', self.handle_api_guild_roles),
             web.post('/send_embed', self.handle_api_embed),
             web.post('/test_embed', self.handle_api_embed),
             web.post('/send_selfrole', self.handle_api_selfrole),
@@ -140,6 +142,36 @@ class PolskiBot(commands.Bot):
         try:
             guild_ids = [str(g.id) for g in self.guilds]
             return web.json_response({'guild_ids': guild_ids})
+        except Exception as e:
+            return web.json_response({'error': str(e)}, status=500)
+
+    async def handle_api_guild_channels(self, request):
+        try:
+            guild_id = request.match_info.get('guild_id')
+            guild = self.get_guild(int(guild_id))
+            if not guild:
+                return web.json_response({'error': 'Gildia nieznaleziona'}, status=404)
+            channels = []
+            for c in guild.channels:
+                if c.type.value in (0, 5):
+                    channels.append({"id": str(c.id), "name": c.name})
+            return web.json_response(channels)
+        except Exception as e:
+            return web.json_response({'error': str(e)}, status=500)
+
+    async def handle_api_guild_roles(self, request):
+        try:
+            guild_id = request.match_info.get('guild_id')
+            guild = self.get_guild(int(guild_id))
+            if not guild:
+                return web.json_response({'error': 'Gildia nieznaleziona'}, status=404)
+            roles = []
+            for r in guild.roles:
+                if r.name != "@everyone" and not r.managed:
+                    color_int = r.color.value
+                    color_hex = f"#{color_int:06x}" if color_int != 0 else "#b5bac1"
+                    roles.append({"id": str(r.id), "name": r.name, "color": color_hex})
+            return web.json_response(roles)
         except Exception as e:
             return web.json_response({'error': str(e)}, status=500)
 

@@ -45,7 +45,8 @@ class PolskiBot(commands.Bot):
             'cogs.tickets',
             'cogs.levels',
             'cogs.fun',
-            'cogs.general'
+            'cogs.general',
+            'cogs.autorole'
         ]
 
     async def setup_hook(self):
@@ -79,10 +80,17 @@ class PolskiBot(commands.Bot):
                         if "sync_counters" in endpoint:
                             cog = self.get_cog('Counters')
                             if cog: await cog.update_all_counters(guild)
-                        elif "send_embed" in endpoint:
+                        elif "sync_boosters" in endpoint:
+                            cog = self.get_cog('AutoRole')
+                            if cog: await cog.sync_boosters(guild)
+                        elif "send_embed" in endpoint or "test_embed" in endpoint:
                             cog = self.get_cog('Embeds')
-                            if cog: await cog.do_process_embed_logic(payload)
-                        elif "send_selfrole" in endpoint:
+                            if cog:
+                                data_to_process = payload or {}
+                                if "test_embed" in endpoint:
+                                    data_to_process['is_test'] = True
+                                await cog.do_process_embed_logic(data_to_process)
+                        elif "send_selfrole" in endpoint or "test_selfrole" in endpoint:
                             cog = self.get_cog('SelfRole')
                             if cog: 
                                 from database import get_selfrole_configs
@@ -90,7 +98,23 @@ class PolskiBot(commands.Bot):
                                 cfg = next((c for c in configs if str(c['id']) == str(payload.get('config_id'))), None)
                                 if cfg:
                                     ch = guild.get_channel(int(cfg['channel_id']))
-                                    await cog.send_selfrole_panel(ch, cfg, is_test=payload.get('is_test', False))
+                                    is_test = "test_selfrole" in endpoint or payload.get('is_test', False)
+                                    await cog.send_selfrole_panel(ch, cfg, is_test=is_test)
+                        elif "test_welcome" in endpoint or "welcome" in endpoint:
+                            cog = self.get_cog('Welcome')
+                            if cog:
+                                member = guild.owner or guild.me or (guild.members[0] if guild.members else None)
+                                if not member:
+                                    try: member = await guild.fetch_member(guild.owner_id)
+                                    except: member = guild.me
+                                if member:
+                                    await cog.send_welcome_message(
+                                        guild,
+                                        member,
+                                        payload.get('type', 'powitanie'),
+                                        target_id=payload.get('config_id'),
+                                        is_test=True
+                                    )
                     os.remove(sf)
                 except Exception as e: print(f"⚠️ [SYNC ERROR] {sf}: {e}")
         except: pass
@@ -103,6 +127,9 @@ class PolskiBot(commands.Bot):
             web.post('/test_embed', self.handle_api_embed),
             web.post('/send_selfrole', self.handle_api_selfrole),
             web.post('/test_selfrole', self.handle_api_selfrole),
+            web.post('/test_welcome', self.handle_api_welcome),
+            web.post('/guilds/{guild_id}/sync_boosters', self.handle_api_sync_boosters),
+            web.post('/guilds/{guild_id}/sync_counters', self.handle_api_sync_counters),
         ])
         runner = web.AppRunner(app)
         await runner.setup()
@@ -131,6 +158,54 @@ class PolskiBot(commands.Bot):
                 await cog.send_selfrole_panel(channel, cfg, is_test=data.get('is_test', False))
                 return web.json_response({'success': True})
         return web.json_response({'success': False, 'error': 'Moduł SelfRole niezaładowany'})
+
+    async def handle_api_welcome(self, request):
+        try:
+            data = await request.json()
+            guild_id = data.get('guild_id')
+            config_id = data.get('config_id')
+            config_type = data.get('type', 'powitanie')
+            
+            guild = self.get_guild(int(guild_id))
+            if guild:
+                cog = self.get_cog('Welcome')
+                if cog:
+                    member = guild.owner or guild.me or (guild.members[0] if guild.members else None)
+                    if not member:
+                        try: member = await guild.fetch_member(guild.owner_id)
+                        except: member = guild.me
+                    if member:
+                        await cog.send_welcome_message(guild, member, config_type, target_id=config_id, is_test=True)
+                        return web.json_response({'success': True})
+            return web.json_response({'success': False, 'error': 'Gildia lub moduł Welcome nieznalezione'})
+        except Exception as e:
+            return web.json_response({'success': False, 'error': str(e)})
+
+    async def handle_api_sync_boosters(self, request):
+        try:
+            guild_id = request.match_info.get('guild_id')
+            guild = self.get_guild(int(guild_id))
+            if guild:
+                cog = self.get_cog('AutoRole')
+                if cog:
+                    await cog.sync_boosters(guild)
+                    return web.json_response({'success': True})
+            return web.json_response({'success': False, 'error': 'Gildia lub moduł AutoRole nieznalezione'})
+        except Exception as e:
+            return web.json_response({'success': False, 'error': str(e)})
+
+    async def handle_api_sync_counters(self, request):
+        try:
+            guild_id = request.match_info.get('guild_id')
+            guild = self.get_guild(int(guild_id))
+            if guild:
+                cog = self.get_cog('Counters')
+                if cog:
+                    await cog.update_all_counters(guild)
+                    return web.json_response({'success': True})
+            return web.json_response({'success': False, 'error': 'Gildia lub moduł Counters nieznalezione'})
+        except Exception as e:
+            return web.json_response({'success': False, 'error': str(e)})
 
 bot = PolskiBot()
 

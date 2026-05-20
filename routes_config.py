@@ -67,8 +67,26 @@ def call_bot_api(endpoint, method="GET", data=None):
     import json
     import os
 
-    # Zawsze przy POST tworzymy sygnał plikowy (dla PythonAnywhere) - PRZED sprawdzeniem cache!
-    if method == "POST":
+    resp_data = None
+    http_success = False
+
+    # 1. Jeśli bot nie był offline w ciągu ostatnich 5 sekund, próbujemy połączenia HTTP
+    if time.time() - _bot_offline_cache >= 5:
+        try:
+            url = f"{BOT_API_URL}{endpoint}"
+            if method == "GET":
+                resp = requests.get(url, timeout=1.5)
+            else:
+                resp = requests.post(url, json=data, timeout=1.5)
+
+            if resp.status_code == 200:
+                resp_data = resp.json()
+                http_success = True
+        except Exception as e:
+            _bot_offline_cache = time.time()
+
+    # 2. Jeśli to POST i HTTP się NIE powiodło (lub bot jest offline), tworzymy plik synchronizacji
+    if method == "POST" and not http_success:
         try:
             guild_id = None
             if '/guilds/' in endpoint:
@@ -80,28 +98,13 @@ def call_bot_api(endpoint, method="GET", data=None):
                 sync_dir = os.path.dirname(os.path.abspath(__file__))
                 filename = f"sync_needed_{guild_id}_{int(time.time()*1000)}.json"
                 filepath = os.path.join(sync_dir, filename)
-                print(f"[DASHBOARD] Tworzenie sygnalu synchronizacji: {filepath}")
+                print(f"[DASHBOARD] Tworzenie sygnalu synchronizacji (FALLBACK): {filepath}")
                 with open(filepath, "w") as f:
                     json.dump({"endpoint": endpoint, "time": time.time(), "data": data}, f)
         except Exception as e:
             print(f"[DASHBOARD] Blad tworzenia pliku sync: {e}")
 
-    # Jeśli bot był offline w ciągu ostatnich 5 sekund, nie próbuj HTTP (ale sync plik już jest)
-    if time.time() - _bot_offline_cache < 5:
-        return None
-
-    try:
-        url = f"{BOT_API_URL}{endpoint}"
-        if method == "GET":
-            resp = requests.get(url, timeout=1.5)
-        else:
-            resp = requests.post(url, json=data, timeout=1.5)
-
-        if resp.status_code == 200:
-            return resp.json()
-    except Exception as e:
-        _bot_offline_cache = time.time()
-    return None
+    return resp_data
 
 
 @config_bp.route('/api/bot/latency')
@@ -555,8 +558,16 @@ def api_save_role_counter(guild_id):
     from database import save_role_counter
     data = request.json
     config_id = data.get('id')
-    new_id = save_role_counter(guild_id, data, config_id)
-    return jsonify({'success': True, 'id': new_id})
+    name = data.get('name')
+    mode = data.get('mode', 'white')
+    roles = data.get('roles', [])
+    enabled = 1 if data.get('enabled', True) else 0
+    
+    success, result = save_role_counter(guild_id, config_id, name, mode, roles, enabled)
+    if success:
+        return jsonify({'success': True, 'id': result})
+    else:
+        return jsonify({'success': False, 'error': result}), 400
 
 @config_bp.route('/api/<guild_id>/role_counters/<int:config_id>', methods=['DELETE'])
 def api_delete_role_counter(guild_id, config_id):

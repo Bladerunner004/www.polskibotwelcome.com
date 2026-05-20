@@ -555,6 +555,7 @@ def save_role_counter(guild_id, counter_id, name, mode, roles, enabled=1):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     roles_json = json.dumps(roles)
+    new_id = counter_id
     if counter_id:
         cursor.execute("UPDATE role_counters SET name = ?, mode = ?, roles = ?, enabled = ? WHERE id = ? AND guild_id = ?", (name, mode, roles_json, enabled, counter_id, str(guild_id)))
     else:
@@ -565,19 +566,25 @@ def save_role_counter(guild_id, counter_id, name, mode, roles, enabled=1):
         cursor.execute("SELECT COUNT(*) FROM role_counters WHERE guild_id = ?", (str(guild_id),))
         if cursor.fetchone()[0] < limit:
             cursor.execute("INSERT INTO role_counters (guild_id, name, mode, roles, enabled) VALUES (?, ?, ?, ?, ?)", (str(guild_id), name, mode, roles_json, enabled))
+            new_id = cursor.lastrowid
         else:
             conn.close()
             return False, f"Osiągnięto limit liczników ({limit}). Kup Premium, aby dodać więcej!"
     conn.commit()
     conn.close()
-    return True, None
+    return True, new_id
 
 def delete_role_counter(guild_id, counter_id):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM role_counters WHERE id = ? AND guild_id = ?", (counter_id, str(guild_id)))
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM role_counters WHERE id = ? AND guild_id = ?", (counter_id, str(guild_id)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Błąd delete_role_counter: {e}")
+        return False
 
 def sync_role_counters(guild_id, configs):
     try:

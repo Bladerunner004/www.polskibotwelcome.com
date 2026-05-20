@@ -18,7 +18,20 @@ def get_bot_guilds_cached():
     
     if _bot_guilds_cache and (time.time() - _bot_guilds_last_update < 60):
         return _bot_guilds_cache
+
+    # 1. Próbujemy pobrać listę serwerów z lokalnego API bota (jest natychmiastowe i nie ma limitów)
+    try:
+        resp = requests.get("http://127.0.0.1:5006/guilds", timeout=1.0)
+        if resp.status_code == 200:
+            guild_ids = resp.json().get('guild_ids', [])
+            _bot_guilds_cache = set(guild_ids)
+            _bot_guilds_last_update = time.time()
+            return _bot_guilds_cache
+    except Exception as e:
+        # Bot offline - przechodzimy do fallbacka
+        pass
         
+    # 2. Fallback: Pobieramy z oficjalnego API Discorda
     if BOT_TOKEN:
         try:
             headers = {"Authorization": f"Bot {BOT_TOKEN}"}

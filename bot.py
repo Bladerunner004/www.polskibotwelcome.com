@@ -123,6 +123,7 @@ class PolskiBot(commands.Bot):
         app = web.Application()
         app.add_routes([
             web.get('/latency', lambda r: web.json_response({'latency': round(self.latency * 1000)})),
+            web.get('/guilds', self.handle_api_get_guilds),
             web.post('/send_embed', self.handle_api_embed),
             web.post('/test_embed', self.handle_api_embed),
             web.post('/send_selfrole', self.handle_api_selfrole),
@@ -134,6 +135,13 @@ class PolskiBot(commands.Bot):
         runner = web.AppRunner(app)
         await runner.setup()
         await web.TCPSite(runner, '127.0.0.1', 5006).start()
+
+    async def handle_api_get_guilds(self, request):
+        try:
+            guild_ids = [str(g.id) for g in self.guilds]
+            return web.json_response({'guild_ids': guild_ids})
+        except Exception as e:
+            return web.json_response({'error': str(e)}, status=500)
 
     async def handle_api_embed(self, request):
         data = await request.json()

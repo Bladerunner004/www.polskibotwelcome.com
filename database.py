@@ -525,6 +525,8 @@ def save_autorole_settings(guild_id, mode, restore_roles, human_roles, bot_roles
 def save_counter_settings(guild_id, type, enabled, name, thousands):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    # Upewnij się, że wiersz istnieje
+    cursor.execute("INSERT OR IGNORE INTO settings (guild_id) VALUES (?)", (str(guild_id),))
     col_en = f"counter_{type}_enabled"
     col_name = f"counter_{type}_name"
     col_th = f"counter_{type}_thousands"
@@ -536,6 +538,8 @@ def save_counter_settings(guild_id, type, enabled, name, thousands):
 def update_counter_channel_id(guild_id, type, channel_id):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    # Upewnij się, że wiersz istnieje
+    cursor.execute("INSERT OR IGNORE INTO settings (guild_id) VALUES (?)", (str(guild_id),))
     col_id = f"counter_{type}_channel_id"
     val = str(channel_id) if channel_id is not None else None
     cursor.execute(f"UPDATE settings SET {col_id} = ? WHERE guild_id = ?", (val, str(guild_id)))
@@ -746,16 +750,17 @@ def get_prefix(guild_id):
     return settings.get("prefix", "!")
 
 def reset_to_global_badwords(guild_id):
-    """Przywraca globalnÄ… listÄ™ wulgaryzmĂłw dla serwera."""
+    """Przywraca globalną listę wulgaryzmów dla serwera."""
     try:
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
+        c.execute("INSERT OR IGNORE INTO settings (guild_id) VALUES (?)", (str(guild_id),))
         c.execute("UPDATE settings SET automod_badwords_list = ? WHERE guild_id = ?", (json.dumps(GLOBAL_BADWORDS), str(guild_id)))
         conn.commit()
         conn.close()
         return True
     except Exception as e:
-        print(f"[DB] BĹ‚Ä…d reset_to_global_badwords: {e}")
+        print(f"[DB] Błąd reset_to_global_badwords: {e}")
         return False
 
 # =============================================

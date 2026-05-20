@@ -51,14 +51,14 @@ app.wsgi_app = ServeoPrefixMiddleware(app.wsgi_app, '/apps/POLSKIBOT.com')
 
 app.secret_key = os.getenv("FLASK_SECRET", "polskibot-fixed-key-12345")
 
-# Wykrywanie środowiska developerskiego (lokalnego na Windowsie lub z localhost w URI)
-import sys
+# Wykrywanie środowiska developerskiego (lokalnego bez tunelu HTTPS)
 redirect_uri_val = os.getenv("DISCORD_REDIRECT_URI", "")
-is_local_dev = (sys.platform == 'win32') or ("127.0.0.1" in redirect_uri_val) or ("localhost" in redirect_uri_val)
+is_local_dev = ("127.0.0.1" in redirect_uri_val) or ("localhost" in redirect_uri_val)
 
 app.config.update(
     SESSION_COOKIE_NAME='polskibot_session',
     SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_PATH='/',
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SECURE=not is_local_dev, # Wyłączone dla localhost na HTTP, włączone dla HTTPS (produkcja)
     PERMANENT_SESSION_LIFETIME=604800,

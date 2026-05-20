@@ -77,13 +77,6 @@
         40% { border-left-color: #0000ff; box-shadow: -2px 0 10px rgba(0,0,255,0.3); }
         60% { border-left-color: #00ffff; box-shadow: -2px 0 10px rgba(0,255,255,0.3); }
         80% { border-left-color: #00ff00; box-shadow: -2px 0 10px rgba(0,255,0,0.3); }
-        100% { border-left-color: #ff0000; box-shadow: -2px 0 10px rgba(255,0,0,0.3); }
-    }
-
-    .discord-embed.rgb-mode {
-        animation: rainbow-border 3s linear infinite;
-    }
-
     /* EFEKT RGB DLA PASKA */
     @keyframes rainbow-border {
         0% { border-left-color: #ff0000; box-shadow: -2px 0 10px rgba(255,0,0,0.3); }
@@ -94,8 +87,21 @@
         100% { border-left-color: #ff0000; box-shadow: -2px 0 10px rgba(255,0,0,0.3); }
     }
 
+    @keyframes rainbow-full-border {
+        0% { border-color: #ff0000; box-shadow: 0 0 10px rgba(255,0,0,0.3); }
+        20% { border-color: #ff00ff; box-shadow: 0 0 10px rgba(255,0,255,0.3); }
+        40% { border-color: #0000ff; box-shadow: 0 0 10px rgba(0,0,255,0.3); }
+        60% { border-color: #00ffff; box-shadow: 0 0 10px rgba(0,255,255,0.3); }
+        80% { border-color: #00ff00; box-shadow: 0 0 10px rgba(0,255,0,0.3); }
+        100% { border-color: #ff0000; box-shadow: 0 0 10px rgba(255,0,0,0.3); }
+    }
+
     .discord-embed.rgb-mode {
         animation: rainbow-border 3s linear infinite;
+    }
+
+    .ee-large-img.rgb-mode, .ee-thumb.rgb-mode {
+        animation: rainbow-full-border 3s linear infinite;
     }
 
     .discord-embed { background: var(--discord-embed-bg); border-left: 4px solid var(--bot-color, #74b816); border-radius: 4px; padding: 12px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px; position: relative; }
@@ -106,8 +112,8 @@
     .ee-desc { font-size: 0.9rem; color: #dbdee1; line-height: 1.375; outline: none; }
     .ee-footer { font-size: 0.75rem; color: #949ba4; margin-top: 12px; outline: none; }
     
-    .ee-thumb { grid-column: 2; width: 80px; height: 80px; background: #2b2d31; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #4e5058; cursor: pointer; background-size: cover; background-position: center; }
-    .ee-large-img { grid-column: 1 / span 2; width: 100%; height: 200px; background: #2b2d31; border-radius: 8px; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #4e5058; cursor: pointer; background-size: cover; background-position: center; }
+    .ee-thumb { grid-column: 2; width: 80px; height: 80px; background: #2b2d31; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #4e5058; cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center; border: none; box-sizing: border-box; }
+    .ee-large-img { grid-column: 1 / span 2; width: 100%; height: 200px; background: #2b2d31; border-radius: 8px; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #4e5058; cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center; border: none; box-sizing: border-box; }
 
     /* CARDS */
     .ux-card { background: #0d0e12; border: 1px solid var(--border-gray); border-radius: 12px; margin-top: 20px; overflow: hidden; display: block !important; }
@@ -514,6 +520,42 @@
             }
         }
         titleEl.style.color = linkColor;
+
+        // Obsługa ramek (has_frame) dla dużego obrazu i miniatury
+        const hasFrame = getE(p + '-has-frame') ? getE(p + '-has-frame').checked : false;
+        const largeImgEl = getE(p + 'e-large-img');
+        const thumbEl = getE(p + 'e-thumb');
+        
+        if (largeImgEl) {
+            if (hasFrame) {
+                largeImgEl.style.border = `8px solid ${embedColor}`;
+                largeImgEl.style.padding = '8px';
+                if (globalRgb && !isPersonalized) {
+                    largeImgEl.classList.add('rgb-mode');
+                } else {
+                    largeImgEl.classList.remove('rgb-mode');
+                }
+            } else {
+                largeImgEl.style.border = 'none';
+                largeImgEl.style.padding = '0';
+                largeImgEl.classList.remove('rgb-mode');
+            }
+        }
+        if (thumbEl) {
+            if (hasFrame) {
+                thumbEl.style.border = `4px solid ${embedColor}`;
+                thumbEl.style.padding = '4px';
+                if (globalRgb && !isPersonalized) {
+                    thumbEl.classList.add('rgb-mode');
+                } else {
+                    thumbEl.classList.remove('rgb-mode');
+                }
+            } else {
+                thumbEl.style.border = 'none';
+                thumbEl.style.padding = '0';
+                thumbEl.classList.remove('rgb-mode');
+            }
+        }
     };
 
     // --- SYSTEM BLOKOWY ZASAD (LOGIKA) ---
@@ -715,6 +757,7 @@
             if (getE(p + '-has-frame')) getE(p + '-has-frame').checked = false;
             getE(p + 'p-toggle').checked = false;
             togglePersonalizacja(p);
+            updatePreviewStyles(p);
         }
     }
 
@@ -768,6 +811,7 @@
 
             getE(p + 'p-toggle').checked = !!cfg.title_url;
             togglePersonalizacja(p);
+            updatePreviewStyles(p);
             getE('modal-general').classList.add('active');
         }
     };

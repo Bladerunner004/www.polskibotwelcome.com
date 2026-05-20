@@ -15,9 +15,14 @@ def fix_url(url):
         if url.startswith('static/'): return f"{BASE_URL}/{url}"
     return url
 
-async def generate_framed_image(image_url, width=600, height=300):
+async def generate_framed_image(image_url, width=600, height=300, color=0x74b816):
     """Generuje obraz idealnie dopasowany do ramki (Crop & Center) z pełnym wsparciem dla animowanych GIF-ów."""
     try:
+        r = (color >> 16) & 0xFF
+        g = (color >> 8) & 0xFF
+        b = color & 0xFF
+        color_tuple = (r, g, b, 255)
+
         async with aiohttp.ClientSession() as session:
             async with session.get(fix_url(image_url)) as resp:
                 if resp.status != 200: return None
@@ -34,6 +39,7 @@ async def generate_framed_image(image_url, width=600, height=300):
                     for frame in ImageSequence.Iterator(img):
                         p_frame = frame.convert("RGBA")
                         p_frame = ImageOps.fit(p_frame, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+                        p_frame = ImageOps.expand(p_frame, border=10, fill=color_tuple)
                         frames.append(p_frame)
                     
                     buf = io.BytesIO()
@@ -51,6 +57,7 @@ async def generate_framed_image(image_url, width=600, height=300):
                 else:
                     img = img.convert("RGBA")
                     img = ImageOps.fit(img, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+                    img = ImageOps.expand(img, border=10, fill=color_tuple)
                     
                     buf = io.BytesIO()
                     img.save(buf, format="PNG")

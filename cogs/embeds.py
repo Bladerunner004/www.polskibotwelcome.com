@@ -62,7 +62,7 @@ class Embeds(commands.Cog):
                             if cfg.get('author'): img_eb.set_author(name=replace_tags(cfg['author']))
                         
                         if cfg.get('has_frame'):
-                            res = await generate_framed_image(block['image'], width=600, height=200)
+                            res = await generate_framed_image(block['image'], width=600, height=200, color=embed_color)
                             if res:
                                 img_data, ext = res
                                 fname = f"rule_{i}.{ext}"
@@ -101,7 +101,7 @@ class Embeds(commands.Cog):
                 
             img_url = cfg.get('image_url')
             if cfg.get('has_frame') and img_url:
-                res = await generate_framed_image(img_url)
+                res = await generate_framed_image(img_url, color=embed_color)
                 if res:
                     img_data, ext = res
                     fname = f"embed_img.{ext}"

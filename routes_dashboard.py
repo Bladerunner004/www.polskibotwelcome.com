@@ -57,31 +57,32 @@ def dashboard():
     user_data = session.get('user')
     access_token = session.get('access_token')
     
-    # 2. Pobieramy serwery użytkownika (z obsługą cache i ochroną przed wylogowaniem przy Rate Limitach/Timeoutach)
+    # 2. Pobieramy serwery użytkownika (z obsługą cache w sesji i ochroną przed wylogowaniem)
     user_guilds = session.get('user_guilds', [])
-    user_headers = {"Authorization": f"Bearer {access_token}"}
-    try:
-        user_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=user_headers, timeout=5)
-        if user_resp.status_code == 200:
-            user_guilds = user_resp.json()
-            # Optimize to prevent Flask cookie size overflow (limit 4KB)
-            optimized_guilds = []
-            for g in user_guilds:
-                optimized_guilds.append({
-                    'id': g.get('id'),
-                    'name': g.get('name'),
-                    'icon': g.get('icon'),
-                    'permissions': g.get('permissions'),
-                    'owner': g.get('owner')
-                })
-            session['user_guilds'] = optimized_guilds
-            session.modified = True
-        elif user_resp.status_code == 429:
-            print("[DASHBOARD] Discord Rate Limit (429). Korzystam z serwerow zapisanych w sesji.")
-        else:
-            print(f"[DASHBOARD] Blad Discord API ({user_resp.status_code}). Korzystam z serwerow w sesji.")
-    except Exception as e:
-        print(f"[DASHBOARD] Blad polaczenia z Discord API ({e}). Korzystam z serwerow w sesji.")
+    if not user_guilds or request.args.get('refresh') == 'true':
+        user_headers = {"Authorization": f"Bearer {access_token}"}
+        try:
+            user_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=user_headers, timeout=5)
+            if user_resp.status_code == 200:
+                user_guilds = user_resp.json()
+                # Optimize to prevent Flask cookie size overflow (limit 4KB)
+                optimized_guilds = []
+                for g in user_guilds:
+                    optimized_guilds.append({
+                        'id': g.get('id'),
+                        'name': g.get('name'),
+                        'icon': g.get('icon'),
+                        'permissions': g.get('permissions'),
+                        'owner': g.get('owner')
+                    })
+                session['user_guilds'] = optimized_guilds
+                session.modified = True
+            elif user_resp.status_code == 429:
+                print("[DASHBOARD] Discord Rate Limit (429). Korzystam z serwerow zapisanych w sesji.")
+            else:
+                print(f"[DASHBOARD] Blad Discord API ({user_resp.status_code}). Korzystam z serwerow w sesji.")
+        except Exception as e:
+            print(f"[DASHBOARD] Blad polaczenia z Discord API ({e}). Korzystam z serwerow w sesji.")
 
     user_servers = []
     bot_guild_ids = get_bot_guilds_cached()

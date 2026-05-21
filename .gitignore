@@ -6,4 +6,6 @@ __pycache__/
 bot_error.log
 bot_status.json
 scratch/
+flask_sessions/
+auth_debug.log
 # static/uploads/ (odkomentuj jeśli chcesz ignorować customowe uploady)

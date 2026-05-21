@@ -11,6 +11,7 @@ import threading
 import asyncio
 import socket
 from flask import Flask, session, redirect, url_for, request, jsonify
+from flask_session import Session
 from dotenv import load_dotenv
 
 # Importujemy dane konfiguracyjne z base.py
@@ -57,15 +58,25 @@ is_pythonanywhere = "pythonanywhere.com" in redirect_uri_val
 is_local_dev = ("127.0.0.1" in redirect_uri_val) or ("localhost" in redirect_uri_val)
 
 app.config.update(
-    SESSION_COOKIE_NAME='polskibot_session',
+    SESSION_COOKIE_NAME='polskibot_sid',
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_PATH='/',
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=not is_local_dev, # Wyłączone dla localhost na HTTP, włączone dla HTTPS (produkcja)
+    SESSION_COOKIE_SECURE=not is_local_dev,
     PERMANENT_SESSION_LIFETIME=604800,
     PREFERRED_URL_SCHEME='http' if is_local_dev else 'https',
-    MAX_CONTENT_LENGTH=16 * 1024 * 1024 # 16MB limit
+    MAX_CONTENT_LENGTH=16 * 1024 * 1024,
+    # --- FLASK-SESSION: sesje po stronie serwera (brak limitu 4KB ciasteczka) ---
+    SESSION_TYPE='filesystem',
+    SESSION_FILE_DIR=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'flask_sessions'),
+    SESSION_FILE_THRESHOLD=500,
+    SESSION_PERMANENT=True,
+    SESSION_USE_SIGNER=True,
 )
+
+# Tworzymy folder na pliki sesji i inicjalizujemy Flask-Session
+os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'flask_sessions'), exist_ok=True)
+Session(app)
 
 @app.after_request
 def add_header(response):

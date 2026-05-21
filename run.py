@@ -197,7 +197,7 @@ def callback():
                 session.modified = True
 
                 # Zapisujemy serwery w pamięci procesu (nie w cookie!) - brak limitu 4KB
-                from run import _guilds_memory_cache
+                # _guilds_memory_cache is a global variable in this module
                 _guilds_memory_cache[user_id] = managed_guilds
                 print(f"💾 [AUTH] Zapisano {len(managed_guilds)} serwerów w pamięci (user: {user_id})")
             else:

@@ -297,6 +297,38 @@ def debug_auth():
     }
     
     if BOT_TOKEN:
+        # Sprawdzanie pliku bot_status.json
+        import time
+        import json
+        status_file_info = {}
+        status_path = "bot_status.json"
+        if os.path.exists(status_path):
+            status_file_info["exists"] = True
+            status_file_info["path"] = os.path.abspath(status_path)
+            status_file_info["mtime"] = os.path.getmtime(status_path)
+            status_file_info["mtime_ago_sec"] = time.time() - os.path.getmtime(status_path)
+            try:
+                with open(status_path, "r") as f:
+                    status_file_info["content"] = json.load(f)
+            except Exception as e:
+                status_file_info["error"] = str(e)
+        else:
+            status_file_info["exists"] = False
+            status_file_info["path"] = os.path.abspath(status_path)
+            
+        debug_info["bot_status_file"] = status_file_info
+
+        # Sprawdzanie lokalnego API bota
+        local_api_info = {}
+        try:
+            resp_local = requests.get("http://127.0.0.1:5006/latency", timeout=1.0)
+            local_api_info["status_code"] = resp_local.status_code
+            if resp_local.status_code == 200:
+                local_api_info["response"] = resp_local.json()
+        except Exception as e:
+            local_api_info["error"] = str(e)
+        debug_info["local_bot_api"] = local_api_info
+
         try:
             headers = {"Authorization": f"Bot {BOT_TOKEN}"}
             resp = requests.get("https://discord.com/api/v10/users/@me/guilds?limit=200", headers=headers, timeout=5)

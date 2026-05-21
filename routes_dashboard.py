@@ -7,30 +7,41 @@ from base import BOT_TOKEN, CLIENT_ID, REDIRECT_URI
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
-# --- CACHE DLA SERWERÓW BOTA (Dla szybkości dashboardu) ---
-_bot_guilds_cache = None
-_bot_guilds_last_update = 0
-
+# --- CACHE DLA SERWERÓW BOTA (Plikowy cache współdzielony między procesami) ---
 def get_bot_guilds_cached():
-    global _bot_guilds_cache, _bot_guilds_last_update
     import time
+    import json
     
-    if _bot_guilds_cache and (time.time() - _bot_guilds_last_update < 30):
-        return _bot_guilds_cache
-
-    # 1. Próbujemy pobrać z lokalnego API bota (działa gdy bot jest w tej samej maszynie)
+    cache_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_guilds_cache.json")
+    
+    # Próbujemy odczytać cache z pliku
+    cache_data = None
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, "r") as f:
+                cache_data = json.load(f)
+        except Exception:
+            pass
+            
+    # Jeśli cache jest świeży (młodszy niż 30 sekund), używamy go
+    if cache_data and isinstance(cache_data, dict):
+        last_update = cache_data.get("last_update", 0)
+        if time.time() - last_update < 30:
+            return set(cache_data.get("guild_ids", []))
+            
+    # W przeciwnym razie aktualizujemy cache
+    guild_ids_list = []
+    
+    # 1. Próbujemy pobrać z lokalnego API bota
     try:
         resp = requests.get("http://127.0.0.1:5006/guilds", timeout=1.0)
         if resp.status_code == 200:
-            guild_ids = resp.json().get('guild_ids', [])
-            _bot_guilds_cache = set(str(g) for g in guild_ids)
-            _bot_guilds_last_update = time.time()
-            return _bot_guilds_cache
+            guild_ids_list = [str(g) for g in resp.json().get('guild_ids', [])]
     except Exception:
-        pass  # Bot offline lub na innym serwerze (PythonAnywhere) - używamy Discord API
-
-    # 2. Fallback: Pobieramy bezpośrednio z Discord API (zawsze działa)
-    if BOT_TOKEN:
+        pass
+        
+    # 2. Fallback: Pobieramy bezpośrednio z Discord API
+    if not guild_ids_list and BOT_TOKEN:
         try:
             headers = {"Authorization": f"Bot {BOT_TOKEN}"}
             resp = requests.get(
@@ -39,22 +50,41 @@ def get_bot_guilds_cached():
                 timeout=5
             )
             if resp.status_code == 200:
-                _bot_guilds_cache = {str(g['id']) for g in resp.json()}
-                _bot_guilds_last_update = time.time()
-                return _bot_guilds_cache
+                guild_ids_list = [str(g['id']) for g in resp.json()]
             else:
                 print(f"[BOT GUILDS] Discord API błąd: {resp.status_code}")
         except Exception as e:
             print(f"[BOT GUILDS] Błąd połączenia: {e}")
+            
+    # Zapisujemy nowy cache do pliku
+    if guild_ids_list or not cache_data:
+        try:
+            with open(cache_file, "w") as f:
+                json.dump({
+                    "last_update": time.time(),
+                    "guild_ids": guild_ids_list
+                }, f)
+        except Exception:
+            pass
+        return set(guild_ids_list)
+        
+    # Fallback do starego cache jeśli API nie odpowiedziało
+    return set(cache_data.get("guild_ids", []))
 
-    return _bot_guilds_cache or set()
+def clear_bot_guilds_cache():
+    cache_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_guilds_cache.json")
+    if os.path.exists(cache_file):
+        try:
+            os.remove(cache_file)
+        except Exception:
+            pass
+
 
 
 @dashboard_bp.route('/dashboard')
 def dashboard():
-    global _bot_guilds_last_update
     if request.args.get('refresh') == 'true':
-        _bot_guilds_last_update = 0
+        clear_bot_guilds_cache()
 
     # 1. Sprawdzamy sesję
     if 'user' not in session or 'access_token' not in session:

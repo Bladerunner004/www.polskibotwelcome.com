@@ -212,8 +212,8 @@ def callback():
         print(f"🤖 [BOT INVITE] Bot został pomyślnie dodany do serwera o ID: {guild_id}")
         
         # Resetujemy natychmiast cache serwerów bota
-        import routes_dashboard
-        routes_dashboard._bot_guilds_last_update = 0
+        from routes_dashboard import clear_bot_guilds_cache
+        clear_bot_guilds_cache()
 
         # Czyścimy cache serwerów użytkownika żeby wymusić świeże pobranie
         if 'user' in session:

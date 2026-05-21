@@ -7,7 +7,7 @@ load_dotenv()
 # --- KONFIGURACJA DISCORD OAuth2 ---
 CLIENT_ID = os.getenv("DISCORD_CLIENT_ID", "1489047223160541295")
 CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET", "NXfIWXi2Tdgcl1qBZBSLwJYTVelt_fFj")
-REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "https://laphost-daniel.serveousercontent.com/apps/POLSKIBOT.com/callback")
+REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "https://BLADERUNNER009.pythonanywhere.com/callback")
 
 
 # Pobieranie tokena bota z pliku .env

@@ -53,6 +53,7 @@ app.secret_key = os.getenv("FLASK_SECRET", "polskibot-fixed-key-12345")
 
 # Wykrywanie środowiska developerskiego (lokalnego bez tunelu HTTPS)
 redirect_uri_val = os.getenv("DISCORD_REDIRECT_URI", "")
+is_pythonanywhere = "pythonanywhere.com" in redirect_uri_val
 is_local_dev = ("127.0.0.1" in redirect_uri_val) or ("localhost" in redirect_uri_val)
 
 app.config.update(

@@ -471,6 +471,13 @@
             </div>
         </div>
 
+        {% if bot_token_error %}
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 15px 20px; border-radius: 12px; margin-bottom: 30px; text-align: center; font-size: 0.9rem;">
+            <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+            <strong>Błąd konfiguracji:</strong> Token bota (<code>DISCORD_BOT_TOKEN</code>) w pliku <code>.env</code> jest nieprawidłowy lub wygasł. Bot nie może się zalogować, a panel nie może sprawdzić obecności bota na serwerach.
+        </div>
+        {% endif %}
+
         <div class="grid">
             {% for server in servers %}
             <div class="card {% if server.premium %}premium-server{% endif %}">

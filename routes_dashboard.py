@@ -10,9 +10,10 @@ dashboard_bp = Blueprint('dashboard', __name__)
 # --- CACHE DLA SERWERÓW BOTA (Dla szybkości dashboardu) ---
 _bot_guilds_cache = None
 _bot_guilds_last_update = 0
+_bot_token_invalid = False
 
 def get_bot_guilds_cached():
-    global _bot_guilds_cache, _bot_guilds_last_update
+    global _bot_guilds_cache, _bot_guilds_last_update, _bot_token_invalid
     import time
     
     if _bot_guilds_cache and (time.time() - _bot_guilds_last_update < 30):
@@ -25,6 +26,7 @@ def get_bot_guilds_cached():
             guild_ids = resp.json().get('guild_ids', [])
             _bot_guilds_cache = set(str(g) for g in guild_ids)
             _bot_guilds_last_update = time.time()
+            _bot_token_invalid = False
             return _bot_guilds_cache
     except Exception:
         pass  # Bot offline lub na innym serwerze (PythonAnywhere) - używamy Discord API
@@ -41,11 +43,17 @@ def get_bot_guilds_cached():
             if resp.status_code == 200:
                 _bot_guilds_cache = {str(g['id']) for g in resp.json()}
                 _bot_guilds_last_update = time.time()
+                _bot_token_invalid = False
                 return _bot_guilds_cache
+            elif resp.status_code == 401:
+                print("[BOT GUILDS] Discord API błąd: 401 Unauthorized (Nieprawidłowy token bota!)")
+                _bot_token_invalid = True
             else:
                 print(f"[BOT GUILDS] Discord API błąd: {resp.status_code}")
         except Exception as e:
             print(f"[BOT GUILDS] Błąd połączenia: {e}")
+    else:
+        _bot_token_invalid = True
 
     return _bot_guilds_cache or set()
 
@@ -127,13 +135,14 @@ def dashboard():
             ext = 'gif' if av_hash.startswith('a_') else 'png'
             user_avatar = f"https://cdn.discordapp.com/avatars/{uid}/{av_hash}.{ext}"
 
-    # Link zaproszenia bota - po zaproszeniu Discord sam wróci na /callback z guild_id
-    discord_invite = f"https://discord.com/oauth2/authorize?client_id={CLIENT_ID}&permissions=8&scope=bot%20applications.commands&redirect_uri={urllib.parse.quote(REDIRECT_URI)}&response_type=code"
+    # Link zaproszenia bota - po zaproszeniu Discord sam wróci na /callback z guild_id i pełnym tokenem (scope)
+    discord_invite = f"https://discord.com/oauth2/authorize?client_id={CLIENT_ID}&permissions=8&scope=bot%20applications.commands%20identify%20guilds&redirect_uri={urllib.parse.quote(REDIRECT_URI)}&response_type=code"
 
     return render_template(
         'dashboard.html', 
         servers=user_servers,
         user=user_data,
         user_avatar=user_avatar,
-        discord_invite=discord_invite
+        discord_invite=discord_invite,
+        bot_token_error=_bot_token_invalid
     )

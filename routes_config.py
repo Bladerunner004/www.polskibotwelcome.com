@@ -21,6 +21,29 @@ from werkzeug.utils import secure_filename
 
 config_bp = Blueprint('config', __name__)
 
+_bot_token_status = None # None = untested, True = valid, False = invalid
+
+def check_bot_token_valid():
+    global _bot_token_status
+    if _bot_token_status is not None:
+        return _bot_token_status
+    if not BOT_TOKEN:
+        _bot_token_status = False
+        return False
+    try:
+        headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+        resp = requests.get("https://discord.com/api/v10/users/@me", headers=headers, timeout=3)
+        if resp.status_code == 200:
+            _bot_token_status = True
+        elif resp.status_code == 401:
+            _bot_token_status = False
+        else:
+            # temporary network error or rate limit, don't cache
+            return True
+    except Exception:
+        return True # assume valid on connection error
+    return _bot_token_status
+
 def check_guild_access(guild_id):
     """Sprawdza czy zalogowany użytkownik ma dostęp do zarządzania danym serwerem."""
     if 'user' not in session: return False
@@ -109,6 +132,12 @@ def call_bot_api(endpoint, method="GET", data=None):
 
 @config_bp.route('/api/bot/latency')
 def api_bot_latency():
+    if not check_bot_token_valid():
+        return jsonify({
+            'status': 'error',
+            'error_msg': 'Błąd autoryzacji bota (401 Unauthorized). Twój token DISCORD_BOT_TOKEN w pliku .env jest nieprawidłowy lub wygasł.'
+        })
+
     # Na PythonAnywhere używamy pliku statusu dla lepszej stabilności
     try:
         if os.path.exists(STATUS_FILE_PATH):
@@ -230,11 +259,39 @@ def config(server_id):
     # Pobieramy dane serwera przez API (bot może być w innym procesie)
     headers = {"Authorization": f"Bot {BOT_TOKEN}"}
     
-    # Pobieramy podstawowe info o serwerze (z ilością osób)
-    guild_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}?with_counts=true", headers=headers)
-    if guild_resp.status_code != 200:
-        return redirect(url_for('dashboard.dashboard'))
-    guild_data = guild_resp.json()
+    bot_token_error = not check_bot_token_valid()
+    guild_data = None
+    
+    if not bot_token_error:
+        # Pobieramy podstawowe info o serwerze (z ilością osób)
+        try:
+            guild_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}?with_counts=true", headers=headers, timeout=5)
+            if guild_resp.status_code == 200:
+                guild_data = guild_resp.json()
+            elif guild_resp.status_code == 401:
+                bot_token_error = True
+        except Exception:
+            pass
+
+    if not guild_data:
+        # Fallback do pamięci podręcznej serwerów użytkownika
+        user_guilds = session.get('user_guilds') or []
+        if not user_guilds and 'user' in session:
+            from run import _guilds_memory_cache
+            user_guilds = _guilds_memory_cache.get(session['user'].get('id'), [])
+        
+        target_g = next((g for g in user_guilds if str(g.get('id')) == str(server_id)), None)
+        if target_g:
+            guild_data = {
+                "name": target_g.get('name'),
+                "id": server_id,
+                "icon": target_g.get('icon'),
+                "member_count": 0,
+                "owner_id": None
+            }
+        else:
+            # Użytkownik nie ma dostępu do tego serwera!
+            return redirect(url_for('dashboard.dashboard'))
 
     # Pobieramy kanały i role
     channels = []
@@ -251,14 +308,14 @@ def config(server_id):
         pass
 
     # 2. Fallback: Jeśli lokalne API nie odpowiedziało, odpytujemy bezpośrednio Discorda
-    if not channels or not roles:
+    if not bot_token_error and (not channels or not roles):
         if not channels:
-            channels_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/channels", headers=headers)
+            channels_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/channels", headers=headers, timeout=5)
             all_channels = channels_resp.json() if channels_resp.status_code == 200 else []
             channels = [{"id": str(c['id']), "name": c['name']} for c in all_channels if c['type'] in (0, 5)]
         
         if not roles:
-            roles_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/roles", headers=headers)
+            roles_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/roles", headers=headers, timeout=5)
             all_roles = roles_resp.json() if roles_resp.status_code == 200 else []
             roles = []
             for r in all_roles:
@@ -361,7 +418,8 @@ def config(server_id):
         user=user_data,
         days_left=days_left,
         bot_latency=bot_latency,
-        member_count=guild['member_count']
+        member_count=guild['member_count'],
+        bot_token_error=bot_token_error
     )
 
 

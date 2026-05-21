@@ -24,9 +24,39 @@ config_bp = Blueprint('config', __name__)
 def check_guild_access(guild_id):
     """Sprawdza czy zalogowany użytkownik ma dostęp do zarządzania danym serwerem."""
     if 'user' not in session: return False
-    managed_guilds = session.get('user_guilds', [])
+    user_data = session.get('user')
+    if not user_data: return False
+    user_id = user_data.get('id')
+    if not user_id: return False
+    
+    from run import _guilds_memory_cache
+    managed_guilds = _guilds_memory_cache.get(user_id, [])
+    
+    # Jeśli cache jest pusty, a mamy access_token, spróbujmy odpytać Discord API
+    if not managed_guilds and session.get('access_token'):
+        try:
+            access_token = session.get('access_token')
+            user_headers = {"Authorization": f"Bearer {access_token}"}
+            resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=user_headers, timeout=5)
+            if resp.status_code == 200:
+                all_guilds = resp.json()
+                managed_guilds = [
+                    {
+                        'id': g.get('id'),
+                        'name': g.get('name'),
+                        'icon': g.get('icon'),
+                        'permissions': g.get('permissions'),
+                        'owner': g.get('owner')
+                    }
+                    for g in all_guilds
+                ]
+                _guilds_memory_cache[user_id] = managed_guilds
+        except Exception as e:
+            print(f"[SECURITY CHECK] Błąd podczas pobierania serwerów z API: {e}")
+            
     # Porównujemy ID serwerów jako stringi
     return any(str(g.get('id')) == str(guild_id) for g in managed_guilds)
+
 
 @config_bp.before_request
 def security_check():
@@ -304,28 +334,26 @@ def config(server_id):
 
     # Pobieramy serwery użytkownika i bota dla navbara (server switcher)
     user_data = session.get('user')
-    access_token = session.get('access_token')
+    user_id = user_data.get('id') if user_data else None
     user_guilds_filtered = []
     user_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
 
-    if access_token:
+    if user_id:
         try:
-            headers = {"Authorization": f"Bearer {access_token}"}
-            resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=headers, timeout=5)
-            if resp.status_code == 200:
-                user_guilds = resp.json()
-                bot_headers = {"Authorization": f"Bot {BOT_TOKEN}"}
-                bot_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=bot_headers, timeout=5)
-                bot_guild_ids = {str(g['id']) for g in bot_resp.json()} if bot_resp.status_code == 200 else set()
-                
-                for g in user_guilds:
-                    if (int(g.get('permissions', 0)) & 0x8) or g.get('owner'):
-                        if str(g['id']) in bot_guild_ids:
-                            user_guilds_filtered.append({
-                                "id": str(g['id']),
-                                "name": g['name'],
-                                "icon": g.get('icon')
-                            })
+            from run import _guilds_memory_cache
+            from routes_dashboard import get_bot_guilds_cached
+            
+            user_guilds = _guilds_memory_cache.get(user_id, [])
+            bot_guild_ids = get_bot_guilds_cached()
+            
+            for g in user_guilds:
+                if (int(g.get('permissions', 0)) & 0x8) or g.get('owner'):
+                    if str(g['id']) in bot_guild_ids:
+                        user_guilds_filtered.append({
+                            "id": str(g['id']),
+                            "name": g['name'],
+                            "icon": g.get('icon')
+                        })
             
             if user_data:
                 uid = user_data.get('id')

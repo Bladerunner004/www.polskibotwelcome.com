@@ -3,16 +3,27 @@ import aiohttp
 import os
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
+from urllib.parse import urlparse
 
 # --- KONFIGURACJA URL ---
-BASE_URL = "https://laphost-daniel.serveousercontent.com/apps/POLSKIBOT.com"
+# Wywoływana przy każdym użyciu fix_url, by mieć pewność że .env jest już załadowany
+def _get_base_url():
+    app_url = os.environ.get("APP_URL", "").rstrip("/")
+    if app_url:
+        return app_url
+    redirect_uri = os.environ.get("DISCORD_REDIRECT_URI", "")
+    if redirect_uri:
+        parsed = urlparse(redirect_uri)
+        return f"{parsed.scheme}://{parsed.netloc}"
+    return "https://BLADERUNNER009.pythonanywhere.com"
 
 def fix_url(url):
     if not url: return url
     if isinstance(url, str):
         if url.startswith('http'): return url
-        if url.startswith('/static/'): return f"{BASE_URL}{url}"
-        if url.startswith('static/'): return f"{BASE_URL}/{url}"
+        base = _get_base_url()
+        if url.startswith('/static/'): return f"{base}{url}"
+        if url.startswith('static/'): return f"{base}/{url}"
     return url
 
 async def generate_framed_image(image_url, width=600, height=300, color=0x74b816):

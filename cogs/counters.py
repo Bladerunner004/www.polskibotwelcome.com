@@ -144,5 +144,11 @@ class Counters(commands.Cog):
     async def on_member_remove(self, member):
         await self.update_all_counters(member.guild)
 
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        """Aktualizacja liczników gdy zmienią się role użytkownika."""
+        if before.roles != after.roles:
+            await self.update_all_counters(after.guild)
+
 async def setup(bot):
     await bot.add_cog(Counters(bot))

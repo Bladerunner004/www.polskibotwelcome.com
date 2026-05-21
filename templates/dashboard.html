@@ -3,11 +3,13 @@
 
 <head>
     <script>
-    // Global fetch interceptor to handle subpath proxying
+    // Global fetch interceptor - dodaje prefix /apps/POLSKIBOT.com tylko na Serveo
     (function() {
+        const isServeo = window.location.hostname.includes('serveousercontent.com');
+        if (!isServeo) return; // Na PythonAnywhere i localhost nie modyfikujemy URL-ów
         const originalFetch = window.fetch;
+        const prefix = '/apps/POLSKIBOT.com';
         window.fetch = function(input, init) {
-            const prefix = '/apps/POLSKIBOT.com';
             if (typeof input === 'string') {
                 if ((input.startsWith('/api/') || input.startsWith('/config/') || input.startsWith('/static/')) && !input.startsWith(prefix)) {
                     input = prefix + input;

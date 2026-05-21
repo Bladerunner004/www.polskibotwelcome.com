@@ -14,34 +14,41 @@ _bot_guilds_last_update = 0
 def get_bot_guilds_cached():
     global _bot_guilds_cache, _bot_guilds_last_update
     import time
-    from base import BOT_TOKEN
     
-    if _bot_guilds_cache and (time.time() - _bot_guilds_last_update < 60):
+    if _bot_guilds_cache and (time.time() - _bot_guilds_last_update < 30):
         return _bot_guilds_cache
 
-    # 1. Próbujemy pobrać listę serwerów z lokalnego API bota (jest natychmiastowe i nie ma limitów)
+    # 1. Próbujemy pobrać z lokalnego API bota (działa gdy bot jest w tej samej maszynie)
     try:
         resp = requests.get("http://127.0.0.1:5006/guilds", timeout=1.0)
         if resp.status_code == 200:
             guild_ids = resp.json().get('guild_ids', [])
-            _bot_guilds_cache = set(guild_ids)
+            _bot_guilds_cache = set(str(g) for g in guild_ids)
             _bot_guilds_last_update = time.time()
             return _bot_guilds_cache
-    except Exception as e:
-        # Bot offline - przechodzimy do fallbacka
-        pass
-        
-    # 2. Fallback: Pobieramy z oficjalnego API Discorda
+    except Exception:
+        pass  # Bot offline lub na innym serwerze (PythonAnywhere) - używamy Discord API
+
+    # 2. Fallback: Pobieramy bezpośrednio z Discord API (zawsze działa)
     if BOT_TOKEN:
         try:
             headers = {"Authorization": f"Bot {BOT_TOKEN}"}
-            resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=headers, timeout=2)
+            resp = requests.get(
+                "https://discord.com/api/v10/users/@me/guilds?limit=200",
+                headers=headers,
+                timeout=5
+            )
             if resp.status_code == 200:
                 _bot_guilds_cache = {str(g['id']) for g in resp.json()}
                 _bot_guilds_last_update = time.time()
                 return _bot_guilds_cache
-        except: pass
+            else:
+                print(f"[BOT GUILDS] Discord API błąd: {resp.status_code}")
+        except Exception as e:
+            print(f"[BOT GUILDS] Błąd połączenia: {e}")
+
     return _bot_guilds_cache or set()
+
 
 @dashboard_bp.route('/dashboard')
 def dashboard():
@@ -117,7 +124,7 @@ def dashboard():
             ext = 'gif' if av_hash.startswith('a_') else 'png'
             user_avatar = f"https://cdn.discordapp.com/avatars/{uid}/{av_hash}.{ext}"
 
-    # Link zaproszenia bota z przekierowaniem z powrotem na stronę
+    # Link zaproszenia bota - po zaproszeniu Discord sam wróci na /callback z guild_id
     discord_invite = f"https://discord.com/oauth2/authorize?client_id={CLIENT_ID}&permissions=8&scope=bot%20applications.commands&redirect_uri={urllib.parse.quote(REDIRECT_URI)}&response_type=code"
 
     return render_template(

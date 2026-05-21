@@ -78,7 +78,7 @@
     /* MODAL STYLES */
     .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 9999; }
     .modal-backdrop.active { display: flex; }
-    .modal-content { background: #0c0d11; width: 90%; max-width: 1000px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); padding: 35px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+    .modal-content { background: #0c0d11; width: 90%; max-width: 1250px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); padding: 35px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
     
     .modal-section { margin-bottom: 25px; }
     .modal-label { display: block; font-size: 0.75rem; font-weight: 800; color: #555; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
@@ -95,10 +95,11 @@
     /* GRID LAYOUT FOR MODAL */
     .embed-editor-grid {
         display: grid;
-        grid-template-columns: 1.2fr 1fr;
+        grid-template-columns: 1fr 1.25fr;
         gap: 30px;
+        align-items: start;
     }
-    @media (max-width: 900px) {
+    @media (max-width: 1050px) {
         .embed-editor-grid {
             grid-template-columns: 1fr;
         }
@@ -109,6 +110,9 @@
     }
     .preview-column {
         position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     /* UPLOAD ZONES */
@@ -235,11 +239,14 @@
         align-items: center;
         gap: 8px;
         margin-bottom: 6px;
+        flex-wrap: wrap;
+        row-gap: 4px;
     }
     .discord-username {
         font-weight: 600;
         color: #ffffff;
         font-size: 0.95rem;
+        white-space: nowrap;
     }
     .discord-bot-tag {
         background: #5865f2;
@@ -251,10 +258,13 @@
         line-height: 1;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        flex-shrink: 0;
+        white-space: nowrap;
     }
     .discord-timestamp {
         color: #949ba4;
         font-size: 0.75rem;
+        white-space: nowrap;
     }
 
     /* EMBED PREVIEW STYLES */
@@ -277,7 +287,7 @@
         border-radius: 4px; 
         padding: 12px 16px; 
         border-left: 4px solid var(--bot-color, #74b816); 
-        max-width: 520px; 
+        max-width: 580px; 
         position: relative; 
         box-sizing: border-box; 
         border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -441,7 +451,7 @@
 
 <!-- MODAL KONFIGURACJI -->
 <div class="modal-backdrop" id="selfrole-modal">
-    <div class="modal-content" style="max-width: 1000px;">
+    <div class="modal-content" style="max-width: 1250px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
             <h2 id="modal-selfrole-title" style="margin:0; font-weight: 900;">Konfiguracja Panelu</h2>
             <div onclick="closeSelfroleModal()" style="cursor:pointer; color:#ff4444;"><i class="fas fa-times fa-lg"></i></div>
@@ -535,20 +545,20 @@
 
             <!-- PRAWA KOLUMNA: CZYSTY PODGLĄD DISCORD -->
             <div class="preview-column">
-                <label style="display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 1px;">Podgląd na Discordzie:</label>
-                
-                <div class="discord-chat-container" id="sr-chat-container" style="min-height: 350px;">
-                    <!-- Przełącznik czystego podglądu -->
-                    <div style="position: absolute; top: 12px; right: 12px; display: flex; align-items: center; gap: 8px; z-index: 10;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%; max-width: 650px; margin-left: auto; margin-right: auto;">
+                    <label style="font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin: 0;">Podgląd na Discordzie:</label>
+                    <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 0.7rem; color: #949ba4; font-weight: 700; text-transform: uppercase;">Podgląd bez ramek:</span>
                         <label class="toggle-row">
                             <input type="checkbox" id="sr-clean-preview" onchange="toggleSRCleanPreview()">
                             <div class="toggle-switch" style="width: 34px; height: 18px; border-radius: 10px; margin: 0;"></div>
                         </label>
                     </div>
-
+                </div>
+                
+                <div class="discord-chat-container" id="sr-chat-container" style="min-height: 350px; width: 100%; max-width: 650px; margin: 0 auto; box-sizing: border-box;">
                     <div class="discord-message">
-                        <div class="discord-avatar" style="background-image: url('{{ url_for('static', filename='uploads/avatar_default.png') }}');"></div>
+                        <div class="discord-avatar" style="background-image: url('{{ bot_avatar_url }}');"></div>
                         <div class="discord-message-content">
                             <div class="discord-message-header">
                                 <span class="discord-username">POLSKIBOT</span>
@@ -561,22 +571,15 @@
                                 <div class="embed-main">
                                     <div class="preview-header" id="sr-preview-title">Konfiguracja Selfrole</div>
                                     <div class="preview-desc" id="sr-preview-desc">Opis panelu...</div>
-                                </div>
-
-                                <!-- Miniaturka po prawej (thumbnail) -->
-                                <div id="sr-preview-thumbnail-wrap" class="preview-thumbnail-wrap">
-                                    <img id="sr-preview-thumbnail" class="preview-thumbnail" src="" style="display: none;">
-                                    <div id="sr-preview-thumbnail-placeholder" class="preview-image-placeholder" style="width: 80px; height: 80px;" onclick="document.getElementById('sr-upload-thumb').click()">
-                                        <i class="fas fa-camera" style="font-size: 1.2rem;"></i>
+                                    
+                                    <!-- Miniaturka po prawej (thumbnail) -->
+                                    <div id="sr-preview-thumbnail-wrap" class="preview-thumbnail-wrap">
+                                        <img id="sr-preview-thumbnail" class="preview-thumbnail" src="" style="display: none;">
                                     </div>
-                                </div>
 
-                                <!-- Duży obraz (image) -->
-                                <div id="sr-preview-large-wrap" class="preview-image-wrap">
-                                    <img id="sr-preview-img" class="preview-image" src="" style="display: none;">
-                                    <div id="sr-preview-large-placeholder" class="preview-image-placeholder" style="width: 100%; height: 140px;" onclick="document.getElementById('sr-upload-large').click()">
-                                        <i class="fas fa-image" style="font-size: 1.5rem; margin-bottom: 4px;"></i>
-                                        <span>Główny obraz</span>
+                                    <!-- Duży obraz (image) -->
+                                    <div id="sr-preview-large-wrap" class="preview-image-wrap">
+                                        <img id="sr-preview-img" class="preview-image" src="" style="display: none;">
                                     </div>
                                 </div>
 
@@ -775,51 +778,35 @@
         
         const thumbEl = document.getElementById('sr-preview-thumbnail');
         const thumbWrap = document.getElementById('sr-preview-thumbnail-wrap');
-        const thumbPlaceholder = document.getElementById('sr-preview-thumbnail-placeholder');
         
         const imgEl = document.getElementById('sr-preview-img');
         const imgWrap = document.getElementById('sr-preview-large-wrap');
-        const imgPlaceholder = document.getElementById('sr-preview-large-placeholder');
         
         const actionCont = document.getElementById('sr-preview-actions');
 
         // Thumbnail logic
-        if (thumbWrap && thumbEl && thumbPlaceholder) {
+        if (thumbWrap && thumbEl) {
             if (thumbUrl && thumbUrl.trim() !== '') {
                 thumbEl.src = thumbUrl;
                 thumbEl.style.display = 'block';
-                thumbPlaceholder.style.display = 'none';
                 thumbWrap.style.display = 'block';
             } else {
                 thumbEl.src = '';
                 thumbEl.style.display = 'none';
-                if (cleanPreview) {
-                    thumbWrap.style.display = 'none';
-                    thumbPlaceholder.style.display = 'none';
-                } else {
-                    thumbWrap.style.display = 'block';
-                    thumbPlaceholder.style.display = 'flex';
-                }
+                thumbWrap.style.display = 'none';
             }
         }
 
         // Image logic
-        if (imgWrap && imgEl && imgPlaceholder) {
+        if (imgWrap && imgEl) {
             if (imgUrl && imgUrl.trim() !== '') {
                 imgEl.src = imgUrl;
                 imgEl.style.display = 'block';
-                imgPlaceholder.style.display = 'none';
                 imgWrap.style.display = 'block';
             } else {
                 imgEl.src = '';
                 imgEl.style.display = 'none';
-                if (cleanPreview) {
-                    imgWrap.style.display = 'none';
-                    imgPlaceholder.style.display = 'none';
-                } else {
-                    imgWrap.style.display = 'block';
-                    imgPlaceholder.style.display = 'flex';
-                }
+                imgWrap.style.display = 'none';
             }
         }
         

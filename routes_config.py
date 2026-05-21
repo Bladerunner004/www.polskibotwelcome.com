@@ -21,6 +21,39 @@ from werkzeug.utils import secure_filename
 
 config_bp = Blueprint('config', __name__)
 
+# Awatar bota cache
+_bot_avatar_cache = {
+    "url": None,
+    "last_fetched": 0
+}
+
+def get_bot_avatar_cached():
+    now = time.time()
+    # Cache na 10 minut
+    if _bot_avatar_cache["url"] and (now - _bot_avatar_cache["last_fetched"] < 600):
+        return _bot_avatar_cache["url"]
+        
+    try:
+        headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+        resp = requests.get("https://discord.com/api/v10/users/@me", headers=headers, timeout=2.0)
+        if resp.status_code == 200:
+            data = resp.json()
+            b_id = data.get("id")
+            b_av = data.get("avatar")
+            if b_id and b_av:
+                ext = 'gif' if b_av.startswith('a_') else 'png'
+                url = f"https://cdn.discordapp.com/avatars/{b_id}/{b_av}.{ext}"
+            else:
+                url = "/static/img/polskibot_logo.png"
+            _bot_avatar_cache["url"] = url
+            _bot_avatar_cache["last_fetched"] = now
+            return url
+    except Exception as e:
+        print(f"[BOT AVATAR FETCH] Error: {e}")
+        
+    return "/static/img/polskibot_logo.png"
+
+
 def check_guild_access(guild_id):
     """Sprawdza czy zalogowany użytkownik ma dostęp do zarządzania danym serwerem."""
     if 'user' not in session: return False
@@ -399,8 +432,8 @@ def config(server_id):
             'created_at': log.get('timestamp')
         })
     audit_logs = formatted_logs
-    # Awatar bota (bezpieczny fallback)
-    bot_avatar_url = "/static/img/default_avatar.png"
+    # Awatar bota (bezpieczny fallback pobierany z Discorda)
+    bot_avatar_url = get_bot_avatar_cached()
 
     # Pobieramy serwery użytkownika i bota dla navbara (server switcher)
     user_data = session.get('user')

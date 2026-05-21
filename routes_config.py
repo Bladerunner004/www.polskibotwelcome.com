@@ -329,6 +329,76 @@ def config(server_id):
     from database import get_role_counters
     role_counters = get_role_counters(server_id)
     audit_logs = get_audit_logs(server_id)
+    formatted_logs = []
+    import re
+    
+    def clean_str(s):
+        return re.sub(r'[^a-zA-Z0-9]', '', s).lower()
+        
+    channel_map = {str(c['id']): c['name'] for c in channels}
+    role_map = {str(r['id']): r['name'] for r in roles}
+    
+    for log in audit_logs:
+        db_username = log.get('user_name', '')
+        user_id = log.get('user_id', '')
+        if (not user_id or user_id == '0') and '(' in db_username:
+            match = re.search(r'\(([^)]+)\)', db_username)
+            if match:
+                user_id = match.group(1)
+        username = re.sub(r'\s*\([^)]+\)', '', db_username)
+        
+        details = log.get('details', '')
+        
+        # 1. Replace <@&ID> with @RoleName
+        def rep_role(m):
+            rid = m.group(1)
+            return f"@{role_map.get(rid, 'rola-' + rid)}"
+        details = re.sub(r'<@&([0-9]+)>', rep_role, details)
+        
+        # 2. Replace <#ID> with #ChannelName
+        def rep_chan(m):
+            cid = m.group(1)
+            return f"#{channel_map.get(cid, 'kanał-' + cid)}"
+        details = re.sub(r'<#([0-9]+)>', rep_chan, details)
+        
+        # 3. Replace <@ID> or <@!ID>
+        details = re.sub(r'<@!?([0-9]+)>', r'@użytkownik-\1', details)
+        
+        # 4. Handle raw IDs
+        def rep_raw_id(m):
+            raw_id = m.group(2)
+            has_parens = m.group(1) is not None
+            
+            if raw_id in channel_map:
+                ch_name = channel_map[raw_id]
+                if clean_str(ch_name) in clean_str(details):
+                    return ""
+                return f"#{ch_name}"
+                
+            if raw_id in role_map:
+                r_name = role_map[raw_id]
+                if clean_str(r_name) in clean_str(details):
+                    return ""
+                return f"@{r_name}"
+                
+            if has_parens:
+                return ""
+            return raw_id
+            
+        details = re.sub(r'(\s*\(([0-9]{17,20})\))|([0-9]{17,20})', rep_raw_id, details)
+        
+        formatted_logs.append({
+            'id': log.get('id'),
+            'guild_id': log.get('guild_id'),
+            'category': log.get('category'),
+            'username': username,
+            'user_id': user_id,
+            'user_avatar': f"https://cdn.discordapp.com/embed/avatars/{int(user_id or 0) % 5}.png",
+            'action_type': log.get('action'),
+            'details': details,
+            'created_at': log.get('timestamp')
+        })
+    audit_logs = formatted_logs
     # Awatar bota (bezpieczny fallback)
     bot_avatar_url = "/static/img/default_avatar.png"
 

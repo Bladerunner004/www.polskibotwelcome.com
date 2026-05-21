@@ -84,6 +84,11 @@ class Welcome(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
+        try:
+            from database import log_join_activity
+            log_join_activity(member.guild.id)
+        except Exception as e:
+            print(f"⚠️ [COGS/WELCOME] Błąd log_join_activity: {e}")
         await self.send_welcome_message(member.guild, member, 'powitanie')
 
     @commands.Cog.listener()

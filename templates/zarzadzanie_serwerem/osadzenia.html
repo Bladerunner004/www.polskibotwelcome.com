@@ -104,12 +104,12 @@
         animation: rainbow-full-border 3s linear infinite;
     }
 
-    .discord-embed { background: var(--discord-embed-bg); border-left: 4px solid var(--bot-color, #74b816); border-radius: 4px; padding: 12px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px; position: relative; }
+    .discord-embed { background: var(--discord-embed-bg); border-left: 4px solid var(--bot-color, #74b816); border-radius: 4px; padding: 12px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px; position: relative; max-width: 520px; box-sizing: border-box; }
     .embed-main { grid-column: 1; }
     
     .ee-author { font-size: 0.85rem; font-weight: 700; color: white; margin-bottom: 8px; outline: none; }
     .ee-title { font-size: 1rem; font-weight: 700; color: #00a8fc; margin-bottom: 8px; outline: none; cursor: text; text-decoration: none; }
-    .ee-desc { font-size: 0.9rem; color: #dbdee1; line-height: 1.375; outline: none; }
+    .ee-desc { font-size: 0.9rem; color: #dbdee1; line-height: 1.375; outline: none; white-space: pre-wrap; }
     .ee-footer { font-size: 0.75rem; color: #949ba4; margin-top: 12px; outline: none; }
     
     .ee-thumb { grid-column: 2; width: 80px; height: 80px; background: #2b2d31; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #4e5058; cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center; border: none; box-sizing: border-box; }
@@ -324,12 +324,26 @@
             </div>
 
             <div class="upload-controls" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-                <button type="button" class="tag-btn {% if main_settings.premium %}premium-frame{% endif %}" style="width: 100%; padding: 12px; text-align: center;" onclick="document.getElementById('gu-thumb').click()">
-                    <i class="fas fa-image"></i> ZMIEŃ MINIATURKĘ (JPG, PNG, GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
-                </button>
-                <button type="button" class="tag-btn {% if main_settings.premium %}premium-frame{% endif %}" style="width: 100%; padding: 12px; text-align: center;" onclick="document.getElementById('gu-large').click()">
-                    <i class="fas fa-expand"></i> ZMIEŃ DUŻY OBRAZ (JPG, PNG, GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
-                </button>
+                <!-- Miniaturka -->
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button type="button" class="tag-btn {% if main_settings.premium %}premium-frame{% endif %}" style="flex: 1; padding: 12px; text-align: center;" onclick="document.getElementById('gu-thumb').click()">
+                        <i class="fas fa-image"></i> <span id="g-thumb-btn-text">DODAJ MINIATURKĘ</span> (JPG, PNG, GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
+                    </button>
+                    <button type="button" id="g-thumb-remove-btn" class="tag-btn" style="display: none; background: rgba(255, 68, 68, 0.1); color: #ff4444; border-color: rgba(255, 68, 68, 0.2); padding: 12px; width: 50px; justify-content: center; align-items: center;" onclick="removeEmbedImage('thumb', 'g')" title="Usuń miniaturkę">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+
+                <!-- Duży obraz -->
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button type="button" class="tag-btn {% if main_settings.premium %}premium-frame{% endif %}" style="flex: 1; padding: 12px; text-align: center;" onclick="document.getElementById('gu-large').click()">
+                        <i class="fas fa-expand"></i> <span id="g-large-btn-text">DODAJ DUŻY OBRAZ</span> (JPG, PNG, GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
+                    </button>
+                    <button type="button" id="g-large-remove-btn" class="tag-btn" style="display: none; background: rgba(255, 68, 68, 0.1); color: #ff4444; border-color: rgba(255, 68, 68, 0.2); padding: 12px; width: 50px; justify-content: center; align-items: center;" onclick="removeEmbedImage('large', 'g')" title="Usuń duży obraz">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+                
                 <input type="file" id="gu-thumb" hidden onchange="uploadImage('thumb', 'g')" accept="image/*">
                 <input type="file" id="gu-large" hidden onchange="uploadImage('large', 'g')" accept="image/*">
                 <input type="hidden" id="g-thumb-url">
@@ -403,7 +417,10 @@
             </label>
         </div>
         
-        <input type="hidden" id="r-name">
+        <div class="modal-section">
+            <label>NAZWA PANELU (NAZWA W LIŚCIE INDENTYFIKACYJNEJ):</label>
+            <input type="text" id="r-name" class="modal-input" placeholder="Np. Regulamin Serwera, Regulamin Rekrutacji...">
+        </div>
         <div class="modal-section">
             <label>KANAŁ DOCELOWY:</label>
             <select id="r-channel" class="modal-select"></select>
@@ -478,7 +495,9 @@
         getE(p + 'p-body').style.display = active ? 'block' : 'none';
     };
 
-    window.setEmoji = (emoji, p) => setV(p + '-reaction-emoji', emoji);
+    window.setEmoji = (emoji, p) => {
+        setV(p + '-reaction-emoji', emoji);
+    };
 
     window.updatePreviewStyles = (p) => {
         if (p === 'r') {
@@ -521,40 +540,86 @@
         }
         titleEl.style.color = linkColor;
 
-        // Obsługa ramek (has_frame) dla dużego obrazu i miniatury
-        const hasFrame = getE(p + '-has-frame') ? getE(p + '-has-frame').checked : false;
-        const largeImgEl = getE(p + 'e-large-img');
+        const thumbUrl = getV(p + '-thumb-url');
+        const largeUrl = getV(p + '-large-url');
         const thumbEl = getE(p + 'e-thumb');
-        
-        if (largeImgEl) {
-            if (hasFrame) {
-                largeImgEl.style.border = `8px solid ${embedColor}`;
-                largeImgEl.style.padding = '8px';
-                if (globalRgb && !isPersonalized) {
-                    largeImgEl.classList.add('rgb-mode');
-                } else {
-                    largeImgEl.classList.remove('rgb-mode');
-                }
-            } else {
-                largeImgEl.style.border = 'none';
-                largeImgEl.style.padding = '0';
-                largeImgEl.classList.remove('rgb-mode');
-            }
-        }
+        const largeImgEl = getE(p + 'e-large-img');
+
+        // Obsługa ramek i widoczności miniatury (ee-thumb)
         if (thumbEl) {
-            if (hasFrame) {
-                thumbEl.style.border = `4px solid ${embedColor}`;
-                thumbEl.style.padding = '4px';
-                if (globalRgb && !isPersonalized) {
-                    thumbEl.classList.add('rgb-mode');
+            if (thumbUrl && thumbUrl.trim() !== '') {
+                thumbEl.style.display = 'flex';
+                thumbEl.style.backgroundImage = `url('${thumbUrl}')`;
+                thumbEl.style.backgroundColor = 'transparent';
+                getE(p + 'e-thumb-icon').style.display = 'none';
+                
+                const hasFrame = getE(p + '-has-frame') ? getE(p + '-has-frame').checked : false;
+                if (hasFrame) {
+                    thumbEl.style.border = `4px solid ${embedColor}`;
+                    thumbEl.style.padding = '4px';
+                    if (globalRgb && !isPersonalized) {
+                        thumbEl.classList.add('rgb-mode');
+                    } else {
+                        thumbEl.classList.remove('rgb-mode');
+                    }
                 } else {
+                    thumbEl.style.border = 'none';
+                    thumbEl.style.padding = '0';
                     thumbEl.classList.remove('rgb-mode');
                 }
             } else {
-                thumbEl.style.border = 'none';
-                thumbEl.style.padding = '0';
-                thumbEl.classList.remove('rgb-mode');
+                thumbEl.style.display = 'none';
+                thumbEl.style.backgroundColor = '#2b2d31';
             }
+        }
+
+        // Obsługa ramek i widoczności dużego obrazu (ee-large-img)
+        if (largeImgEl) {
+            if (largeUrl && largeUrl.trim() !== '') {
+                largeImgEl.style.display = 'flex';
+                largeImgEl.style.backgroundImage = `url('${largeUrl}')`;
+                largeImgEl.style.backgroundColor = 'transparent';
+                getE(p + 'e-large-icon').style.display = 'none';
+
+                const hasFrame = getE(p + '-has-frame') ? getE(p + '-has-frame').checked : false;
+                if (hasFrame) {
+                    largeImgEl.style.border = `8px solid ${embedColor}`;
+                    largeImgEl.style.padding = '8px';
+                    if (globalRgb && !isPersonalized) {
+                        largeImgEl.classList.add('rgb-mode');
+                    } else {
+                        largeImgEl.classList.remove('rgb-mode');
+                    }
+                } else {
+                    largeImgEl.style.border = 'none';
+                    largeImgEl.style.padding = '0';
+                    largeImgEl.classList.remove('rgb-mode');
+                }
+            } else {
+                largeImgEl.style.display = 'none';
+                largeImgEl.style.backgroundColor = '#2b2d31';
+            }
+        }
+
+        // Aktualizacja widoczności przycisków usuwania i tekstów
+        const thumbRemoveBtn = getE(p + '-thumb-remove-btn');
+        const thumbBtnText = getE(p + '-thumb-btn-text');
+        if (thumbUrl && thumbUrl.trim() !== '') {
+            if (thumbRemoveBtn) thumbRemoveBtn.style.display = 'flex';
+            if (thumbBtnText) thumbBtnText.textContent = 'ZMIEŃ MINIATURKĘ';
+        } else {
+            if (thumbRemoveBtn) thumbRemoveBtn.style.display = 'none';
+            if (thumbBtnText) thumbBtnText.textContent = 'DODAJ MINIATURKĘ';
+        }
+
+        const largeRemoveBtn = getE(p + '-large-remove-btn');
+        const largeBtnText = getE(p + '-large-btn-text');
+        if (largeUrl && largeUrl.trim() !== '') {
+            if (largeRemoveBtn) largeRemoveBtn.style.display = 'flex';
+            if (largeBtnText) largeBtnText.textContent = 'ZMIEŃ DUŻY OBRAZ';
+        } else {
+            if (largeRemoveBtn) largeRemoveBtn.style.display = 'none';
+            if (largeBtnText) largeBtnText.textContent = 'DODAJ DUŻY OBRAZ';
         }
     };
 
@@ -581,14 +646,25 @@
                 <span style="font-size: 0.7rem; font-weight: 800; color: var(--accent-green);">BLOK ZASAD</span>
                 <i class="fas fa-times" style="color: #ff4444; cursor: pointer;" onclick="removeRuleBlock('${blockId}')"></i>
             </div>
-            <div class="discord-embed" style="border-left-color: #74b816;">
-                <div class="ee-desc" id="rb-text-${blockId}" contenteditable="true" placeholder="Opis do tego bloku..." style="min-height: 40px; outline: none;">${text}</div>
-
-                <div class="ee-large-img" id="rb-img-${blockId}" style="height: 120px; margin-top: 15px; background-image: ${imgUrl ? `url('${imgUrl}')` : 'none'};" onclick="triggerBlockUpload('${blockId}')">
-                    <i class="fas fa-image" style="display: ${imgUrl ? 'none' : 'block'};"></i>
+            <div class="discord-embed" style="border-left-color: #74b816; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; max-width: 520px; box-sizing: border-box; width: 100%;">
+                
+                <!-- PUSTY PLACEHOLDER - POKAZYWANY GDY NIE MA OBRAZU -->
+                <div class="ee-large-img-placeholder" id="rb-placeholder-${blockId}" style="display: ${imgUrl ? 'none' : 'flex'}; border: 2px dashed rgba(255,255,255,0.15); border-radius: 8px; height: 80px; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; transition: 0.2s;" onclick="triggerBlockUpload('${blockId}')">
+                    <i class="fas fa-image" style="margin-right: 8px;"></i> Dodaj obraz nagłówkowy bloku (opcjonalnie)
                 </div>
+
+                <!-- PODGLĄD OBRAZU - POKAZYWANY GDY JEST OBRAZ -->
+                <div class="ee-large-img-container" id="rb-img-container-${blockId}" style="display: ${imgUrl ? 'block' : 'none'}; position: relative; width: 100%;">
+                    <img id="rb-img-${blockId}" src="${imgUrl || ''}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; cursor: pointer;" onclick="triggerBlockUpload('${blockId}')">
+                    <button type="button" class="btn-remove-image" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); border: none; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;" onclick="removeBlockImage('${blockId}', event)" title="Usuń obraz">
+                        <i class="fas fa-trash-alt" style="font-size: 0.85rem;"></i>
+                    </button>
+                </div>
+
                 <input type="file" id="rb-input-${blockId}" hidden accept="image/*" onchange="uploadBlockImage('${blockId}')">
                 <input type="hidden" id="rb-url-${blockId}" value="${imgUrl}">
+
+                <div class="ee-desc" id="rb-text-${blockId}" contenteditable="true" placeholder="Opis do tego bloku..." style="min-height: 40px; outline: none; white-space: pre-wrap;">${text}</div>
             </div>
         `;
         container.appendChild(div);
@@ -621,11 +697,22 @@
             const data = await res.json();
             if (data.success) {
                 getE(`rb-url-${id}`).value = data.url;
-                const preview = getE(`rb-img-${id}`);
-                preview.style.backgroundImage = `url('${data.url}')`;
-                preview.querySelector('i').style.display = 'none';
+                
+                const img = getE(`rb-img-${id}`);
+                img.src = data.url;
+                getE(`rb-placeholder-${id}`).style.display = 'none';
+                getE(`rb-img-container-${id}`).style.display = 'block';
             }
         } catch(e) { alert('Błąd przesłania zdjęcia'); }
+    };
+
+    window.removeBlockImage = (id, event) => {
+        if (event) event.stopPropagation();
+        getE(`rb-url-${id}`).value = '';
+        getE(`rb-img-${id}`).src = '';
+        getE(`rb-placeholder-${id}`).style.display = 'flex';
+        getE(`rb-img-container-${id}`).style.display = 'none';
+        getE(`rb-input-${id}`).value = '';
     };
 
     window.updateRulesPreview = () => {
@@ -653,9 +740,7 @@
             const data = await res.json();
             if (data.success) {
                 setV(`${p}-${type}-url`, data.url);
-                const container = getE(`${p}e-${type === 'thumb' ? 'thumb' : 'large-img'}`);
-                container.style.backgroundImage = `url('${data.url}')`;
-                container.querySelector('i').style.display = 'none';
+                updatePreviewStyles(p);
             }
         } catch(e) {
             alert('Błąd przesyłania obrazu');
@@ -666,9 +751,7 @@
 
     window.removeEmbedImage = (type, p) => {
         setV(`${p}-${type}-url`, '');
-        const container = getE(`${p}e-${type === 'thumb' ? 'thumb' : 'large-img'}`);
-        container.style.backgroundImage = 'none';
-        container.querySelector('i').style.display = 'block';
+        updatePreviewStyles(p);
     };
 
     async function loadSelects(p) {

@@ -273,6 +273,51 @@ def logout():
     session.clear()
     return redirect(url_for('home.index'))
 
+@app.route('/debug_auth')
+def debug_auth():
+    from base import BOT_TOKEN, CLIENT_ID, REDIRECT_URI
+    import requests
+    
+    debug_info = {
+        "env": {
+            "DISCORD_CLIENT_ID": CLIENT_ID,
+            "DISCORD_REDIRECT_URI": REDIRECT_URI,
+            "BOT_TOKEN_SET": BOT_TOKEN is not None and len(BOT_TOKEN) > 0,
+            "BOT_TOKEN_LEN": len(BOT_TOKEN) if BOT_TOKEN else 0,
+            "BOT_TOKEN_START": BOT_TOKEN[:15] if BOT_TOKEN else "None"
+        },
+        "session": {
+            "user": session.get('user'),
+            "has_access_token": 'access_token' in session
+        },
+        "cache": {
+            "cache_keys": list(_guilds_memory_cache.keys()),
+            "user_guilds_in_cache": _guilds_memory_cache.get(session.get('user', {}).get('id')) if session.get('user') else None
+        }
+    }
+    
+    if BOT_TOKEN:
+        try:
+            headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+            resp = requests.get("https://discord.com/api/v10/users/@me/guilds?limit=200", headers=headers, timeout=5)
+            debug_info["bot_api_test"] = {
+                "status_code": resp.status_code,
+                "guilds_count": len(resp.json()) if resp.status_code == 200 else None,
+                "error_response": resp.text if resp.status_code != 200 else None
+            }
+            if resp.status_code == 200:
+                debug_info["bot_api_test"]["guilds_list"] = [
+                    {"id": g["id"], "name": g["name"]} for g in resp.json()
+                ]
+        except Exception as e:
+            debug_info["bot_api_test"] = {
+                "error": str(e)
+            }
+    else:
+        debug_info["bot_api_test"] = "BOT_TOKEN is missing"
+        
+    return jsonify(debug_info)
+
 if __name__ == '__main__':
     host = os.getenv("FLASK_HOST", "0.0.0.0")
     port = int(os.getenv("FLASK_PORT", 5000))

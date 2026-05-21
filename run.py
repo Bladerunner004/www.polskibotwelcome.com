@@ -11,7 +11,6 @@ import threading
 import asyncio
 import socket
 from flask import Flask, session, redirect, url_for, request, jsonify
-from flask_session import Session
 from dotenv import load_dotenv
 
 # Importujemy dane konfiguracyjne z base.py
@@ -58,7 +57,7 @@ is_pythonanywhere = "pythonanywhere.com" in redirect_uri_val
 is_local_dev = ("127.0.0.1" in redirect_uri_val) or ("localhost" in redirect_uri_val)
 
 app.config.update(
-    SESSION_COOKIE_NAME='polskibot_sid',
+    SESSION_COOKIE_NAME='polskibot_session',
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_PATH='/',
     SESSION_COOKIE_HTTPONLY=True,
@@ -66,17 +65,11 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=604800,
     PREFERRED_URL_SCHEME='http' if is_local_dev else 'https',
     MAX_CONTENT_LENGTH=16 * 1024 * 1024,
-    # --- FLASK-SESSION: sesje po stronie serwera (brak limitu 4KB ciasteczka) ---
-    SESSION_TYPE='filesystem',
-    SESSION_FILE_DIR=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'flask_sessions'),
-    SESSION_FILE_THRESHOLD=500,
-    SESSION_PERMANENT=True,
-    SESSION_USE_SIGNER=True,
 )
 
-# Tworzymy folder na pliki sesji i inicjalizujemy Flask-Session
-os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'flask_sessions'), exist_ok=True)
-Session(app)
+# --- PAMIĘĆ PODRĘCZNA SERWERÓW (zamiast cookie, brak limitu 4KB) ---
+# Słownik: user_id -> lista serwerów. Przechowywany w pamięci procesu.
+_guilds_memory_cache = {}
 
 @app.after_request
 def add_header(response):
@@ -93,7 +86,7 @@ def inject_global_vars():
     return {
         'user': user,
         'user_avatar': avatar,
-        'user_guilds': session.get('user_guilds', []), # Pobieramy z sesji (stabilność)
+        'user_guilds': _guilds_memory_cache.get(user.get('id') if user else None, []),
         'login_url': get_login_url(),
         'discord_invite': DISCORD_INVITE_URL
     }
@@ -196,12 +189,17 @@ def callback():
                             'owner': g.get('owner')
                         })
 
+                user_id = user_data['id']
                 session.permanent = True
-                session['user'] = {'id': user_data['id'], 'username': user_data['username'], 'avatar': user_data['avatar']}
+                session['user'] = {'id': user_id, 'username': user_data['username'], 'avatar': user_data['avatar']}
                 session['user_avatar'] = get_user_avatar(session['user'])
-                session['user_guilds'] = managed_guilds
                 session['access_token'] = access_token
                 session.modified = True
+
+                # Zapisujemy serwery w pamięci procesu (nie w cookie!) - brak limitu 4KB
+                from run import _guilds_memory_cache
+                _guilds_memory_cache[user_id] = managed_guilds
+                print(f"💾 [AUTH] Zapisano {len(managed_guilds)} serwerów w pamięci (user: {user_id})")
             else:
                 print(f"⚠️ [AUTH] Błąd tokena: {token_data}")
         except Exception as e:
@@ -213,27 +211,32 @@ def callback():
     if guild_id:
         print(f"🤖 [BOT INVITE] Bot został pomyślnie dodany do serwera o ID: {guild_id}")
         
-        # Resetujemy natychmiast cache serwerów bota na podstronie dashboardu!
+        # Resetujemy natychmiast cache serwerów bota
         import routes_dashboard
         routes_dashboard._bot_guilds_last_update = 0
-        session.pop('user_guilds', None) # Wyczyszczenie starej listy serwerów sesji, by wymusić świeże pobranie z Discorda
+
+        # Czyścimy cache serwerów użytkownika żeby wymusić świeże pobranie
+        if 'user' in session:
+            uid = session['user'].get('id')
+            if uid and uid in _guilds_memory_cache:
+                del _guilds_memory_cache[uid]
         
         # Jeżeli użytkownik jest poprawnie zalogowany, sprawdźmy czy ma prawa do tego serwera
         if 'user' in session:
-            user_guilds = session.get('user_guilds') or []
+            uid = session['user'].get('id')
+            user_guilds = _guilds_memory_cache.get(uid, [])
             if not user_guilds and session.get('access_token'):
                 try:
-                    # Pobieramy awaryjnie w locie jeśli go nie było w sesji
                     g_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers={"Authorization": f"Bearer {session['access_token']}"})
                     if g_resp.status_code == 200:
                         user_guilds = [g for g in g_resp.json() if (int(g.get('permissions', 0)) & 0x8) == 0x8 or g.get('owner')]
-                        session['user_guilds'] = user_guilds
-                        session.modified = True
+                        if uid:
+                            _guilds_memory_cache[uid] = user_guilds
                 except: pass
             
             has_access = any(str(g.get('id')) == str(guild_id) for g in user_guilds)
             if has_access:
-                print(f"🚀 [BOT INVITE] Użytkownik posiada uprawnienia! Przekierowanie bezpośrednie do /config/{guild_id}")
+                print(f"🚀 [BOT INVITE] Użytkownik posiada uprawnienia! Przekierowanie bezpośrednio do /config/{guild_id}")
                 return redirect(url_for('config.config', server_id=guild_id))
         
         return redirect(url_for('dashboard.dashboard'))
@@ -253,7 +256,7 @@ def dev_login():
         'avatar': 'a_1234567890abcdef'
     }
     session['access_token'] = 'mock_token'
-    session['user_guilds'] = [
+    _guilds_memory_cache['1234567890'] = [
         {
             'id': '1489771395163623527',
             'name': 'Testowy Serwer PolskiBot',

@@ -4,8 +4,11 @@
         --border-gray: rgba(255, 255, 255, 0.08);
         --accent-green: #74b816;
         --text-muted: #8b8e94;
-        --discord-embed-bg: #1e1f22;
-        --discord-outer-bg: #2b2d31;
+        --discord-outer-bg: #313338;
+        --discord-embed-bg: #2b2d31;
+        --discord-text-normal: #dbdee1;
+        --discord-text-muted: #949ba4;
+        --discord-link: #00a8fc;
     }
 
     .settings-card { background: var(--bg-card); border: 1px solid var(--border-gray); border-radius: 16px; margin-bottom: 24px; max-width: 100%; }
@@ -63,20 +66,75 @@
     /* MODAL */
     .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; }
     .modal-backdrop.active { display: flex; }
-    .modal-content { background: #0b0c10; border: 1px solid var(--border-gray); border-radius: 24px; width: 95%; max-width: 900px; max-height: 95vh; overflow-y: auto; padding: 30px; box-shadow: 0 30px 100px rgba(0,0,0,0.9); }
+    .modal-content { background: #0b0c10; border: 1px solid var(--border-gray); border-radius: 24px; width: 95%; max-width: 950px; max-height: 95vh; overflow-y: auto; padding: 30px; box-shadow: 0 30px 100px rgba(0,0,0,0.9); }
     
-    /* DISCORD STYLE EDITOR */
-    .discord-editor-outer { background: var(--discord-outer-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; color: #dbdee1; font-family: 'Inter', sans-serif; }
-    .outer-text { margin-bottom: 12px; font-size: 0.95rem; outline: none; min-height: 20px; }
+    /* DISCORD MOCKUP CHAT STYLE */
+    .discord-chat-container {
+        background: var(--discord-outer-bg);
+        border-radius: 12px;
+        padding: 20px;
+        font-family: 'Inter', sans-serif;
+        color: var(--discord-text-normal);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+        margin-bottom: 20px;
+        position: relative;
+    }
+    .discord-message {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+    }
+    .discord-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-color: #1a1c23;
+        flex-shrink: 0;
+    }
+    .discord-message-content {
+        flex: 1;
+        min-width: 0;
+    }
+    .discord-message-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    .discord-username {
+        font-weight: 600;
+        color: #ffffff;
+        font-size: 0.95rem;
+    }
+    .discord-bot-tag {
+        background: #5865f2;
+        color: #ffffff;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 5px;
+        border-radius: 3px;
+        line-height: 1;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .discord-timestamp {
+        color: var(--discord-text-muted);
+        font-size: 0.75rem;
+    }
+    .outer-text { 
+        margin-bottom: 12px; 
+        font-size: 0.95rem; 
+        outline: none; 
+        min-height: 20px; 
+        color: var(--discord-text-normal);
+        white-space: pre-wrap;
+    }
     .outer-text[placeholder]:empty:before { content: attr(placeholder); color: #5c5e66; }
 
-    /* EFEKT RGB DLA PASKA */
-    @keyframes rainbow-border {
-        0% { border-left-color: #ff0000; box-shadow: -2px 0 10px rgba(255,0,0,0.3); }
-        20% { border-left-color: #ff00ff; box-shadow: -2px 0 10px rgba(255,0,255,0.3); }
-        40% { border-left-color: #0000ff; box-shadow: -2px 0 10px rgba(0,0,255,0.3); }
-        60% { border-left-color: #00ffff; box-shadow: -2px 0 10px rgba(0,255,255,0.3); }
-        80% { border-left-color: #00ff00; box-shadow: -2px 0 10px rgba(0,255,0,0.3); }
     /* EFEKT RGB DLA PASKA */
     @keyframes rainbow-border {
         0% { border-left-color: #ff0000; box-shadow: -2px 0 10px rgba(255,0,0,0.3); }
@@ -100,20 +158,105 @@
         animation: rainbow-border 3s linear infinite;
     }
 
-    .ee-large-img.rgb-mode, .ee-thumb.rgb-mode {
+    .discord-embed-image.rgb-mode, .discord-embed-thumbnail.rgb-mode {
         animation: rainbow-full-border 3s linear infinite;
     }
 
-    .discord-embed { background: var(--discord-embed-bg); border-left: 4px solid var(--bot-color, #74b816); border-radius: 4px; padding: 12px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px; position: relative; max-width: 520px; box-sizing: border-box; }
+    .discord-embed { 
+        background: var(--discord-embed-bg); 
+        border-left: 4px solid var(--bot-color, #74b816); 
+        border-radius: 4px; 
+        padding: 12px 16px; 
+        display: grid; 
+        grid-template-columns: 1fr auto; 
+        gap: 8px; 
+        position: relative; 
+        max-width: 520px; 
+        box-sizing: border-box; 
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
     .embed-main { grid-column: 1; }
     
     .ee-author { font-size: 0.85rem; font-weight: 700; color: white; margin-bottom: 8px; outline: none; }
-    .ee-title { font-size: 1rem; font-weight: 700; color: #00a8fc; margin-bottom: 8px; outline: none; cursor: text; text-decoration: none; }
-    .ee-desc { font-size: 0.9rem; color: #dbdee1; line-height: 1.375; outline: none; white-space: pre-wrap; }
-    .ee-footer { font-size: 0.75rem; color: #949ba4; margin-top: 12px; outline: none; }
+    .ee-title { font-size: 1rem; font-weight: 700; color: var(--discord-link); margin-bottom: 8px; outline: none; cursor: text; text-decoration: none; }
+    .ee-desc { font-size: 0.9rem; color: var(--discord-text-normal); line-height: 1.375; outline: none; white-space: pre-wrap; }
+    .ee-footer { font-size: 0.75rem; color: var(--discord-text-muted); margin-top: 12px; outline: none; grid-column: 1 / span 2; }
     
-    .ee-thumb { grid-column: 2; width: 80px; height: 80px; background: #2b2d31; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #4e5058; cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center; border: none; box-sizing: border-box; }
-    .ee-large-img { grid-column: 1 / span 2; width: 100%; height: 200px; background: #2b2d31; border-radius: 8px; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #4e5058; cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center; border: none; box-sizing: border-box; }
+    /* DISCORD IMAGE AND THUMBNAIL PREVIEWS */
+    .discord-embed-thumbnail-wrap {
+        grid-column: 2;
+        grid-row: 1 / span 4;
+        margin-left: 16px;
+        flex-shrink: 0;
+        display: none;
+    }
+    .discord-embed-thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    .discord-embed-image-wrap {
+        margin-top: 8px;
+        grid-column: 1 / span 2;
+        border-radius: 4px;
+        overflow: hidden;
+        max-width: 100%;
+        display: none;
+    }
+    .discord-embed-image {
+        max-width: 100%;
+        max-height: 300px;
+        object-fit: contain;
+        display: block;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    /* Placeholders for empty images/thumbnails */
+    .preview-image-placeholder {
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .preview-image-placeholder:hover {
+        border-color: var(--accent-green);
+        background: rgba(116, 184, 22, 0.05);
+        color: var(--accent-green);
+    }
+
+    /* GRID LAYOUT FOR GENERAL EMBED EDITOR */
+    .embed-editor-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 30px;
+    }
+    @media (max-width: 900px) {
+        .embed-editor-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .editor-column {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    .preview-column {
+        position: relative;
+    }
 
     /* CARDS */
     .ux-card { background: #0d0e12; border: 1px solid var(--border-gray); border-radius: 12px; margin-top: 20px; overflow: hidden; display: block !important; }
@@ -225,6 +368,164 @@
         border: 1px solid rgba(255, 215, 0, 0.4) !important;
         box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
     }
+
+    /* RULES BLOCK EDITOR */
+    .rule-block-editor-card {
+        background: #111317;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+    .rule-block-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+    .rule-block-header span {
+        font-weight: 800;
+        font-size: 0.85rem;
+        color: var(--accent-green);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .btn-remove-block {
+        background: rgba(255, 68, 68, 0.08);
+        border: 1px solid rgba(255, 68, 68, 0.2);
+        color: #ff4444;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-remove-block:hover {
+        background: #ff4444;
+        color: white;
+    }
+    .rule-block-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 20px;
+    }
+    @media (max-width: 768px) {
+        .rule-block-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .rule-image-upload-zone {
+        border: 1.5px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.015);
+        position: relative;
+        overflow: hidden;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .rule-image-upload-zone:hover {
+        border-color: var(--accent-green);
+        background: rgba(116, 184, 22, 0.03);
+    }
+    .upload-zone-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        width: 100%;
+        height: 100%;
+        justify-content: center;
+    }
+    .upload-zone-empty i {
+        font-size: 1.3rem;
+        color: var(--accent-green);
+    }
+    .upload-zone-filled {
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+    .upload-zone-filled img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #2b2d31;
+    }
+    .upload-zone-actions {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    .upload-zone-filled:hover .upload-zone-actions {
+        opacity: 1;
+    }
+    .btn-zone-action {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-zone-action:hover {
+        background: white;
+        color: black;
+    }
+    .btn-zone-action.delete:hover {
+        background: #ff4444;
+        color: white;
+        border-color: #ff4444;
+    }
+    .rule-textarea {
+        resize: vertical;
+        min-height: 100px !important;
+        font-family: inherit;
+        font-size: 0.85rem !important;
+        line-height: 1.4;
+    }
+    .discord-chat-container.compact {
+        padding: 12px;
+        margin-bottom: 0;
+    }
+
+    /* Wyraźniejsze granice embeda i cienie w trybie edycji */
+    .discord-chat-container .discord-embed {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Tryb czystego podglądu (bez dodatkowych granic) */
+    .clean-preview-mode .discord-embed {
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+        box-shadow: none !important;
+    }
 </style>
 
 
@@ -281,7 +582,7 @@
 
 <!-- MODAL: KONFIGURACJA OSADZENIA (GENERAL) -->
 <div class="modal-backdrop" id="modal-general">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 1000px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 style="margin:0;">Konfiguracja Osadzenia</h2>
             <button type="button" onclick="closeModal('general')" style="background:none; border:none; color:gray; font-size:1.5rem; cursor:pointer;"><i class="fas fa-times"></i></button>
@@ -294,106 +595,192 @@
                 <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
             </label>
         </div>
-        
-        <input type="hidden" id="g-name">
-        <div class="modal-section">
-            <label>KANAŁ DOCELOWY:</label>
-            <select id="g-channel" class="modal-select"></select>
-        </div>
 
-        <div class="modal-section">
-            <label>EDYCJA WIADOMOŚCI</label>
-            <div class="discord-editor-outer">
-                <div id="ge-outer-text" class="outer-text" contenteditable="true" placeholder="Wiadomość nad osadzeniem (opcjonalnie)..."></div>
-                <div class="discord-embed" id="ge-preview" style="border-left-color: #74b816;">
-                    <div class="embed-main">
-                        <div id="ge-author" class="ee-author" contenteditable="true" placeholder="Autor..."></div>
-                        <div id="ge-title" class="ee-title" contenteditable="true" placeholder="Tytuł..."></div>
-                        <div id="ge-desc" class="ee-desc" contenteditable="true" placeholder="Opis..."></div>
-                    </div>
-                    <div id="ge-thumb" class="ee-thumb" onclick="document.getElementById('gu-thumb').click()">
-                        <i class="fas fa-image" id="ge-thumb-icon"></i>
-                    </div>
-                    <div id="ge-large-img" class="ee-large-img" onclick="document.getElementById('gu-large').click()">
-                        <i class="fas fa-image" id="ge-large-icon"></i>
-                    </div>
-                    <div class="embed-main">
-                        <div id="ge-footer" class="ee-footer" contenteditable="true" placeholder="Stopka..."></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="upload-controls" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-                <!-- Miniaturka -->
-                <div style="display: flex; gap: 10px; width: 100%;">
-                    <button type="button" class="tag-btn {% if main_settings.premium %}premium-frame{% endif %}" style="flex: 1; padding: 12px; text-align: center;" onclick="document.getElementById('gu-thumb').click()">
-                        <i class="fas fa-image"></i> <span id="g-thumb-btn-text">DODAJ MINIATURKĘ</span> (JPG, PNG, GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
-                    </button>
-                    <button type="button" id="g-thumb-remove-btn" class="tag-btn" style="display: none; background: rgba(255, 68, 68, 0.1); color: #ff4444; border-color: rgba(255, 68, 68, 0.2); padding: 12px; width: 50px; justify-content: center; align-items: center;" onclick="removeEmbedImage('thumb', 'g')" title="Usuń miniaturkę">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-
-                <!-- Duży obraz -->
-                <div style="display: flex; gap: 10px; width: 100%;">
-                    <button type="button" class="tag-btn {% if main_settings.premium %}premium-frame{% endif %}" style="flex: 1; padding: 12px; text-align: center;" onclick="document.getElementById('gu-large').click()">
-                        <i class="fas fa-expand"></i> <span id="g-large-btn-text">DODAJ DUŻY OBRAZ</span> (JPG, PNG, GIF <i class="fas fa-crown" style="color: #ffd700;"></i>)
-                    </button>
-                    <button type="button" id="g-large-remove-btn" class="tag-btn" style="display: none; background: rgba(255, 68, 68, 0.1); color: #ff4444; border-color: rgba(255, 68, 68, 0.2); padding: 12px; width: 50px; justify-content: center; align-items: center;" onclick="removeEmbedImage('large', 'g')" title="Usuń duży obraz">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
+        <div class="embed-editor-grid">
+            <!-- LEWA KOLUMNA: FORMULARZ EDYCJI -->
+            <div class="editor-column">
+                <input type="hidden" id="g-name">
+                <div class="modal-section">
+                    <label>KANAŁ DOCELOWY:</label>
+                    <select id="g-channel" class="modal-select"></select>
                 </div>
                 
+                <div class="modal-section">
+                    <label>TEKST NAD OSADZENIEM (NP. WZMIANKA @everyone):</label>
+                    <textarea id="g-input-outer-text" class="modal-input rule-textarea" placeholder="Napisz coś nad osadzeniem (np. wzmianka @everyone)..." oninput="updateGeneralPreview()" style="min-height: 80px;"></textarea>
+                </div>
+                
+                <div class="modal-section">
+                    <label>NAZWA AUTORA:</label>
+                    <input type="text" id="g-input-author" class="modal-input" placeholder="Nazwa autora..." oninput="updateGeneralPreview()">
+                </div>
+
+                <div class="modal-section">
+                    <label>TYTUŁ EMBEDA:</label>
+                    <input type="text" id="g-input-title" class="modal-input" placeholder="Tytuł embeda..." oninput="updateGeneralPreview()">
+                </div>
+
+                <div class="modal-section">
+                    <label>OPIS EMBEDA (TREŚĆ GŁÓWNA):</label>
+                    <textarea id="g-input-desc" class="modal-input rule-textarea" placeholder="Opis embeda (treść główna)..." oninput="updateGeneralPreview()" style="min-height: 120px;"></textarea>
+                </div>
+
+                <div class="modal-section">
+                    <label>STOPKA EMBEDA:</label>
+                    <input type="text" id="g-input-footer" class="modal-input" placeholder="Stopka embeda..." oninput="updateGeneralPreview()">
+                </div>
+
+                <!-- Obrazy: Miniaturka i Duży Obraz -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label>MINIATURKA (THUMBNAIL):</label>
+                        <div class="rule-image-upload-zone" id="g-thumb-upload-zone" style="height: 100px;">
+                            <!-- Pusty stan -->
+                            <div class="upload-zone-empty" id="g-thumb-empty" onclick="triggerGeneralUpload('thumb')" style="display: flex;">
+                                <i class="fas fa-camera"></i>
+                                <span>Dodaj miniaturkę</span>
+                            </div>
+                            <!-- Stan z obrazem -->
+                            <div class="upload-zone-filled" id="g-thumb-filled" style="display: none;">
+                                <img id="g-thumb-img" src="" style="object-fit: contain; width: 100%; height: 100%;">
+                                <div class="upload-zone-actions">
+                                    <button type="button" class="btn-zone-action" onclick="triggerGeneralUpload('thumb')">Zmień</button>
+                                    <button type="button" class="btn-zone-action delete" onclick="removeGeneralImage('thumb', event)">Usuń</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label>DUŻY OBRAZ (BANNER):</label>
+                        <div class="rule-image-upload-zone" id="g-large-upload-zone" style="height: 100px;">
+                            <!-- Pusty stan -->
+                            <div class="upload-zone-empty" id="g-large-empty" onclick="triggerGeneralUpload('large')" style="display: flex;">
+                                <i class="fas fa-image"></i>
+                                <span>Dodaj duży obraz</span>
+                            </div>
+                            <!-- Stan z obrazem -->
+                            <div class="upload-zone-filled" id="g-large-filled" style="display: none;">
+                                <img id="g-large-img" src="" style="object-fit: contain; width: 100%; height: 100%;">
+                                <div class="upload-zone-actions">
+                                    <button type="button" class="btn-zone-action" onclick="triggerGeneralUpload('large')">Zmień</button>
+                                    <button type="button" class="btn-zone-action delete" onclick="removeGeneralImage('large', event)">Usuń</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ukryte inputy do wgrywania plików -->
                 <input type="file" id="gu-thumb" hidden onchange="uploadImage('thumb', 'g')" accept="image/*">
                 <input type="file" id="gu-large" hidden onchange="uploadImage('large', 'g')" accept="image/*">
                 <input type="hidden" id="g-thumb-url">
                 <input type="hidden" id="g-large-url">
+
+                <div class="ux-card" style="margin-top: 10px;">
+                    <div class="ux-header">
+                        <h3 style="margin:0; font-size:0.9rem;"><i class="fas fa-palette"></i> PERSONALIZACJA</h3>
+                        <label class="toggle-row">
+                            <input type="checkbox" id="gp-toggle" onchange="togglePersonalizacja('g'); updatePreviewStyles('g');">
+                            <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
+                        </label>
+                    </div>
+                    <div id="gp-body" class="ux-body" style="display:none;">
+                        <div style="margin-bottom: 15px;">
+                            <label>LINK TYTUŁU:</label>
+                            <input type="text" id="g-title-url" class="modal-input" placeholder="Wklej link (np. https://google.com)..." oninput="updatePreviewStyles('g')">
+                        </div>
+                        <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 15px;">
+                            <div style="flex: 1;">
+                                <label>KOLOR PASKA:</label>
+                                <input type="color" id="g-color" value="{{ main_settings.embed_color or '#74b816' }}" style="height: 45px; cursor: pointer; padding: 5px;" oninput="updatePreviewStyles('g')">
+                            </div>
+                            <div style="flex: 1;">
+                                <label>KOLOR LINKÓW:</label>
+                                <input type="color" id="g-link-color" value="{{ main_settings.embed_color or '#00a8fc' }}" style="height: 45px; cursor: pointer; padding: 5px;" oninput="updatePreviewStyles('g')">
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <label class="toggle-row" style="justify-content: flex-start; gap: 10px;">
+                                <input type="checkbox" id="g-timestamp" onchange="updateGeneralPreview()">
+                                <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
+                                <span style="font-size: 0.8rem; color: var(--text-gray);">POKAŻ CZAS (TIMESTAMP)</span>
+                            </label>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <label class="toggle-row" style="justify-content: flex-start; gap: 10px;">
+                                <input type="checkbox" id="g-has-frame" onchange="updatePreviewStyles('g')">
+                                <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
+                                <span style="font-size: 0.8rem; color: #ffd700; font-weight: 800;">
+                                    <i class="fas fa-expand-arrows-alt"></i> ULEPSZONE FORMATOWANIE (RAMKA) <i class="fas fa-crown"></i>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRAWA KOLUMNA: CZYSTY PODGLĄD DISCORD -->
+            <div class="preview-column">
+                <label style="display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 1px;">Podgląd na Discordzie:</label>
+                
+                <div class="discord-chat-container" id="g-chat-container" style="min-height: 350px;">
+                    <!-- Przełącznik czystego podglądu -->
+                    <div style="position: absolute; top: 12px; right: 12px; display: flex; align-items: center; gap: 8px; z-index: 10;">
+                        <span style="font-size: 0.7rem; color: var(--discord-text-muted); font-weight: 700; text-transform: uppercase;">Podgląd bez ramek:</span>
+                        <label class="toggle-row">
+                            <input type="checkbox" id="g-clean-preview" onchange="toggleCleanPreview('g')">
+                            <div class="toggle-switch" style="width: 34px; height: 18px; border-radius: 10px; margin: 0;"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="discord-message">
+                        <div class="discord-avatar" style="background-image: url('{{ url_for('static', filename='uploads/avatar_default.png') }}');"></div>
+                        <div class="discord-message-content">
+                            <div class="discord-message-header">
+                                <span class="discord-username">POLSKIBOT</span>
+                                <span class="discord-bot-tag">BOT</span>
+                                <span class="discord-timestamp" id="ge-timestamp-val">Dzisiaj o 12:34</span>
+                            </div>
+                            
+                            <!-- Tekst nad embedem -->
+                            <div id="ge-outer-text" class="outer-text"></div>
+                            
+                            <!-- Embed główny -->
+                            <div class="discord-embed" id="ge-preview">
+                                <div class="embed-main">
+                                    <div id="ge-author" class="ee-author"></div>
+                                    <div id="ge-title" class="ee-title"></div>
+                                    <div id="ge-desc" class="ee-desc"></div>
+                                </div>
+                                
+                                <!-- Miniaturka po prawej (thumbnail) -->
+                                <div id="ge-thumb-wrap" class="discord-embed-thumbnail-wrap">
+                                    <img id="ge-thumb-preview" class="discord-embed-thumbnail" src="" style="display: none;">
+                                    <div id="ge-preview-thumbnail-placeholder" class="preview-image-placeholder" style="width: 80px; height: 80px;" onclick="triggerGeneralUpload('thumb')">
+                                        <i class="fas fa-camera" style="font-size: 1.2rem;"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Duży obraz (image) -->
+                                <div id="ge-large-img-wrap" class="discord-embed-image-wrap">
+                                    <img id="ge-large-img-preview" class="discord-embed-image" src="" style="display: none;">
+                                    <div id="ge-preview-large-placeholder" class="preview-image-placeholder" style="width: 100%; height: 140px;" onclick="triggerGeneralUpload('large')">
+                                        <i class="fas fa-image" style="font-size: 1.5rem; margin-bottom: 4px;"></i>
+                                        <span>Główny obraz</span>
+                                    </div>
+                                </div>
+
+                                <!-- Stopka -->
+                                <div id="ge-footer" class="ee-footer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="ux-card">
-            <div class="ux-header">
-                <h3 style="margin:0; font-size:0.9rem;"><i class="fas fa-palette"></i> PERSONALIZACJA</h3>
-                <label class="toggle-row">
-                    <input type="checkbox" id="gp-toggle" onchange="togglePersonalizacja('g'); updatePreviewStyles('g');">
-                    <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
-                </label>
-            </div>
-            <div id="gp-body" class="ux-body" style="display:none;">
-                <div style="margin-bottom: 15px;">
-                    <label>LINK TYTUŁU:</label>
-                    <input type="text" id="g-title-url" class="modal-input" placeholder="Wklej link (np. https://google.com)..." oninput="updatePreviewStyles('g')">
-                </div>
-                <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 15px;">
-                    <div style="flex: 1;">
-                        <label>KOLOR PASKA:</label>
-                        <input type="color" id="g-color" value="{{ main_settings.embed_color or '#74b816' }}" style="height: 45px; cursor: pointer; padding: 5px;" oninput="updatePreviewStyles('g')">
-                    </div>
-                    <div style="flex: 1;">
-                        <label>KOLOR LINKÓW:</label>
-                        <input type="color" id="g-link-color" value="{{ main_settings.embed_color or '#00a8fc' }}" style="height: 45px; cursor: pointer; padding: 5px;" oninput="updatePreviewStyles('g')">
-                    </div>
-                </div>
-                <div style="margin-top: 10px;">
-                    <label class="toggle-row" style="justify-content: flex-start; gap: 10px;">
-                        <input type="checkbox" id="g-timestamp">
-                        <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
-                        <span style="font-size: 0.8rem; color: var(--text-gray);">POKAŻ CZAS (TIMESTAMP)</span>
-                    </label>
-                </div>
-                <div style="margin-top: 10px;">
-                    <label class="toggle-row" style="justify-content: flex-start; gap: 10px;">
-                        <input type="checkbox" id="g-has-frame" onchange="updatePreviewStyles('g')">
-                        <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
-                        <span style="font-size: 0.8rem; color: #ffd700; font-weight: 800;">
-                            <i class="fas fa-expand-arrows-alt"></i> ULEPSZONE FORMATOWANIE (RAMKA) <i class="fas fa-crown"></i>
-                        </span>
-                    </label>
-                </div>
-            </div>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-            <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" style="padding: 14px; font-size: 0.8rem;" onclick="saveConfig('general', true, false)">ZAPISZ I WYŚLIJ NA DISCORD</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+            <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" style="padding: 14px; font-size: 0.8rem; margin-top: 0;" onclick="saveConfig('general', true, false)">ZAPISZ I WYŚLIJ NA DISCORD</button>
             <button type="button" class="btn-save-secondary" style="margin-top: 0 !important; font-weight: 800 !important; background: rgba(116, 184, 22, 0.08) !important; border: 1px solid rgba(116, 184, 22, 0.2) !important; color: var(--accent-green) !important;" onclick="saveConfig('general', true, true)">WYŚLIJ TEST <i class="fas fa-vial"></i></button>
         </div>
         <button type="button" onclick="saveConfig('general', false, false)" class="btn-save-secondary">TYLKO ZAPISZ</button>
@@ -483,12 +870,34 @@
     // Lokalny bufor osadzeń
     window.localEmbedConfigs = [];
 
+    // Konfiguracja globalna
+    window.mainSettings = {
+        embed_color: "{{ main_settings.embed_color or '#74b816' }}",
+        rgb_mode: {% if main_settings.rgb_mode %}true{% else %}false{% endif %},
+        premium: {% if main_settings.premium %}true{% else %}false{% endif %}
+    };
+
     // --- HELPERY ---
     const getE = id => document.getElementById(id);
     const getT = id => getE(id).innerText;
     const setT = (id, val) => getE(id).innerText = val || '';
     const getV = id => getE(id).value;
     const setV = (id, val) => getE(id).value = val || '';
+
+    window.toggleCleanPreview = (p) => {
+        const isClean = getE(p + '-clean-preview').checked;
+        const container = getE(p + '-chat-container');
+        if (container) {
+            if (isClean) {
+                container.classList.add('clean-preview-mode');
+            } else {
+                container.classList.remove('clean-preview-mode');
+            }
+        }
+        if (p === 'g') {
+            updateGeneralPreview();
+        }
+    };
 
     window.togglePersonalizacja = (p) => {
         const active = getE(p + 'p-toggle').checked;
@@ -497,6 +906,157 @@
 
     window.setEmoji = (emoji, p) => {
         setV(p + '-reaction-emoji', emoji);
+    };
+
+    window.triggerGeneralUpload = (type) => {
+        const fileInput = getE('gu-' + type);
+        if (fileInput) fileInput.click();
+    };
+
+    window.removeGeneralImage = (type, event) => {
+        if (event) event.stopPropagation();
+        setV('g-' + type + '-url', '');
+        const fileInput = getE('gu-' + type);
+        if (fileInput) fileInput.value = '';
+        updateGeneralPreview();
+    };
+
+    window.updateGeneralPreview = () => {
+        const p = 'g';
+        
+        // Read form inputs
+        const outerText = getV(p + '-input-outer-text') || '';
+        const author = getV(p + '-input-author') || '';
+        const title = getV(p + '-input-title') || '';
+        const desc = getV(p + '-input-desc') || '';
+        const footer = getV(p + '-input-footer') || '';
+        
+        // Sync text elements
+        const outerEl = getE(p + 'e-outer-text');
+        if (outerEl) {
+            outerEl.innerText = outerText;
+            outerEl.style.display = outerText.trim() ? 'block' : 'none';
+        }
+        
+        const authorEl = getE(p + 'e-author');
+        if (authorEl) {
+            authorEl.innerText = author;
+            authorEl.style.display = author.trim() ? 'block' : 'none';
+        }
+        
+        const titleEl = getE(p + 'e-title');
+        if (titleEl) {
+            titleEl.innerText = title;
+            titleEl.style.display = title.trim() ? 'block' : 'none';
+        }
+        
+        const descEl = getE(p + 'e-desc');
+        if (descEl) {
+            descEl.innerText = desc;
+            descEl.style.display = desc.trim() ? 'block' : 'none';
+        }
+        
+        const footerEl = getE(p + 'e-footer');
+        if (footerEl) {
+            footerEl.innerText = footer;
+            footerEl.style.display = footer.trim() ? 'block' : 'none';
+        }
+        
+        // Handle images
+        const thumbUrl = getV(p + '-thumb-url');
+        const largeUrl = getV(p + '-large-url');
+        const cleanPreview = getE(p + '-clean-preview') ? getE(p + '-clean-preview').checked : false;
+        
+        // Thumbnail preview sync
+        const thumbWrap = getE(p + 'e-thumb-wrap');
+        const thumbPreview = getE(p + 'e-thumb-preview');
+        const thumbPlaceholder = getE(p + '-preview-thumbnail-placeholder');
+        
+        if (thumbWrap && thumbPreview) {
+            if (thumbUrl && thumbUrl.trim() !== '') {
+                thumbPreview.src = thumbUrl;
+                thumbPreview.style.display = 'block';
+                if (thumbPlaceholder) thumbPlaceholder.style.display = 'none';
+                thumbWrap.style.display = 'block';
+            } else {
+                thumbPreview.src = '';
+                thumbPreview.style.display = 'none';
+                if (cleanPreview) {
+                    thumbWrap.style.display = 'none';
+                    if (thumbPlaceholder) thumbPlaceholder.style.display = 'none';
+                } else {
+                    thumbWrap.style.display = 'block';
+                    if (thumbPlaceholder) thumbPlaceholder.style.display = 'flex';
+                }
+            }
+        }
+        
+        // Large image preview sync
+        const largeWrap = getE(p + 'e-large-img-wrap');
+        const largePreview = getE(p + 'e-large-img-preview');
+        const largePlaceholder = getE(p + '-preview-large-placeholder');
+        
+        if (largeWrap && largePreview) {
+            if (largeUrl && largeUrl.trim() !== '') {
+                largePreview.src = largeUrl;
+                largePreview.style.display = 'block';
+                if (largePlaceholder) largePlaceholder.style.display = 'none';
+                largeWrap.style.display = 'block';
+            } else {
+                largePreview.src = '';
+                largePreview.style.display = 'none';
+                if (cleanPreview) {
+                    largeWrap.style.display = 'none';
+                    if (largePlaceholder) largePlaceholder.style.display = 'none';
+                } else {
+                    largeWrap.style.display = 'block';
+                    if (largePlaceholder) largePlaceholder.style.display = 'flex';
+                }
+            }
+        }
+        
+        // Left side upload zone sync (empty/filled state card controls)
+        const thumbZoneEmpty = getE(p + '-thumb-empty');
+        const thumbZoneFilled = getE(p + '-thumb-filled');
+        const thumbZoneImg = getE(p + '-thumb-img');
+        
+        if (thumbZoneEmpty && thumbZoneFilled && thumbZoneImg) {
+            if (thumbUrl && thumbUrl.trim() !== '') {
+                thumbZoneImg.src = thumbUrl;
+                thumbZoneEmpty.style.display = 'none';
+                thumbZoneFilled.style.display = 'block';
+            } else {
+                thumbZoneImg.src = '';
+                thumbZoneEmpty.style.display = 'flex';
+                thumbZoneFilled.style.display = 'none';
+            }
+        }
+        
+        const largeZoneEmpty = getE(p + '-large-empty');
+        const largeZoneFilled = getE(p + '-large-filled');
+        const largeZoneImg = getE(p + '-large-img');
+        
+        if (largeZoneEmpty && largeZoneFilled && largeZoneImg) {
+            if (largeUrl && largeUrl.trim() !== '') {
+                largeZoneImg.src = largeUrl;
+                largeZoneEmpty.style.display = 'none';
+                largeZoneFilled.style.display = 'block';
+            } else {
+                largeZoneImg.src = '';
+                largeZoneEmpty.style.display = 'flex';
+                largeZoneFilled.style.display = 'none';
+            }
+        }
+
+        // Timestamp sync
+        const showTimestamp = getE(p + '-timestamp') ? getE(p + '-timestamp').checked : false;
+        const timestampVal = getE(p + 'e-timestamp-val');
+        if (timestampVal) {
+            timestampVal.style.display = showTimestamp ? 'inline-block' : 'none';
+        }
+        
+        // Color border / RGB / Frame styles
+        updatePreviewStyles(p);
     };
 
     window.updatePreviewStyles = (p) => {
@@ -508,19 +1068,21 @@
         const titleUrl = isPersonalized ? getV(p + '-title-url') : '';
         const titleEl = getE(p + 'e-title');
         
-        if (titleUrl && titleUrl.trim() !== '') {
-            titleEl.style.textDecoration = 'underline';
-            titleEl.style.cursor = 'pointer';
-            titleEl.onclick = () => window.open(titleUrl, '_blank');
-            titleEl.title = "Link: " + titleUrl;
-        } else {
-            titleEl.style.textDecoration = 'none';
-            titleEl.style.cursor = 'text';
-            titleEl.onclick = null;
-            titleEl.title = "";
+        if (titleEl) {
+            if (titleUrl && titleUrl.trim() !== '') {
+                titleEl.style.textDecoration = 'underline';
+                titleEl.style.cursor = 'pointer';
+                titleEl.onclick = () => window.open(titleUrl, '_blank');
+                titleEl.title = "Link: " + titleUrl;
+            } else {
+                titleEl.style.textDecoration = 'none';
+                titleEl.style.cursor = 'text';
+                titleEl.onclick = null;
+                titleEl.title = "";
+            }
         }
 
-        // Aktualizacja kolorów (Nowe)
+        // Color and RGB update
         const globalColor = window.mainSettings.embed_color;
         const globalRgb = window.mainSettings.rgb_mode;
         
@@ -530,7 +1092,6 @@
         const embedEl = getE(p + 'e-preview');
         
         if (embedEl) {
-            // Obsługa RGB dla podglądu
             if (globalRgb && !isPersonalized) {
                 embedEl.classList.add('rgb-mode');
             } else {
@@ -538,95 +1099,81 @@
                 embedEl.style.borderLeftColor = embedColor;
             }
         }
-        titleEl.style.color = linkColor;
+        if (titleEl) titleEl.style.color = linkColor;
 
+        // Apply premium frame to images if checked
         const thumbUrl = getV(p + '-thumb-url');
         const largeUrl = getV(p + '-large-url');
-        const thumbEl = getE(p + 'e-thumb');
-        const largeImgEl = getE(p + 'e-large-img');
+        const thumbPreview = getE(p + 'e-thumb-preview');
+        const largePreview = getE(p + 'e-large-img-preview');
+        const hasFrame = getE(p + '-has-frame') ? getE(p + '-has-frame').checked : false;
 
-        // Obsługa ramek i widoczności miniatury (ee-thumb)
-        if (thumbEl) {
-            if (thumbUrl && thumbUrl.trim() !== '') {
-                thumbEl.style.display = 'flex';
-                thumbEl.style.backgroundImage = `url('${thumbUrl}')`;
-                thumbEl.style.backgroundColor = 'transparent';
-                getE(p + 'e-thumb-icon').style.display = 'none';
-                
-                const hasFrame = getE(p + '-has-frame') ? getE(p + '-has-frame').checked : false;
-                if (hasFrame) {
-                    thumbEl.style.border = `4px solid ${embedColor}`;
-                    thumbEl.style.padding = '4px';
-                    if (globalRgb && !isPersonalized) {
-                        thumbEl.classList.add('rgb-mode');
-                    } else {
-                        thumbEl.classList.remove('rgb-mode');
-                    }
+        if (thumbPreview && thumbUrl) {
+            if (hasFrame) {
+                thumbPreview.style.border = `4px solid ${embedColor}`;
+                thumbPreview.style.padding = '4px';
+                if (globalRgb && !isPersonalized) {
+                    thumbPreview.classList.add('rgb-mode');
                 } else {
-                    thumbEl.style.border = 'none';
-                    thumbEl.style.padding = '0';
-                    thumbEl.classList.remove('rgb-mode');
+                    thumbPreview.classList.remove('rgb-mode');
                 }
             } else {
-                thumbEl.style.display = 'none';
-                thumbEl.style.backgroundColor = '#2b2d31';
+                thumbPreview.style.border = 'none';
+                thumbPreview.style.padding = '0';
+                thumbPreview.classList.remove('rgb-mode');
             }
         }
 
-        // Obsługa ramek i widoczności dużego obrazu (ee-large-img)
-        if (largeImgEl) {
-            if (largeUrl && largeUrl.trim() !== '') {
-                largeImgEl.style.display = 'flex';
-                largeImgEl.style.backgroundImage = `url('${largeUrl}')`;
-                largeImgEl.style.backgroundColor = 'transparent';
-                getE(p + 'e-large-icon').style.display = 'none';
-
-                const hasFrame = getE(p + '-has-frame') ? getE(p + '-has-frame').checked : false;
-                if (hasFrame) {
-                    largeImgEl.style.border = `8px solid ${embedColor}`;
-                    largeImgEl.style.padding = '8px';
-                    if (globalRgb && !isPersonalized) {
-                        largeImgEl.classList.add('rgb-mode');
-                    } else {
-                        largeImgEl.classList.remove('rgb-mode');
-                    }
+        if (largePreview && largeUrl) {
+            if (hasFrame) {
+                largePreview.style.border = `6px solid ${embedColor}`;
+                largePreview.style.padding = '6px';
+                if (globalRgb && !isPersonalized) {
+                    largePreview.classList.add('rgb-mode');
                 } else {
-                    largeImgEl.style.border = 'none';
-                    largeImgEl.style.padding = '0';
-                    largeImgEl.classList.remove('rgb-mode');
+                    largePreview.classList.remove('rgb-mode');
                 }
             } else {
-                largeImgEl.style.display = 'none';
-                largeImgEl.style.backgroundColor = '#2b2d31';
+                largePreview.style.border = 'none';
+                largePreview.style.padding = '0';
+                largePreview.classList.remove('rgb-mode');
             }
-        }
-
-        // Aktualizacja widoczności przycisków usuwania i tekstów
-        const thumbRemoveBtn = getE(p + '-thumb-remove-btn');
-        const thumbBtnText = getE(p + '-thumb-btn-text');
-        if (thumbUrl && thumbUrl.trim() !== '') {
-            if (thumbRemoveBtn) thumbRemoveBtn.style.display = 'flex';
-            if (thumbBtnText) thumbBtnText.textContent = 'ZMIEŃ MINIATURKĘ';
-        } else {
-            if (thumbRemoveBtn) thumbRemoveBtn.style.display = 'none';
-            if (thumbBtnText) thumbBtnText.textContent = 'DODAJ MINIATURKĘ';
-        }
-
-        const largeRemoveBtn = getE(p + '-large-remove-btn');
-        const largeBtnText = getE(p + '-large-btn-text');
-        if (largeUrl && largeUrl.trim() !== '') {
-            if (largeRemoveBtn) largeRemoveBtn.style.display = 'flex';
-            if (largeBtnText) largeBtnText.textContent = 'ZMIEŃ DUŻY OBRAZ';
-        } else {
-            if (largeRemoveBtn) largeRemoveBtn.style.display = 'none';
-            if (largeBtnText) largeBtnText.textContent = 'DODAJ DUŻY OBRAZ';
         }
     };
 
     // --- SYSTEM BLOKOWY ZASAD (LOGIKA) ---
+    window.updateRuleBlockPreview = (blockId) => {
+        const text = getV(`rb-input-text-${blockId}`);
+        const imgUrl = getE(`rb-url-${blockId}`).value;
+        
+        // Sync text preview
+        const textPreview = getE(`rb-preview-text-${blockId}`);
+        if (textPreview) {
+            textPreview.innerText = text || 'Wpisz treść bloku...';
+            if (!text) {
+                textPreview.style.color = '#5c5e66';
+            } else {
+                textPreview.style.color = 'var(--discord-text-normal)';
+            }
+        }
+        
+        // Sync image preview
+        const imgWrap = getE(`rb-preview-img-wrap-${blockId}`);
+        const imgEl = getE(`rb-preview-img-${blockId}`);
+        if (imgWrap && imgEl) {
+            if (imgUrl && imgUrl.trim() !== '') {
+                imgEl.src = imgUrl;
+                imgWrap.style.display = 'block';
+            } else {
+                imgEl.src = '';
+                imgWrap.style.display = 'none';
+            }
+        }
+    };
+
     window.addRuleBlock = (imgUrl = '', text = '') => {
         const container = getE('rules-blocks-container');
-        const blocks = document.querySelectorAll('.rule-block-editor');
+        const blocks = document.querySelectorAll('.rule-block-editor-card');
         const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
         const maxBlocks = isPremium ? 10 : 1;
 
@@ -635,39 +1182,73 @@
             return;
         }
 
-        const blockId = Date.now() + Math.random();
+        const blockId = Date.now() + Math.random().toString(36).substr(2, 5);
         const div = document.createElement('div');
-        div.className = 'rule-block-editor';
-        div.style = 'margin-bottom: 15px; position: relative;';
+        div.className = 'rule-block-editor-card';
         div.dataset.id = blockId;
         
         div.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 0.7rem; font-weight: 800; color: var(--accent-green);">BLOK ZASAD</span>
-                <i class="fas fa-times" style="color: #ff4444; cursor: pointer;" onclick="removeRuleBlock('${blockId}')"></i>
+            <div class="rule-block-header">
+                <span><i class="fas fa-paragraph"></i> Blok zasad</span>
+                <button type="button" class="btn-remove-block" onclick="removeRuleBlock('${blockId}')">USUŃ BLOK</button>
             </div>
-            <div class="discord-embed" style="border-left-color: #74b816; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; max-width: 520px; box-sizing: border-box; width: 100%;">
-                
-                <!-- PUSTY PLACEHOLDER - POKAZYWANY GDY NIE MA OBRAZU -->
-                <div class="ee-large-img-placeholder" id="rb-placeholder-${blockId}" style="display: ${imgUrl ? 'none' : 'flex'}; border: 2px dashed rgba(255,255,255,0.15); border-radius: 8px; height: 80px; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; transition: 0.2s;" onclick="triggerBlockUpload('${blockId}')">
-                    <i class="fas fa-image" style="margin-right: 8px;"></i> Dodaj obraz nagłówkowy bloku (opcjonalnie)
+            <div class="rule-block-grid">
+                <!-- LEWA KOLUMNA: EDYTOR -->
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Treść bloku zasad (Obsługuje Markdown):</label>
+                        <textarea class="modal-input rule-textarea" id="rb-input-text-${blockId}" placeholder="Wpisz treść bloku zasad..." oninput="updateRuleBlockPreview('${blockId}')">${text}</textarea>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Obraz nagłówkowy bloku (opcjonalnie):</label>
+                        <div class="rule-image-upload-zone" id="rb-upload-zone-${blockId}">
+                            <!-- Pusty stan -->
+                            <div class="upload-zone-empty" id="rb-empty-${blockId}" onclick="triggerBlockUpload('${blockId}')" style="display: ${imgUrl ? 'none' : 'flex'}">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Kliknij, aby wgrać grafikę</span>
+                            </div>
+                            <!-- Stan z obrazem -->
+                            <div class="upload-zone-filled" id="rb-filled-${blockId}" style="display: ${imgUrl ? 'block' : 'none'}">
+                                <img id="rb-img-${blockId}" src="${imgUrl || ''}">
+                                <div class="upload-zone-actions">
+                                    <button type="button" class="btn-zone-action" onclick="triggerBlockUpload('${blockId}')">Zmień</button>
+                                    <button type="button" class="btn-zone-action delete" onclick="removeBlockImage('${blockId}', event)">Usuń</button>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="file" id="rb-input-${blockId}" hidden accept="image/*" onchange="uploadBlockImage('${blockId}')">
+                        <input type="hidden" id="rb-url-${blockId}" value="${imgUrl}">
+                    </div>
                 </div>
 
-                <!-- PODGLĄD OBRAZU - POKAZYWANY GDY JEST OBRAZ -->
-                <div class="ee-large-img-container" id="rb-img-container-${blockId}" style="display: ${imgUrl ? 'block' : 'none'}; position: relative; width: 100%;">
-                    <img id="rb-img-${blockId}" src="${imgUrl || ''}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; cursor: pointer;" onclick="triggerBlockUpload('${blockId}')">
-                    <button type="button" class="btn-remove-image" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); border: none; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;" onclick="removeBlockImage('${blockId}', event)" title="Usuń obraz">
-                        <i class="fas fa-trash-alt" style="font-size: 0.85rem;"></i>
-                    </button>
+                <!-- PRAWA KOLUMNA: CZYSTY PODGLĄD DISCORD -->
+                <div>
+                    <label style="display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Podgląd na Discordzie:</label>
+                    <div class="discord-chat-container compact">
+                        <div class="discord-message">
+                            <div class="discord-avatar" style="background-image: url('{{ url_for('static', filename='uploads/avatar_default.png') }}');"></div>
+                            <div class="discord-message-content">
+                                <div class="discord-message-header">
+                                    <span class="discord-username">POLSKIBOT</span>
+                                    <span class="discord-bot-tag">BOT</span>
+                                    <span class="discord-timestamp">Dzisiaj o 12:34</span>
+                                </div>
+                                <div class="discord-embed" style="border-left-color: #74b816;">
+                                    <div class="embed-main">
+                                        <div class="ee-desc" id="rb-preview-text-${blockId}" style="white-space: pre-wrap;"></div>
+                                        <div id="rb-preview-img-wrap-${blockId}" class="discord-embed-image-wrap" style="display: none;">
+                                            <img id="rb-preview-img-${blockId}" class="discord-embed-image" src="" style="max-height: 200px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <input type="file" id="rb-input-${blockId}" hidden accept="image/*" onchange="uploadBlockImage('${blockId}')">
-                <input type="hidden" id="rb-url-${blockId}" value="${imgUrl}">
-
-                <div class="ee-desc" id="rb-text-${blockId}" contenteditable="true" placeholder="Opis do tego bloku..." style="min-height: 40px; outline: none; white-space: pre-wrap;">${text}</div>
             </div>
         `;
         container.appendChild(div);
+        updateRuleBlockPreview(blockId);
     };
 
     window.removeRuleBlock = (id) => {
@@ -700,8 +1281,9 @@
                 
                 const img = getE(`rb-img-${id}`);
                 img.src = data.url;
-                getE(`rb-placeholder-${id}`).style.display = 'none';
-                getE(`rb-img-container-${id}`).style.display = 'block';
+                getE(`rb-empty-${id}`).style.display = 'none';
+                getE(`rb-filled-${id}`).style.display = 'block';
+                updateRuleBlockPreview(id);
             }
         } catch(e) { alert('Błąd przesłania zdjęcia'); }
     };
@@ -710,9 +1292,10 @@
         if (event) event.stopPropagation();
         getE(`rb-url-${id}`).value = '';
         getE(`rb-img-${id}`).src = '';
-        getE(`rb-placeholder-${id}`).style.display = 'flex';
-        getE(`rb-img-container-${id}`).style.display = 'none';
+        getE(`rb-empty-${id}`).style.display = 'flex';
+        getE(`rb-filled-${id}`).style.display = 'none';
         getE(`rb-input-${id}`).value = '';
+        updateRuleBlockPreview(id);
     };
 
     window.updateRulesPreview = () => {
@@ -825,22 +1408,21 @@
         } else {
             setV(p + '-name', '');
             getE(p + '-enabled').checked = true;
-            setT(p + 'e-outer-text', '');
-            setT(p + 'e-author', '');
-            setT(p + 'e-title', '');
-            setT(p + 'e-desc', '');
-            setT(p + 'e-footer', '');
+            setV(p + '-input-outer-text', '');
+            setV(p + '-input-author', '');
+            setV(p + '-input-title', '');
+            setV(p + '-input-desc', '');
+            setV(p + '-input-footer', '');
             setV(p + '-thumb-url', '');
             setV(p + '-large-url', '');
             setV(p + '-title-url', '');
-            getE(p + 'e-thumb').style.backgroundImage = '';
-            getE(p + 'e-large-img').style.backgroundImage = '';
-            getE(p + 'e-thumb-icon').style.display = 'block';
-            getE(p + 'e-large-icon').style.display = 'block';
             if (getE(p + '-has-frame')) getE(p + '-has-frame').checked = false;
             getE(p + 'p-toggle').checked = false;
+            if (getE(p + '-clean-preview')) {
+                getE(p + '-clean-preview').checked = false;
+            }
             togglePersonalizacja(p);
-            updatePreviewStyles(p);
+            updateGeneralPreview();
         }
     }
 
@@ -873,28 +1455,24 @@
             setV(p + '-name', cfg.name);
             setV(p + '-channel', cfg.channel_id);
             getE(p + '-enabled').checked = cfg.enabled !== 0;
-            setT(p + 'e-outer-text', cfg.outer_text || '');
-            setT(p + 'e-author', cfg.author);
-            setT(p + 'e-title', cfg.title);
-            setT(p + 'e-desc', cfg.description);
-            setT(p + 'e-footer', cfg.footer);
-            setV(p + '-thumb-url', cfg.thumbnail_url);
-            setV(p + '-large-url', cfg.image_url);
-            setV(p + '-title-url', cfg.title_url);
+            
+            // Set inputs
+            setV(p + '-input-outer-text', cfg.outer_text || '');
+            setV(p + '-input-author', cfg.author || '');
+            setV(p + '-input-title', cfg.title || '');
+            setV(p + '-input-desc', cfg.description || '');
+            setV(p + '-input-footer', cfg.footer || '');
+            setV(p + '-thumb-url', cfg.thumbnail_url || '');
+            setV(p + '-large-url', cfg.image_url || '');
+            setV(p + '-title-url', cfg.title_url || '');
             if (getE(p + '-has-frame')) getE(p + '-has-frame').checked = cfg.has_frame === 1;
             
-            if (cfg.thumbnail_url) {
-                getE(p + 'e-thumb').style.backgroundImage = `url('${cfg.thumbnail_url}')`;
-                getE(p + 'e-thumb-icon').style.display = 'none';
-            }
-            if (cfg.image_url) {
-                getE(p + 'e-large-img').style.backgroundImage = `url('${cfg.image_url}')`;
-                getE(p + 'e-large-icon').style.display = 'none';
-            }
-
             getE(p + 'p-toggle').checked = !!cfg.title_url;
+            if (getE(p + '-clean-preview')) {
+                getE(p + '-clean-preview').checked = false;
+            }
             togglePersonalizacja(p);
-            updatePreviewStyles(p);
+            updateGeneralPreview();
             getE('modal-general').classList.add('active');
         }
     };
@@ -907,46 +1485,47 @@
         const p = type === 'rules' ? 'r' : 'g';
         let name = getV(p + '-name');
         
-        // Dla rules nie istnieją elementy re-title, re-desc, re-author, re-footer
         const isRules = type === 'rules';
-        const title = isRules ? '' : getT(p + 'e-title');
+        const title = isRules ? '' : getV(p + '-input-title');
         if (!name) name = title || (isRules ? 'Zasady' : 'Osadzenie');
 
         let finalDesc = '';
         if (isRules) {
             const blocks = [];
-            document.querySelectorAll('.rule-block-editor').forEach(el => {
+            document.querySelectorAll('.rule-block-editor-card').forEach(el => {
                 const id = el.dataset.id;
                 blocks.push({
                     image: document.getElementById(`rb-url-${id}`).value,
-                    text: document.getElementById(`rb-text-${id}`).innerText
+                    text: document.getElementById(`rb-input-text-${id}`).value
                 });
             });
             finalDesc = JSON.stringify(blocks);
         } else {
-            finalDesc = getT(p + 'e-desc');
+            finalDesc = getV(p + '-input-desc');
         }
 
-        // Sprawdzenie czy element personalizacji istnieje (nie istnieje w modalu zasad)
         const hasPersonalization = !isRules && getE(p + 'p-toggle');
         const isPersonalized = hasPersonalization ? getE(p + 'p-toggle').checked : false;
 
         const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
         const oldCfg = window.localEmbedConfigs.find(c => c.id === editingId);
         
-        // Dodatkowa blokada GIF przed zapisem dla bezpieczeństwa
         const thumbUrl = isRules ? '' : getV(p + '-thumb-url');
         const largeUrl = isRules ? '' : getV(p + '-large-url');
         
         if (!isPremium) {
             if (thumbUrl.toLowerCase().endsWith('.gif') || largeUrl.toLowerCase().endsWith('.gif')) {
                 alert('⚠️ Twoja konfiguracja zawiera animowane obrazy (GIF), które są funkcją PREMIUM. Usuń je lub kup Premium, aby zapisać.');
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
                 return;
             }
             if (isRules) {
                 const blocks = JSON.parse(finalDesc);
                 if (blocks.some(b => b.image.toLowerCase().endsWith('.gif'))) {
                     alert('⚠️ Jeden z bloków zasad zawiera GIF, co wymaga statusu PREMIUM.');
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
                     return;
                 }
             }
@@ -958,12 +1537,12 @@
             name: name,
             last_message_id: oldCfg ? oldCfg.last_message_id : '',
             channel_id: getV(p + '-channel'),
-            author: isRules ? '' : getT(p + 'e-author'),
+            author: isRules ? '' : getV(p + '-input-author'),
             author_url: isRules ? '' : (isPersonalized ? (getE(p + '-author-url') ? getV(p + '-author-url') : '') : ''),
             title: isRules ? '' : title,
             title_url: isRules ? '' : (isPersonalized ? getV(p + '-title-url') : ''),
             description: finalDesc,
-            footer: isRules ? '' : getT(p + 'e-footer'),
+            footer: isRules ? '' : getV(p + '-input-footer'),
             color: isPersonalized ? getV(p + '-color') : '',
             link_color: isPersonalized ? getV(p + '-link-color') : '',
             thumbnail_url: thumbUrl,
@@ -972,7 +1551,7 @@
             reaction_role_id: isRules ? getV('r-reaction-role') : '',
             timestamp: getE(p + '-timestamp') ? (getE(p + '-timestamp').checked ? 1 : 0) : 0,
             has_frame: getE(p + '-has-frame') ? (getE(p + '-has-frame').checked ? 1 : 0) : 0,
-            outer_text: getE(p + 'e-outer-text') ? getT(p + 'e-outer-text') : '',
+            outer_text: getE(p + '-input-outer-text') ? getV(p + '-input-outer-text') : '',
             enabled: getE(p + '-enabled').checked
         };
 
@@ -989,10 +1568,8 @@
             const data = await res.json();
             if (data.success) {
                 if (shouldTest) {
-                    // Wywołanie TESTU (nie edytuje starej wiadomości)
                     await fetch(`${API}/embeds/${data.id || config.id}/test`, { method: 'POST' });
                 } else if (shouldSync) {
-                    // Wywołanie synchronizacji konkretnego embeda
                     await fetch(`${API}/embeds/${data.id || config.id}/sync`, { method: 'POST' });
                 }
                 loadEmbeds();

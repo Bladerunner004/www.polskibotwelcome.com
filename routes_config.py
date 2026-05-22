@@ -21,25 +21,35 @@ from werkzeug.utils import secure_filename
 
 config_bp = Blueprint('config', __name__)
 
-# Awatar bota cache
-_bot_avatar_cache = {
-    "url": None,
-    "last_fetched": 0
-}
+# Awatar bota cache (klucz: guild_id lub "main" -> {"url": url, "last_fetched": timestamp})
+_bot_avatar_cache = {}
 
-def get_bot_avatar_cached():
+def get_bot_avatar_cached(guild_id=None):
     now = time.time()
-    # Cache na 10 minut (pomijane przy refresh=true)
+    token_to_use = BOT_TOKEN
+    cache_key = "main"
+
+    if guild_id:
+        try:
+            from database import get_custom_bot
+            custom_bot = get_custom_bot(guild_id)
+            if custom_bot and custom_bot.get('enabled') and custom_bot.get('token'):
+                token_to_use = custom_bot['token']
+                cache_key = str(guild_id)
+        except Exception as e:
+            print(f"[BOT AVATAR] Błąd pobierania custom bota z DB dla {guild_id}: {e}")
+
     try:
         force_refresh = request.args.get('refresh') == 'true'
     except Exception:
         force_refresh = False
 
-    if not force_refresh and _bot_avatar_cache["url"] and (now - _bot_avatar_cache["last_fetched"] < 600):
-        return _bot_avatar_cache["url"]
+    cached = _bot_avatar_cache.get(cache_key)
+    if not force_refresh and cached and (now - cached.get("last_fetched", 0) < 600):
+        return cached["url"]
         
     try:
-        headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+        headers = {"Authorization": f"Bot {token_to_use}"}
         resp = requests.get("https://discord.com/api/v10/users/@me", headers=headers, timeout=2.0)
         if resp.status_code == 200:
             data = resp.json()
@@ -50,12 +60,16 @@ def get_bot_avatar_cached():
                 url = f"https://cdn.discordapp.com/avatars/{b_id}/{b_av}.{ext}"
             else:
                 url = "/static/img/polskibot_logo.png"
-            _bot_avatar_cache["url"] = url
-            _bot_avatar_cache["last_fetched"] = now
+            _bot_avatar_cache[cache_key] = {
+                "url": url,
+                "last_fetched": now
+            }
             return url
     except Exception as e:
-        print(f"[BOT AVATAR FETCH] Error: {e}")
+        print(f"[BOT AVATAR FETCH] Error dla {cache_key}: {e}")
         
+    if cached:
+        return cached["url"]
     return "/static/img/polskibot_logo.png"
 
 
@@ -438,7 +452,7 @@ def config(server_id):
         })
     audit_logs = formatted_logs
     # Awatar bota (bezpieczny fallback pobierany z Discorda)
-    bot_avatar_url = get_bot_avatar_cached()
+    bot_avatar_url = get_bot_avatar_cached(server_id)
 
     # Pobieramy serwery użytkownika i bota dla navbara (server switcher)
     user_data = session.get('user')
@@ -940,6 +954,10 @@ def api_sync_custom_bot(guild_id):
         data.get('bot_name'), 
         data.get('enabled', False)
     )
+    if ok:
+        g_id_str = str(guild_id)
+        if g_id_str in _bot_avatar_cache:
+            del _bot_avatar_cache[g_id_str]
     return jsonify({'success': ok})
 
 # --- WEBHOOKS (Stripe/PayPal) ---

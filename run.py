@@ -177,34 +177,161 @@ app.register_blueprint(config_bp)
 
 # --- AUTOMATYCZNE BUDZENIE BOTA ---
 def start_bot_background():
-    """Uruchamia bota w osobnym procesie, aby nie blokować serwera WWW."""
+    """Uruchamia bota w osobnym procesie i monitoruje go w tle przed crash-loopami."""
     import subprocess
     import sys
+    import threading
+    import json
     
     # Wybór właściwego interpretera Python (virtualenv ma pierwszeństwo na PythonAnywhere)
     venv_python = os.path.expanduser("~/.virtualenvs/venv_bot/bin/python")
     bot_dir = os.path.dirname(os.path.abspath(__file__))
     python_exe = venv_python if os.path.exists(venv_python) else sys.executable
     
-    # Próba zajęcia portu 5005 - jeśli się uda, to ten worker odpala proces bota
+    # Próba zajęcia portu 5005 - jeśli się uda, to ten worker odpala proces bota i monitoruje go
     try:
         lock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         lock_socket.bind(('127.0.0.1', 5005))
         # Nie zamykamy gniazda - trzymamy je jako blokadę (Single Instance)
         
-        print(f"[SYSTEM] Uruchamiam proces bota w tle... (Python: {python_exe})")
-        log_path = os.path.join(bot_dir, "bot_error.log")
-        with open(log_path, "a") as f:
-            f.write(f"\n--- START BOT {datetime.datetime.now()} (Python: {python_exe}) ---\n")
-            subprocess.Popen(
-                [python_exe, os.path.join(bot_dir, "bot.py")],
-                stdout=f,
-                stderr=f,
-                cwd=bot_dir,
-                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
-            )
+        def monitor_bot():
+            consecutive_failures = 0
+            max_failures = 3
+            quick_crash_threshold = 30  # sekundy
+            last_env_mtime = 0
+            env_path = os.path.join(bot_dir, ".env")
+            
+            while True:
+                # Sprawdzamy czy plik .env został zmodyfikowany
+                env_modified = False
+                if os.path.exists(env_path):
+                    try:
+                        mtime = os.path.getmtime(env_path)
+                        if mtime > last_env_mtime:
+                            last_env_mtime = mtime
+                            env_modified = True
+                    except Exception as e:
+                        print(f"[MONITOR] Błąd odczytu mtime .env: {e}")
+                
+                if env_modified:
+                    print("[MONITOR] Wykryto zmianę w pliku .env, przeładowuję zmienne i resetuję licznik awarii.")
+                    consecutive_failures = 0
+                    try:
+                        load_dotenv(env_path, override=True)
+                    except Exception as e:
+                        print(f"[MONITOR] Błąd przeładowania .env: {e}")
+                
+                # Sprawdzenie poprawności tokena bota
+                bot_token = os.getenv("DISCORD_BOT_TOKEN")
+                if not bot_token or bot_token.strip() == "" or bot_token.strip() == "your_discord_bot_token_here":
+                    print("[MONITOR] DISCORD_BOT_TOKEN jest nieprawidłowy lub pusty. Wstrzymuję bota.")
+                    try:
+                        status = {"status": "error", "error": "Brak poprawnego tokenu bota w .env", "last_seen": time.time()}
+                        with open(os.path.join(bot_dir, "bot_status.json"), "w") as f:
+                            json.dump(status, f)
+                    except Exception as e:
+                        print(f"[MONITOR] Błąd zapisu statusu: {e}")
+                    time.sleep(10)
+                    continue
+
+                if consecutive_failures >= max_failures:
+                    print(f"[MONITOR] Wykryto pętlę awarii bota ({consecutive_failures} nieudanych uruchomień). Auto-restart wstrzymany.")
+                    try:
+                        status = {
+                            "status": "error",
+                            "error": "Pętla awarii bota. Sprawdź bot_error.log (prawdopodobnie niepoprawny token).",
+                            "last_seen": time.time()
+                        }
+                        with open(os.path.join(bot_dir, "bot_status.json"), "w") as f:
+                            json.dump(status, f)
+                    except Exception as e:
+                        print(f"[MONITOR] Błąd zapisu statusu awarii: {e}")
+                    
+                    # Wstrzymujemy restarty na 15 minut, ale sprawdzamy plik .env co 5 sekund na wypadek modyfikacji
+                    for _ in range(180):
+                        time.sleep(5)
+                        if os.path.exists(env_path):
+                            try:
+                                mtime = os.path.getmtime(env_path)
+                                if mtime > last_env_mtime:
+                                    last_env_mtime = mtime
+                                    print("[MONITOR] Wykryto modyfikację .env podczas oczekiwania. Przerywam uśpienie.")
+                                    consecutive_failures = 0
+                                    try:
+                                        load_dotenv(env_path, override=True)
+                                    except: pass
+                                    break
+                            except: pass
+                    
+                    if consecutive_failures >= max_failures:
+                        # Jeśli nie przerwano przez modyfikację .env, kontynuujemy wstrzymanie
+                        continue
+
+                print(f"[SYSTEM] Uruchamiam proces bota w tle... (Python: {python_exe})")
+                log_path = os.path.join(bot_dir, "bot_error.log")
+                start_time = time.time()
+                
+                try:
+                    with open(log_path, "a") as f:
+                        f.write(f"\n--- START BOT {datetime.datetime.now()} (Python: {python_exe}) ---\n")
+                        proc = subprocess.Popen(
+                            [python_exe, os.path.join(bot_dir, "bot.py")],
+                            stdout=f,
+                            stderr=f,
+                            cwd=bot_dir,
+                            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                        )
+                except Exception as e:
+                    print(f"[MONITOR] Błąd uruchamiania bota: {e}")
+                    consecutive_failures += 1
+                    time.sleep(10)
+                    continue
+
+                # Pętla monitorowania procesu bota w czasie rzeczywistym
+                while True:
+                    if proc.poll() is not None:
+                        exit_code = proc.returncode
+                        elapsed = time.time() - start_time
+                        print(f"[MONITOR] Proces bota zakończył się z kodem {exit_code} po {elapsed:.1f} sekundach.")
+                        
+                        if elapsed < quick_crash_threshold:
+                            consecutive_failures += 1
+                            print(f"[MONITOR] Szybka awaria bota. Licznik awarii: {consecutive_failures}/{max_failures}")
+                        else:
+                            consecutive_failures = 0
+                            print("[MONITOR] Proces bota działał stabilnie. Resetuję licznik awarii.")
+                        break
+                    
+                    # W międzyczasie możemy też sprawdzić czy nie zmienił się plik .env.
+                    # Jeśli zmienił się w trakcie działania bota, możemy chcieć zrestartować go na nowym tokenie!
+                    if os.path.exists(env_path):
+                        try:
+                            mtime = os.path.getmtime(env_path)
+                            if mtime > last_env_mtime:
+                                last_env_mtime = mtime
+                                print("[MONITOR] Wykryto zmianę .env w trakcie działania bota. Restartuję bota z nową konfiguracją...")
+                                proc.terminate()
+                                try:
+                                    proc.wait(timeout=5)
+                                except subprocess.TimeoutExpired:
+                                    proc.kill()
+                                consecutive_failures = 0
+                                try:
+                                    load_dotenv(env_path, override=True)
+                                except: pass
+                                break
+                        except: pass
+                        
+                    time.sleep(5)
+                
+                time.sleep(5)
+
+        # Uruchamiamy wątek monitorujący
+        monitor_thread = threading.Thread(target=monitor_bot, daemon=True)
+        monitor_thread.start()
+        
     except socket.error:
-        # Bot już prawdopodobnie działa w innym procesie
+        # Bot już prawdopodobnie działa w innym procesie (port zablokowany przez inny worker)
         pass
     except Exception as e:
         print(f"[SYSTEM] Błąd startu bota: {e}")

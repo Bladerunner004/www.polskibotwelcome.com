@@ -131,9 +131,14 @@ def security_check():
         
     # Zabezpieczenie ścieżek diagnostycznych/debugowania
     if request.path.startswith('/api/debug/'):
+        redirect_uri_val = os.getenv("DISCORD_REDIRECT_URI", "")
+        is_local_dev = ("127.0.0.1" in redirect_uri_val) or ("localhost" in redirect_uri_val)
+        if not is_local_dev:
+            return jsonify({'success': False, 'error': 'Nieautoryzowany dostęp (tylko lokalnie)'}), 403
+            
         if 'user' not in session:
             return jsonify({'success': False, 'error': 'Nieautoryzowany dostęp'}), 401
-        return # W przyszłości można dodać dodatkowe warunki, np. ID dewelopera
+        return
         
     # Sprawdzamy czy żądanie dotyczy konkretnego serwera (na podstawie parametrów ścieżki)
     guild_id = None

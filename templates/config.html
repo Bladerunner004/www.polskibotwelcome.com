@@ -635,11 +635,41 @@
         }
         window.addEventListener('click', () => { if (cfgDropdown && cfgDropdown.classList.contains('show')) cfgDropdown.classList.remove('show'); });
 
-        // Usuwanie ?refresh=true z paska adresu po załadowaniu
-        if (window.location.search.includes('refresh=true')) {
-            const url = new URL(window.location.href);
-            url.searchParams.delete('refresh');
-            window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+        // Obsługa komunikatów płatności i czyszczenie parametrów URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let urlChanged = false;
+        
+        if (urlParams.has('payment')) {
+            const pStatus = urlParams.get('payment');
+            if (pStatus === 'success') {
+                alert("🎉 Płatność zakończona pomyślnie! Premium zostanie wkrótce aktywowane dla Twojego serwera.");
+            } else if (pStatus === 'cancel') {
+                alert("ℹ️ Płatność została anulowana.");
+            }
+            urlParams.delete('payment');
+            urlChanged = true;
+        }
+        
+        if (urlParams.has('payment_error')) {
+            const pError = urlParams.get('payment_error');
+            if (pError === 'stripe_not_installed') {
+                alert("❌ Błąd: Moduł płatności Stripe nie został zainstalowany na serwerze. Skontaktuj się z administratorem.");
+            } else {
+                alert("❌ Wystąpił błąd podczas płatności:\n" + decodeURIComponent(pError));
+            }
+            urlParams.delete('payment_error');
+            urlChanged = true;
+        }
+
+        if (urlParams.has('refresh')) {
+            urlParams.delete('refresh');
+            urlChanged = true;
+        }
+        
+        if (urlChanged) {
+            const cleanSearch = urlParams.toString();
+            const searchPart = cleanSearch ? '?' + cleanSearch : '';
+            window.history.replaceState({}, document.title, window.location.pathname + searchPart + window.location.hash);
         }
 
 

@@ -284,9 +284,39 @@ def api_debug_sync():
 def premium_checkout(server_id):
     if 'user' not in session or server_id == 'None':
         return redirect(url_for('dashboard.dashboard'))
+    
     plan_name = request.args.get('plan', 'PREMIUM')
-    plan_price = request.args.get('price', '15.00')
-    return render_template('glowne/checkout.html', server_id=server_id, plan_name=plan_name, plan_price=plan_price)
+    
+    if not stripe:
+        print("❌ [STRIPE] Próba płatności, ale moduł 'stripe' nie jest zainstalowany.")
+        return redirect(url_for('config.config', server_id=server_id) + '?payment_error=stripe_not_installed')
+
+    try:
+        # Bezpośrednie tworzenie sesji Stripe Checkout
+        checkout_session = stripe.checkout.Session.create(
+            automatic_payment_methods={
+                'enabled': True,
+            },
+            line_items=[{
+                'price_data': {
+                    'currency': 'pln',
+                    'product_data': {
+                        'name': f'PolskiBot {plan_name} - Serwer {server_id}',
+                        'description': 'Dostęp do wszystkich zaawansowanych funkcji bota na 30 dni.',
+                    },
+                    'unit_amount': 1500, # 15.00 PLN w groszach
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            metadata={'guild_id': server_id}, # Przekazujemy ID serwera do webhooka
+            success_url=url_for('config.config', server_id=server_id, _external=True) + '?payment=success',
+            cancel_url=url_for('config.config', server_id=server_id, _external=True) + '?payment=cancel',
+        )
+        return redirect(checkout_session.url)
+    except Exception as e:
+        print(f"❌ [STRIPE] Błąd podczas bezpośredniego tworzenia sesji: {e}")
+        return redirect(url_for('config.config', server_id=server_id) + f'?payment_error={requests.utils.quote(str(e))}')
 
 
 

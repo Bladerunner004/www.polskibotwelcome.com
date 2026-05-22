@@ -1032,8 +1032,12 @@ def create_checkout_session(server_id):
         # Wybór planu (na razie domyślny 15 PLN)
         plan_name = request.args.get('plan', 'PREMIUM')
         
+        # Używamy automatycznych metod płatności ustawionych w panelu Stripe (np. Karta, Blik, P24, Google Pay, PayPal).
+        # Zapobiega to błędom gdy dana metoda (np. paypal czy niepoprawny string google_pay) nie jest aktywna lub obsługiwana.
         checkout_session = stripe.checkout.Session.create(
-            payment_method_types=['card', 'blik', 'p24', 'google_pay', 'paypal'],
+            automatic_payment_methods={
+                'enabled': True,
+            },
             line_items=[{
                 'price_data': {
                     'currency': 'pln',

@@ -15,7 +15,7 @@ def _get_base_url():
     if redirect_uri:
         parsed = urlparse(redirect_uri)
         return f"{parsed.scheme}://{parsed.netloc}"
-    return "https://BLADERUNNER009.pythonanywhere.com"
+    return "https://polskibot-bladerunner009.pythonanywhere.com"
 
 def fix_url(url):
     if not url: return url

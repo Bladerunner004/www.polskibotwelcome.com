@@ -275,7 +275,7 @@ def start_bot_background():
                     with open(log_path, "a") as f:
                         f.write(f"\n--- START BOT {datetime.datetime.now()} (Python: {python_exe}) ---\n")
                         proc = subprocess.Popen(
-                            [python_exe, os.path.join(bot_dir, "bot.py")],
+                            [python_exe, "-u", os.path.join(bot_dir, "bot.py")],
                             stdout=f,
                             stderr=f,
                             cwd=bot_dir,

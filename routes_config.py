@@ -292,11 +292,9 @@ def premium_checkout(server_id):
         return redirect(url_for('config.config', server_id=server_id) + '?payment_error=stripe_not_installed')
 
     try:
-        # Bezpośrednie tworzenie sesji Stripe Checkout
+        # Bezpośrednie tworzenie sesji Stripe Checkout z obsługą kart płatniczych i BLIK
         checkout_session = stripe.checkout.Session.create(
-            automatic_payment_methods={
-                'enabled': True,
-            },
+            payment_method_types=['card', 'blik'],
             line_items=[{
                 'price_data': {
                     'currency': 'pln',
@@ -1062,12 +1060,9 @@ def create_checkout_session(server_id):
         # Wybór planu (na razie domyślny 15 PLN)
         plan_name = request.args.get('plan', 'PREMIUM')
         
-        # Używamy automatycznych metod płatności ustawionych w panelu Stripe (np. Karta, Blik, P24, Google Pay, PayPal).
-        # Zapobiega to błędom gdy dana metoda (np. paypal czy niepoprawny string google_pay) nie jest aktywna lub obsługiwana.
+        # Tworzenie sesji Stripe Checkout z obsługą kart płatniczych i BLIK
         checkout_session = stripe.checkout.Session.create(
-            automatic_payment_methods={
-                'enabled': True,
-            },
+            payment_method_types=['card', 'blik'],
             line_items=[{
                 'price_data': {
                     'currency': 'pln',

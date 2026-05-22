@@ -205,6 +205,16 @@
         document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
     }
 
+    async function wakeUpBot() {
+        try {
+            const res = await fetch('http://127.0.0.1:5006/ping');
+            alert("✅ Bot został obudzony!");
+            location.reload();
+        } catch(e) {
+            alert("❌ Bot nie odpowiada. Spróbuj za chwilę.");
+        }
+    }
+
     async function startTrial() {
         if (!confirm("Aktywować 7 dni Premium za darmo? Możesz to zrobić tylko raz na tym serwerze.")) return;
         try {

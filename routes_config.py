@@ -29,8 +29,13 @@ _bot_avatar_cache = {
 
 def get_bot_avatar_cached():
     now = time.time()
-    # Cache na 10 minut
-    if _bot_avatar_cache["url"] and (now - _bot_avatar_cache["last_fetched"] < 600):
+    # Cache na 10 minut (pomijane przy refresh=true)
+    try:
+        force_refresh = request.args.get('refresh') == 'true'
+    except Exception:
+        force_refresh = False
+
+    if not force_refresh and _bot_avatar_cache["url"] and (now - _bot_avatar_cache["last_fetched"] < 600):
         return _bot_avatar_cache["url"]
         
     try:

@@ -6,6 +6,7 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 import datetime
 import os
+import time
 import requests
 import threading
 import asyncio
@@ -70,6 +71,77 @@ app.config.update(
 # --- PAMIĘĆ PODRĘCZNA SERWERÓW (zamiast cookie, brak limitu 4KB) ---
 # Słownik: user_id -> lista serwerów. Przechowywany w pamięci procesu.
 _guilds_memory_cache = {}
+
+@app.before_request
+def refresh_discord_cache():
+    # Pomijamy pliki statyczne, webhooki i żądania API bota
+    if request.path.startswith('/static/') or request.path.startswith('/webhook/'):
+        return
+        
+    if 'user' not in session or 'access_token' not in session:
+        return
+        
+    user_id = session['user'].get('id')
+    if not user_id:
+        return
+        
+    now = time.time()
+    last_refresh = session.get('last_profile_refresh', 0)
+    
+    # Odświeżamy co 5 minut (300 sekund) lub gdy w URL jest refresh=true
+    force_refresh = request.args.get('refresh') == 'true'
+    
+    if force_refresh or (now - last_refresh > 300):
+        access_token = session['access_token']
+        headers = {"Authorization": f"Bearer {access_token}"}
+        
+        # 1. Odświeżenie profilu użytkownika (avatar, username itp.)
+        try:
+            user_resp = requests.get("https://discord.com/api/v10/users/@me", headers=headers, timeout=5)
+            if user_resp.status_code == 200:
+                user_data = user_resp.json()
+                session['user'] = {
+                    'id': user_data.get('id'),
+                    'username': user_data.get('username'),
+                    'avatar': user_data.get('avatar')
+                }
+                session['user_avatar'] = get_user_avatar(session['user'])
+                session.modified = True
+                print(f"👤 [REFRESH] Zaktualizowano profil użytkownika {user_id}")
+            elif user_resp.status_code == 401:
+                # Token wygasł lub został cofnięty
+                print(f"⚠️ [REFRESH] Token nieautoryzowany dla {user_id}. Czyszczenie sesji.")
+                session.clear()
+                return
+        except Exception as e:
+            print(f"❌ [REFRESH] Błąd podczas odświeżania profilu: {e}")
+            
+        # 2. Odświeżenie listy serwerów użytkownika (nazwy, ikony, uprawnienia)
+        try:
+            guilds_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=headers, timeout=5)
+            if guilds_resp.status_code == 200:
+                all_guilds = guilds_resp.json()
+                managed_guilds = []
+                for g in all_guilds:
+                    is_admin = (int(g.get('permissions', 0)) & 0x8) == 0x8 or g.get('owner')
+                    if is_admin:
+                        managed_guilds.append({
+                            'id': g.get('id'),
+                            'name': g.get('name'),
+                            'icon': g.get('icon'),
+                            'permissions': g.get('permissions'),
+                            'owner': g.get('owner')
+                        })
+                _guilds_memory_cache[user_id] = managed_guilds
+                print(f"💾 [REFRESH] Zaktualizowano {len(managed_guilds)} serwerów dla {user_id}")
+            elif guilds_resp.status_code == 401:
+                session.clear()
+                return
+        except Exception as e:
+            print(f"❌ [REFRESH] Błąd podczas odświeżania serwerów: {e}")
+            
+        session['last_profile_refresh'] = now
+        session.modified = True
 
 @app.after_request
 def add_header(response):
@@ -194,6 +266,7 @@ def callback():
                 session['user'] = {'id': user_id, 'username': user_data['username'], 'avatar': user_data['avatar']}
                 session['user_avatar'] = get_user_avatar(session['user'])
                 session['access_token'] = access_token
+                session['last_profile_refresh'] = time.time()
                 session.modified = True
 
                 # Zapisujemy serwery w pamięci procesu (nie w cookie!) - brak limitu 4KB

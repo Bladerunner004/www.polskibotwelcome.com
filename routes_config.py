@@ -22,6 +22,11 @@ config_bp = Blueprint('config', __name__)
 # Awatar bota cache (klucz: guild_id lub "main" -> {"url": url, "last_fetched": timestamp})
 _bot_avatar_cache = {}
 
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+if stripe and STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
+
 def get_bot_avatar_cached(guild_id=None):
     now = time.time()
     token_to_use = BOT_TOKEN
@@ -286,15 +291,39 @@ def premium_checkout(server_id):
         if 'user' not in session:
             print(f"❌ [Checkout] Brak user w sesji")
             return redirect(url_for('dashboard.dashboard'))
-        
+
         if server_id == 'None' or not server_id:
             print(f"❌ [Checkout] Błędny server_id: {server_id}")
             return redirect(url_for('dashboard.dashboard'))
-        
-        # Przekierowujemy bezpośrednio na gotowy Stripe Payment Link z przekazaniem ID serwera
-        stripe_url = f"https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00?client_reference_id={server_id}"
-        print(f"✅ [Checkout] Redirecting to Stripe: {stripe_url}")
-        return redirect(stripe_url)
+
+        if not stripe or not STRIPE_SECRET_KEY:
+            print("❌ [Checkout] Stripe nie jest skonfigurowany")
+            flash('Stripe nie jest skonfigurowany. Skontaktuj się z administratorem.', 'error')
+            return redirect(url_for('config.config', server_id=server_id))
+
+        success_url = url_for('config.config', server_id=server_id, _external=True) + '?payment=success'
+        cancel_url = url_for('config.config', server_id=server_id, _external=True) + '?payment=cancel'
+
+        session_data = stripe.checkout.Session.create(
+            success_url=success_url,
+            cancel_url=cancel_url,
+            payment_method_types=['card', 'blik'],
+            mode='subscription',
+            line_items=[{
+                'price_data': {
+                    'currency': 'pln',
+                    'product_data': {'name': 'PolskiBot Premium'},
+                    'unit_amount': 1500,
+                    'recurring': {'interval': 'month'},
+                },
+                'quantity': 1,
+            }],
+            metadata={'guild_id': server_id, 'plan': 'miesieczny'},
+            client_reference_id=server_id,
+        )
+
+        print(f"✅ [Checkout] Utworzono sesję Stripe: {session_data.id}")
+        return redirect(session_data.url, code=303)
     except Exception as e:
         print(f"❌ [Checkout Error] {str(e)}")
         import traceback
@@ -1037,12 +1066,39 @@ def stripe_webhook():
 
 @config_bp.route('/api/<server_id>/create-checkout-session', methods=['POST'])
 def create_checkout_session(server_id):
-    """Tworzy sesję płatności kierującą na gotowy link Stripe."""
+    """Tworzy sesję płatności Stripe Checkout dla Google Pay / BLIK."""
     if 'user' not in session:
         return jsonify({'error': 'Zaloguj się'}), 401
-        
-    stripe_url = f"https://buy.stripe.com/cNiaEZfKx7LW3nxf628Vi00?client_reference_id={server_id}"
-    return jsonify({'url': stripe_url})
+
+    if not stripe or not STRIPE_SECRET_KEY:
+        return jsonify({'error': 'Stripe nie jest skonfigurowany'}), 500
+
+    try:
+        success_url = url_for('config.config', server_id=server_id, _external=True) + '?payment=success'
+        cancel_url = url_for('config.config', server_id=server_id, _external=True) + '?payment=cancel'
+
+        session_data = stripe.checkout.Session.create(
+            success_url=success_url,
+            cancel_url=cancel_url,
+            payment_method_types=['card', 'blik'],
+            mode='subscription',
+            line_items=[{
+                'price_data': {
+                    'currency': 'pln',
+                    'product_data': {'name': 'PolskiBot Premium'},
+                    'unit_amount': 1500,
+                    'recurring': {'interval': 'month'},
+                },
+                'quantity': 1,
+            }],
+            metadata={'guild_id': server_id, 'plan': 'miesieczny'},
+            client_reference_id=server_id,
+        )
+
+        return jsonify({'url': session_data.url})
+    except Exception as e:
+        print(f"❌ [API Checkout Error] {e}")
+        return jsonify({'error': str(e)}), 500
 
 @config_bp.route('/api/<guild_id>/premium', methods=['POST'])
 def api_set_premium(guild_id):

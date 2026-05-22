@@ -28,7 +28,7 @@ def _extract_client_id(token):
 extracted_id = _extract_client_id(BOT_TOKEN)
 
 # --- KONFIGURACJA DISCORD OAuth2 ---
-CLIENT_ID = os.getenv("DISCORD_CLIENT_ID") or extracted_id or "1489047223160541295"
+CLIENT_ID = extracted_id or os.getenv("DISCORD_CLIENT_ID") or "1489047223160541295"
 CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET", "NXfIWXi2Tdgcl1qBZBSLwJYTVelt_fFj")
 REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "https://BLADERUNNER009.pythonanywhere.com/callback")
 

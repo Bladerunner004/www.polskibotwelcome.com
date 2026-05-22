@@ -1,17 +1,37 @@
 import os
+import base64
 from urllib.parse import quote
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# Pobieranie tokena bota z pliku .env
+BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+
+# Automatyczne dekodowanie CLIENT_ID z pierwszego członu tokena bota (Base64)
+def _extract_client_id(token):
+    if not token or '.' not in token:
+        return None
+    try:
+        first_part = token.split('.')[0]
+        # Dopełnienie do wielokrotności 4 znaków dla Base64
+        missing_padding = len(first_part) % 4
+        if missing_padding:
+            first_part += '=' * (4 - missing_padding)
+        decoded = base64.b64decode(first_part).decode('utf-8')
+        if decoded.isdigit():
+            return decoded
+    except Exception:
+        pass
+    return None
+
+extracted_id = _extract_client_id(BOT_TOKEN)
+
 # --- KONFIGURACJA DISCORD OAuth2 ---
-CLIENT_ID = os.getenv("DISCORD_CLIENT_ID", "1489047223160541295")
+CLIENT_ID = os.getenv("DISCORD_CLIENT_ID") or extracted_id or "1489047223160541295"
 CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET", "NXfIWXi2Tdgcl1qBZBSLwJYTVelt_fFj")
 REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "https://BLADERUNNER009.pythonanywhere.com/callback")
 
-
-# Pobieranie tokena bota z pliku .env
-BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
 # --- LINKI ---
 DISCORD_INVITE_URL = (

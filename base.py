@@ -30,7 +30,10 @@ extracted_id = _extract_client_id(BOT_TOKEN)
 # --- KONFIGURACJA DISCORD OAuth2 ---
 CLIENT_ID = extracted_id or os.getenv("DISCORD_CLIENT_ID") or "1489047223160541295"
 CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET", "NXfIWXi2Tdgcl1qBZBSLwJYTVelt_fFj")
-REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "https://polskibot-bladerunner009.pythonanywhere.com/callback").strip()
+_raw_redirect = os.getenv("DISCORD_REDIRECT_URI", "https://polskibot-bladerunner009.pythonanywhere.com/callback").strip().strip("\"'")
+if not _raw_redirect.startswith("http"):
+    _raw_redirect = "https://" + _raw_redirect
+REDIRECT_URI = _raw_redirect
 
 
 # --- LINKI ---

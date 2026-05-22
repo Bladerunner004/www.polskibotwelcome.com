@@ -76,7 +76,7 @@ def get_bot_avatar_cached(guild_id=None):
 
 
 def check_guild_access(guild_id):
-    """Sprawdza czy zalogowany użytkownik ma dostęp do zarządzania danym serwerem."""
+    """Sprawdza czy zalogowany użytkownik ma dostęp do zarządzania danym serwerem (musi być adminem lub właścicielem)."""
     if 'user' not in session: return False
     user_data = session.get('user')
     if not user_data: return False
@@ -84,17 +84,17 @@ def check_guild_access(guild_id):
     if not user_id: return False
     
     from run import _guilds_memory_cache
-    managed_guilds = _guilds_memory_cache.get(user_id, [])
+    user_guilds = _guilds_memory_cache.get(user_id, [])
     
     # Jeśli cache jest pusty, a mamy access_token, spróbujmy odpytać Discord API
-    if not managed_guilds and session.get('access_token'):
+    if not user_guilds and session.get('access_token'):
         try:
             access_token = session.get('access_token')
             user_headers = {"Authorization": f"Bearer {access_token}"}
             resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=user_headers, timeout=5)
             if resp.status_code == 200:
                 all_guilds = resp.json()
-                managed_guilds = [
+                user_guilds = [
                     {
                         'id': g.get('id'),
                         'name': g.get('name'),
@@ -104,36 +104,45 @@ def check_guild_access(guild_id):
                     }
                     for g in all_guilds
                 ]
-                _guilds_memory_cache[user_id] = managed_guilds
+                _guilds_memory_cache[user_id] = user_guilds
         except Exception as e:
             print(f"[SECURITY CHECK] Błąd podczas pobierania serwerów z API: {e}")
             
-    # Porównujemy ID serwerów jako stringi
-    return any(str(g.get('id')) == str(guild_id) for g in managed_guilds)
+    # Filtrujemy i sprawdzamy czy użytkownik ma uprawnienia administratora lub właściciela
+    for g in user_guilds:
+        if str(g.get('id')) == str(guild_id):
+            permissions = int(g.get('permissions', 0))
+            is_admin = (permissions & 0x8) == 0x8 or g.get('owner', False)
+            if is_admin:
+                return True
+    return False
 
 
 @config_bp.before_request
 def security_check():
     """Globalne zabezpieczenie dla wszystkich ścieżek API i konfiguracji."""
-    # Jeśli to ścieżka /api/<guild_id>/..., sprawdź uprawnienia
-    if request.path.startswith('/api/'):
-        # Wyjątki dla statusu bota
-        if request.path.startswith('/api/bot/'): return
-        if request.path.startswith('/api/debug/'): return # Opcjonalnie zablokować też to
+    # Jeśli to ścieżka /webhook/stripe, pomijamy całkowicie
+    if request.path.startswith('/webhook/'):
+        return
+
+    # Wyjątki dla statusu bota
+    if request.path.startswith('/api/bot/'):
+        return
         
-        parts = request.path.split('/')
-        if len(parts) >= 3:
-            guild_id = parts[2]
-            # Sprawdzamy czy to wygląda na ID serwera (same cyfry)
-            if guild_id.isdigit() and len(guild_id) > 15:
-                if not check_guild_access(guild_id):
+    # Zabezpieczenie ścieżek diagnostycznych/debugowania
+    if request.path.startswith('/api/debug/'):
+        if 'user' not in session:
+            return jsonify({'success': False, 'error': 'Nieautoryzowany dostęp'}), 401
+        return # W przyszłości można dodać dodatkowe warunki, np. ID dewelopera
+        
+    # Sprawdzamy czy żądanie dotyczy konkretnego serwera (na podstawie parametrów ścieżki)
+    guild_id = request.view_args.get('guild_id') or request.view_args.get('server_id')
+    if guild_id:
+        if str(guild_id).isdigit() and len(str(guild_id)) > 15:
+            if not check_guild_access(guild_id):
+                if request.path.startswith('/api/'):
                     return jsonify({'success': False, 'error': 'Nie masz uprawnień do zarządzania tym serwerem!'}), 403
-    
-    # Dla ścieżki /config/<guild_id> (główna strona)
-    if request.endpoint == 'config.config':
-        guild_id = request.view_args.get('server_id')
-        if guild_id and not check_guild_access(guild_id):
-            return redirect(url_for('dashboard.dashboard'))
+                return redirect(url_for('dashboard.dashboard'))
 
 # --- STRIPE CONFIGURATION ---
 if stripe:

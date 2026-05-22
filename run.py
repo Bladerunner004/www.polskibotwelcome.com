@@ -331,6 +331,9 @@ def callback():
 
 @app.route('/dev_login')
 def dev_login():
+    if not is_local_dev:
+        return redirect(url_for('home.index'))
+        
     session['user'] = {
         'id': '1234567890',
         'username': 'PolskiBotDev',
@@ -356,6 +359,9 @@ def logout():
 
 @app.route('/debug_auth')
 def debug_auth():
+    if not is_local_dev:
+        return redirect(url_for('home.index'))
+        
     from base import BOT_TOKEN, CLIENT_ID, REDIRECT_URI
     import requests
     

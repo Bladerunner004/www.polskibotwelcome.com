@@ -68,6 +68,18 @@ app.config.update(
     MAX_CONTENT_LENGTH=16 * 1024 * 1024,
 )
 
+_lock_socket = None
+_bot_started = False
+
+@app.before_request
+def start_bot_on_first_request():
+    global _bot_started
+    if not _bot_started:
+        _bot_started = True
+        is_under_uwsgi = 'uwsgi' in sys.modules
+        if is_under_uwsgi:
+            start_bot_background()
+
 # --- PAMIĘĆ PODRĘCZNA SERWERÓW (zamiast cookie, brak limitu 4KB) ---
 # Słownik: user_id -> lista serwerów. Przechowywany w pamięci procesu.
 _guilds_memory_cache = {}
@@ -178,6 +190,7 @@ app.register_blueprint(config_bp)
 # --- AUTOMATYCZNE BUDZENIE BOTA ---
 def start_bot_background():
     """Uruchamia bota w osobnym procesie i monitoruje go w tle przed crash-loopami."""
+    global _lock_socket
     import subprocess
     import sys
     import threading
@@ -190,8 +203,8 @@ def start_bot_background():
     
     # Próba zajęcia portu 5005 - jeśli się uda, to ten worker odpala proces bota i monitoruje go
     try:
-        lock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        lock_socket.bind(('127.0.0.1', 5005))
+        _lock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        _lock_socket.bind(('127.0.0.1', 5005))
         # Nie zamykamy gniazda - trzymamy je jako blokadę (Single Instance)
         
         def monitor_bot():
@@ -336,8 +349,9 @@ def start_bot_background():
     except Exception as e:
         print(f"[SYSTEM] Błąd startu bota: {e}")
 
-# Uruchamiamy bota przy starcie aplikacji (tylko jeśli nie jesteśmy w reloaderze Flaska)
-if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+# Uruchamiamy bota przy starcie aplikacji (tylko jeśli nie jesteśmy w reloaderze Flaska i nie jesteśmy pod uWSGI)
+is_under_uwsgi = 'uwsgi' in sys.modules
+if not is_under_uwsgi and os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
     start_bot_background()
 
 @app.route('/callback')

@@ -17,14 +17,13 @@ class SelfRole(commands.Cog):
         img_url = cfg.get('image_url')
         
         if img_url:
-            if cfg.get('has_frame'):
-                res = await generate_framed_image(img_url)
-                if res:
-                    img_data, ext = res
-                    fname = f"selfrole_img.{ext}"
-                    file = discord.File(img_data, filename=fname)
-                    emb.set_image(url=f"attachment://{fname}")
-                else: emb.set_image(url=fix_url(img_url))
+            has_frame = bool(cfg.get('has_frame'))
+            res = await generate_framed_image(img_url, color=get_global_color(channel.guild.id), has_frame=has_frame)
+            if res:
+                img_data, ext = res
+                fname = f"selfrole_img.{ext}"
+                file = discord.File(img_data, filename=fname)
+                emb.set_image(url=f"attachment://{fname}")
             else:
                 emb.set_image(url=fix_url(img_url))
 

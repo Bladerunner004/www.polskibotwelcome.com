@@ -61,15 +61,15 @@ class Embeds(commands.Cog):
                             img_eb.title = replace_tags(cfg.get('name', 'Regulamin'))
                             if cfg.get('author'): img_eb.set_author(name=replace_tags(cfg['author']))
                         
-                        if cfg.get('has_frame'):
-                            res = await generate_framed_image(block['image'], width=600, height=200, color=embed_color)
-                            if res:
-                                img_data, ext = res
-                                fname = f"rule_{i}.{ext}"
-                                files.append(discord.File(img_data, filename=fname))
-                                img_eb.set_image(url=f"attachment://{fname}")
-                            else: img_eb.set_image(url=fix_url(block['image']))
-                        else: img_eb.set_image(url=fix_url(block['image']))
+                        has_frame = bool(cfg.get('has_frame'))
+                        res = await generate_framed_image(block['image'], width=600, height=200, color=embed_color, has_frame=has_frame)
+                        if res:
+                            img_data, ext = res
+                            fname = f"rule_{i}.{ext}"
+                            files.append(discord.File(img_data, filename=fname))
+                            img_eb.set_image(url=f"attachment://{fname}")
+                        else:
+                            img_eb.set_image(url=fix_url(block['image']))
                         embeds.append(img_eb)
                         
                         # Embed z tekstem (bez tytułu, bo tytuł poszedł już na obrazku na samej górze)
@@ -100,15 +100,16 @@ class Embeds(commands.Cog):
                 e.set_author(name=author_name, url=fix_url(cfg.get('author_url', '')))
                 
             img_url = cfg.get('image_url')
-            if cfg.get('has_frame') and img_url:
-                res = await generate_framed_image(img_url, color=embed_color)
+            if img_url:
+                has_frame = bool(cfg.get('has_frame'))
+                res = await generate_framed_image(img_url, color=embed_color, has_frame=has_frame)
                 if res:
                     img_data, ext = res
                     fname = f"embed_img.{ext}"
                     files.append(discord.File(img_data, filename=fname))
                     e.set_image(url=f"attachment://{fname}")
-                else: e.set_image(url=fix_url(img_url))
-            elif img_url: e.set_image(url=fix_url(img_url))
+                else:
+                    e.set_image(url=fix_url(img_url))
             
             if cfg.get('thumbnail_url'): e.set_thumbnail(url=fix_url(cfg['thumbnail_url']))
             if cfg.get('footer'): e.set_footer(text=replace_tags(cfg['footer']))

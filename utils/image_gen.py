@@ -26,8 +26,8 @@ def fix_url(url):
         if url.startswith('static/'): return f"{base}/{url}"
     return url
 
-async def generate_framed_image(image_url, width=600, height=300, color=0x74b816):
-    """Generuje obraz idealnie dopasowany do ramki (Crop & Center) z pełnym wsparciem dla animowanych GIF-ów."""
+async def generate_framed_image(image_url, width=600, height=300, color=0x74b816, has_frame=True):
+    """Generuje obraz idealnie dopasowany do ramki (Contain & Pad) z pełnym wsparciem dla animowanych GIF-ów."""
     try:
         r = (color >> 16) & 0xFF
         g = (color >> 8) & 0xFF
@@ -39,6 +39,12 @@ async def generate_framed_image(image_url, width=600, height=300, color=0x74b816
                 if resp.status != 200: return None
                 data = await resp.read()
                 img = Image.open(io.BytesIO(data))
+                
+                # Determine scaling factor to fit within (width, height) preserving aspect ratio
+                img_w, img_h = img.size
+                ratio = min(width / img_w, height / img_h)
+                new_w = int(img_w * ratio)
+                new_h = int(img_h * ratio)
                 
                 is_animated = getattr(img, "is_animated", False)
                 if is_animated:
@@ -52,9 +58,27 @@ async def generate_framed_image(image_url, width=600, height=300, color=0x74b816
                     
                     for frame in ImageSequence.Iterator(img):
                         p_frame = frame.convert("RGBA")
-                        p_frame = ImageOps.fit(p_frame, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
-                        p_frame = ImageOps.expand(p_frame, border=10, fill=color_tuple)
-                        frames.append(p_frame)
+                        p_frame = p_frame.resize((new_w, new_h), Image.Resampling.LANCZOS)
+                        
+                        if has_frame:
+                            p_frame = ImageOps.expand(p_frame, border=10, fill=color_tuple)
+                            canvas_width = width + 20
+                        else:
+                            canvas_width = width
+                            
+                        # Create transparent canvas
+                        canvas = Image.new("RGBA", (canvas_width, p_frame.height), (0, 0, 0, 0))
+                        x_offset = (canvas.width - p_frame.width) // 2
+                        canvas.paste(p_frame, (x_offset, 0), p_frame)
+                        
+                        # Quantize for transparent GIF
+                        alpha = canvas.split()[3]
+                        canvas_p = canvas.convert('RGB').convert('P', palette=Image.Palette.ADAPTIVE, colors=255)
+                        mask = Image.eval(alpha, lambda a: 255 if a <= 128 else 0)
+                        canvas_p.paste(255, mask)
+                        canvas_p.info['transparency'] = 255
+                        
+                        frames.append(canvas_p)
                         
                         dur = frame.info.get('duration')
                         if dur is None:
@@ -78,11 +102,20 @@ async def generate_framed_image(image_url, width=600, height=300, color=0x74b816
                     return buf, "gif"
                 else:
                     img = img.convert("RGBA")
-                    img = ImageOps.fit(img, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
-                    img = ImageOps.expand(img, border=10, fill=color_tuple)
+                    img = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+                    
+                    if has_frame:
+                        img = ImageOps.expand(img, border=10, fill=color_tuple)
+                        canvas_width = width + 20
+                    else:
+                        canvas_width = width
+                        
+                    canvas = Image.new("RGBA", (canvas_width, img.height), (0, 0, 0, 0))
+                    x_offset = (canvas.width - img.width) // 2
+                    canvas.paste(img, (x_offset, 0), img)
                     
                     buf = io.BytesIO()
-                    img.save(buf, format="PNG")
+                    canvas.save(buf, format="PNG")
                     buf.seek(0)
                     return buf, "png"
     except Exception as e:

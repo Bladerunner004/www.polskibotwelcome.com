@@ -3,7 +3,7 @@ import time
 import asyncio
 import sys
 from run import app
-from bot import run_bot
+from bot import bot, TOKEN
 from database import init_db
 
 RETRY_DELAY = 5
@@ -23,7 +23,7 @@ def start_discord_bot():
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            loop.run_until_complete(run_bot())
+            loop.run_until_complete(bot.start(TOKEN))
         except Exception as e:
             print(f"[BOT] Błąd: {e}")
         

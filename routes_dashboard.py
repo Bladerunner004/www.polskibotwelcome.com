@@ -139,11 +139,18 @@ def dashboard():
             from database import is_premium
             premium_status = is_premium(guild_id) if bot_present else False
 
+            icon_hash = guild.get('icon')
+            icon_url = None
+            if icon_hash:
+                ext = 'gif' if icon_hash.startswith('a_') else 'png'
+                icon_url = f"https://cdn.discordapp.com/icons/{guild_id}/{icon_hash}.{ext}"
+
             user_servers.append({
                 "id": guild_id,
                 "name": guild.get('name'),
                 "role": "Właściciel" if guild.get('owner') else "Administrator",
-                "icon": guild.get('icon'),
+                "icon": icon_hash,
+                "icon_url": icon_url,
                 "has_bot": bot_present,
                 "premium": premium_status
             })

@@ -479,8 +479,8 @@
                 <div class="premium-tag"><i class="fas fa-crown"></i> Premium</div>
                 {% endif %}
 
-                {% if server.icon %}
-                <img src="https://cdn.discordapp.com/icons/{{ server.id }}/{{ server.icon }}.{% if server.icon.startswith('a_') %}gif{% else %}png{% endif %}" class="icon">
+                {% if server.icon_url %}
+                <img src="{{ server.icon_url }}" class="icon">
                 {% else %}
                 <div class="icon">{{ server.name[0] }}</div>
                 {% endif %}

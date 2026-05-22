@@ -518,8 +518,8 @@
         <div class="server-nav">
             {% for ug in user_guilds %}
                 <a href="/config/{{ ug.id }}" class="server-link {% if ug.id|string == guild.id|string %}active{% endif %}" title="{{ ug.name }}">
-                    {% if ug.icon %}
-                        <img src="https://cdn.discordapp.com/icons/{{ ug.id }}/{{ ug.icon }}.{% if ug.icon.startswith('a_') %}gif{% else %}png{% endif %}" class="server-pfp">
+                    {% if ug.icon_url %}
+                        <img src="{{ ug.icon_url }}" class="server-pfp">
                     {% else %}
                         <div class="server-pfp" style="display:flex; align-items:center; justify-content:center; background:#1a1d24; color:#666; font-size:0.7rem;">{{ ug.name[0] }}</div>
                     {% endif %}
@@ -530,8 +530,8 @@
         <div class="sidebar">
                 <div class="sidebar-scroll-area">
                 <div class="sidebar-header">
-                    <div class="server-pfp-large" {% if guild.icon %} style="background-image: url('https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.{% if guild.icon.startswith('a_') %}gif{% else %}png{% endif %}'); background-size: cover;" {% endif %}>
-                        {% if not guild.icon %}<span style="font-size: 1.5rem; color: #888;">{{ guild.name[0] }}</span>{% endif %}
+                    <div class="server-pfp-large" {% if guild.icon_url %} style="background-image: url('{{ guild.icon_url }}'); background-size: cover;" {% endif %}>
+                        {% if not guild.icon_url %}<span style="font-size: 1.5rem; color: #888;">{{ guild.name[0] }}</span>{% endif %}
                     </div>
                     <div style="font-weight: 800; font-size: 0.95rem;">{{ guild.name }}</div>
                 </div>

@@ -371,10 +371,17 @@ def config(server_id):
         bot_latency = bot_info.get('latency') if bot_info else None
     
     # Rozszerzone dane o serwerze (ilość osób itp)
+    g_icon = guild_data.get('icon')
+    g_icon_url = None
+    if g_icon:
+        ext = 'gif' if g_icon.startswith('a_') else 'png'
+        g_icon_url = f"https://cdn.discordapp.com/icons/{server_id}/{g_icon}.{ext}"
+
     guild = {
         "name": guild_data.get('name'), 
         "id": server_id,
-        "icon": guild_data.get('icon'),
+        "icon": g_icon,
+        "icon_url": g_icon_url,
         "member_count": guild_data.get('approximate_member_count') or guild_data.get('member_count', 0),
         "owner_id": guild_data.get('owner_id')
     }
@@ -475,10 +482,16 @@ def config(server_id):
             for g in user_guilds:
                 if (int(g.get('permissions', 0)) & 0x8) or g.get('owner'):
                     if str(g['id']) in bot_guild_ids:
+                        icon_hash = g.get('icon')
+                        icon_url = None
+                        if icon_hash:
+                            ext = 'gif' if icon_hash.startswith('a_') else 'png'
+                            icon_url = f"https://cdn.discordapp.com/icons/{g['id']}/{icon_hash}.{ext}"
                         user_guilds_filtered.append({
                             "id": str(g['id']),
                             "name": g['name'],
-                            "icon": g.get('icon')
+                            "icon": icon_hash,
+                            "icon_url": icon_url
                         })
             
             if user_data:

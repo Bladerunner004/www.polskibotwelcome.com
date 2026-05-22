@@ -1631,9 +1631,19 @@
 
     async function loadEmbeds() {
         try {
-            const res = await fetch(`${API}/embeds`);
-            const configs = await res.json();
-            window.localEmbedConfigs = configs || [];
+            const [embedsRes, channelsRes] = await Promise.all([
+                fetch(`${API}/embeds`),
+                fetch(`${API}/channels`)
+            ]);
+            window.localEmbedConfigs = (await embedsRes.json()) || [];
+            const channels = await channelsRes.json();
+            
+            const channelMap = {};
+            if(Array.isArray(channels)) {
+                channels.forEach(c => channelMap[c.id] = c.name);
+            }
+            window.globalChannelMap = channelMap;
+            
             renderLists(window.localEmbedConfigs);
         } catch(e) {}
     }
@@ -1664,10 +1674,14 @@
                 subtitle = cfg.description ? (cfg.description.length > 45 ? cfg.description.substring(0, 42) + '...' : cfg.description) : "Brak opisu";
             }
 
+            let channelName = window.globalChannelMap && window.globalChannelMap[cfg.channel_id] 
+                              ? `#${window.globalChannelMap[cfg.channel_id]}` 
+                              : (cfg.channel_id ? `K. usunięty (${cfg.channel_id.toString().substring(0,4)}...)` : 'Brak kanału');
+
             div.innerHTML = `
                 <div style="display:flex; flex-direction:column; gap:2px;">
                     <span style="font-weight:700; font-size:0.95rem;"><i class="${icon}" style="color:var(--accent-green); margin-right:8px; width:20px;"></i> ${cfg.name}</span>
-                    <span style="font-size:0.75rem; color:var(--text-gray); margin-left:28px;">${subtitle}</span>
+                    <span style="font-size:0.75rem; color:var(--text-gray); margin-left:28px;">Wysyłane na: <strong style="color:var(--accent-green);">${channelName}</strong> | ${subtitle}</span>
                 </div>
                 <button type="button" class="btn-del" onclick="deleteEmbed(${cfg.id}, event)"><i class="fas fa-trash"></i></button>
             `;

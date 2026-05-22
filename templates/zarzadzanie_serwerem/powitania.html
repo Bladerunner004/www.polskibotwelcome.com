@@ -943,13 +943,16 @@
         configs.forEach(cfg => {
             const div = document.createElement('div');
             div.className = 'config-item';
+            const channelNameText = window.globalChannelMap && window.globalChannelMap[cfg.channel_id] 
+                                    ? `#${window.globalChannelMap[cfg.channel_id]}` 
+                                    : (cfg.channel_name || `K. usunięty (${cfg.channel_id ? cfg.channel_id.toString().substring(0,4) : ''})`);
+            const iconClass = type === 'powitanie' ? 'fa-sign-in-alt' : 'fa-sign-out-alt';
             div.innerHTML = `
-                <span onclick="openEditWelcomeModal(${cfg.id}, '${type}')">
-                    <i class="fas fa-comment-dots"></i> ${cfg.channel_name || 'Kanał'}
-                </span>
-                <div style="display: flex; gap: 10px;">
-                    <i class="fas fa-trash btn-del" onclick="event.stopPropagation(); deleteWelcomeConfig(${cfg.id}, '${type}')"></i>
+                <div style="display:flex; flex-direction:column; gap:2px; cursor: pointer; flex-grow: 1;" onclick="openEditWelcomeModal(${cfg.id}, '${type}')">
+                    <span style="font-weight:700; font-size:0.95rem; color: white;"><i class="fas ${iconClass}" style="color:var(--accent-green); margin-right:8px;"></i> ${type === 'powitanie' ? 'Wiadomość Powitalna' : 'Wiadomość Pożegnalna'}</span>
+                    <span style="font-size:0.75rem; color:var(--text-gray); margin-left:24px;">Wysyłane na: <strong style="color:var(--accent-green);">${channelNameText}</strong></span>
                 </div>
+                <button type="button" class="btn-del" onclick="event.stopPropagation(); deleteWelcomeConfig(${cfg.id}, '${type}')"><i class="fas fa-trash"></i></button>
             `;
             cont.appendChild(div);
         });
@@ -1106,8 +1109,19 @@
 
     async function loadAllWelcomeConfigs() {
         try {
-            const res = await fetch(`${API_URL}/welcome`);
+            const [res, channelsRes] = await Promise.all([
+                fetch(`${API_URL}/welcome`),
+                fetch(`${API_URL}/channels`)
+            ]);
             const data = await res.json();
+            const channels = await channelsRes.json();
+            
+            const channelMap = {};
+            if(Array.isArray(channels)) {
+                channels.forEach(c => channelMap[c.id] = c.name);
+            }
+            window.globalChannelMap = channelMap;
+            
             window.localWelcomeConfigs = {
                 powitanie: data.powitanie || [],
                 pozegnanie: data.pozegnanie || []

@@ -136,7 +136,9 @@ def security_check():
         return # W przyszłości można dodać dodatkowe warunki, np. ID dewelopera
         
     # Sprawdzamy czy żądanie dotyczy konkretnego serwera (na podstawie parametrów ścieżki)
-    guild_id = request.view_args.get('guild_id') or request.view_args.get('server_id')
+    guild_id = None
+    if request.view_args:
+        guild_id = request.view_args.get('guild_id') or request.view_args.get('server_id')
     if guild_id:
         if str(guild_id).isdigit() and len(str(guild_id)) > 15:
             if not check_guild_access(guild_id):

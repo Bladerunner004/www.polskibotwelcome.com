@@ -734,8 +734,18 @@ def api_save_role_counter(guild_id):
 
 @config_bp.route('/api/<guild_id>/role_counters/<int:config_id>', methods=['DELETE'])
 def api_delete_role_counter(guild_id, config_id):
-    from database import delete_role_counter
+    from database import get_role_counters, delete_role_counter
+    # Znajdź channel_id przed usunięciem wiersza w bazie
+    configs = get_role_counters(guild_id)
+    cfg = next((c for c in configs if c['id'] == config_id), None)
+    if cfg and cfg.get('channel_id'):
+        ch_id = cfg['channel_id']
+        if ch_id and str(ch_id).strip() != "None" and str(ch_id).isdigit():
+            call_bot_api(f"/guilds/{guild_id}/delete_channel/{ch_id}", method="POST")
+            
     ok = delete_role_counter(guild_id, config_id)
+    if ok:
+        call_bot_api(f"/guilds/{guild_id}/sync_counters", method="POST")
     return jsonify({'success': ok})
 
 @config_bp.route('/api/<guild_id>/role_counters/sync', methods=['POST'])
@@ -743,7 +753,12 @@ def api_sync_role_counters(guild_id):
     from database import sync_role_counters
     data = request.json
     configs = data.get('configs', [])
-    if sync_role_counters(guild_id, configs):
+    success, deleted_channel_ids = sync_role_counters(guild_id, configs)
+    if success:
+        # Usuń skasowane kanały na Discordzie
+        for ch_id in deleted_channel_ids:
+            call_bot_api(f"/guilds/{guild_id}/delete_channel/{ch_id}", method="POST")
+            
         call_bot_api(f"/guilds/{guild_id}/sync_counters", method="POST")
         return jsonify({'success': True})
     return jsonify({'success': False}), 400

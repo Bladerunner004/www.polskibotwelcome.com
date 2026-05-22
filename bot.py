@@ -133,6 +133,7 @@ class PolskiBot(commands.Bot):
             web.post('/test_welcome', self.handle_api_welcome),
             web.post('/guilds/{guild_id}/sync_boosters', self.handle_api_sync_boosters),
             web.post('/guilds/{guild_id}/sync_counters', self.handle_api_sync_counters),
+            web.post('/guilds/{guild_id}/delete_channel/{channel_id}', self.handle_api_delete_channel),
         ])
         runner = web.AppRunner(app)
         await runner.setup()
@@ -197,6 +198,7 @@ class PolskiBot(commands.Bot):
                 channel = guild.get_channel(int(cfg['channel_id']))
                 await cog.send_selfrole_panel(channel, cfg, is_test=data.get('is_test', False))
                 return web.json_response({'success': True})
+            return web.json_response({'success': False, 'error': 'Konfiguracja nieznaleziona'})
         return web.json_response({'success': False, 'error': 'Moduł SelfRole niezaładowany'})
 
     async def handle_api_welcome(self, request):
@@ -244,6 +246,22 @@ class PolskiBot(commands.Bot):
                     await cog.update_all_counters(guild)
                     return web.json_response({'success': True})
             return web.json_response({'success': False, 'error': 'Gildia lub moduł Counters nieznalezione'})
+        except Exception as e:
+            return web.json_response({'success': False, 'error': str(e)})
+
+    async def handle_api_delete_channel(self, request):
+        try:
+            guild_id = request.match_info.get('guild_id')
+            channel_id = request.match_info.get('channel_id')
+            guild = self.get_guild(int(guild_id))
+            if guild:
+                channel = guild.get_channel(int(channel_id))
+                if channel:
+                    await channel.delete()
+                    return web.json_response({'success': True})
+                else:
+                    return web.json_response({'success': True, 'warning': 'Channel not found on Discord'})
+            return web.json_response({'success': False, 'error': 'Gildia nieznaleziona'})
         except Exception as e:
             return web.json_response({'success': False, 'error': str(e)})
 

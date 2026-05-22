@@ -598,20 +598,54 @@ def sync_role_counters(guild_id, configs):
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
-        # Usuwamy stare, bo to synchronizacja stanu z dashboardu
-        cursor.execute("DELETE FROM role_counters WHERE guild_id = ?", (str(guild_id),))
+        
+        # 1. Pobierz obecne liczniki z bazy
+        cursor.execute("SELECT id, channel_id FROM role_counters WHERE guild_id = ?", (str(guild_id),))
+        old_rows = cursor.fetchall()
+        old_by_id = {row[0]: row[1] for row in old_rows}
+        
+        incoming_ids = set()
+        deleted_channel_ids = []
         
         for cfg in configs:
+            cfg_id = cfg.get('id')
             roles_json = json.dumps(cfg.get('roles', []))
-            cursor.execute("INSERT INTO role_counters (guild_id, name, mode, roles, enabled) VALUES (?, ?, ?, ?, ?)",
-                         (str(guild_id), cfg.get('name'), cfg.get('mode', 'white'), roles_json, 1 if cfg.get('enabled', True) else 0))
+            enabled = 1 if cfg.get('enabled', True) else 0
+            name = cfg.get('name')
+            mode = cfg.get('mode', 'white')
+            
+            try:
+                cfg_id_int = int(cfg_id) if cfg_id is not None else None
+            except (ValueError, TypeError):
+                cfg_id_int = None
+                
+            if cfg_id_int and cfg_id_int in old_by_id:
+                incoming_ids.add(cfg_id_int)
+                # Aktualizujemy istniejący licznik, zachowując channel_id
+                cursor.execute(
+                    "UPDATE role_counters SET name = ?, mode = ?, roles = ?, enabled = ? WHERE id = ? AND guild_id = ?",
+                    (name, mode, roles_json, enabled, cfg_id_int, str(guild_id))
+                )
+            else:
+                # Dodajemy nowy licznik
+                cursor.execute(
+                    "INSERT INTO role_counters (guild_id, name, mode, roles, enabled) VALUES (?, ?, ?, ?, ?)",
+                    (str(guild_id), name, mode, roles_json, enabled)
+                )
+        
+        # 2. Usuwamy te liczniki z bazy, których nie ma w nowej konfiguracji (zostały usunięte)
+        for old_id, channel_id in old_by_id.items():
+            if old_id not in incoming_ids:
+                if channel_id and str(channel_id).strip() != "None" and str(channel_id).isdigit():
+                    deleted_channel_ids.append(str(channel_id))
+                cursor.execute("DELETE FROM role_counters WHERE id = ?", (old_id,))
         
         conn.commit()
         conn.close()
-        return True
+        return True, deleted_channel_ids
     except Exception as e:
-        print(f"âťŚ BĹ‚Ä…d sync_role_counters: {e}")
-        return False
+        print(f"❌ Błąd sync_role_counters: {e}")
+        return False, []
 
 def update_role_counter_channel_id(counter_id, channel_id):
     conn = sqlite3.connect(DB_NAME)

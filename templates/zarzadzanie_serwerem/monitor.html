@@ -107,8 +107,22 @@
     
     async function loadStats() {
         try {
-            const res = await fetch(`/api/${guildId}/activity`);
-            const data = await res.json();
+            const [activityRes, channelsRes] = await Promise.all([
+                fetch(`/api/${guildId}/activity`),
+                fetch(`/api/${guildId}/channels`)
+            ]);
+            const data = await activityRes.json();
+            const channels = await channelsRes.json();
+            
+            const channelMap = {};
+            if(Array.isArray(channels)) {
+                channels.forEach(c => channelMap[c.id] = c.name);
+            }
+            
+            data.top_channels.forEach(c => {
+                c.name = channelMap[c.id] ? `#${channelMap[c.id]}` : `K. usunięty (${c.id.substring(0,4)}...)`;
+            });
+
             renderCharts(data);
             updateMiniStats(data);
         } catch(e) { console.error("Błąd ładowania statystyk:", e); }
@@ -176,7 +190,7 @@
             new Chart(ctx2, {
                 type: 'doughnut',
                 data: {
-                    labels: data.top_channels.map(c => `ID: ${c.id}`),
+                    labels: data.top_channels.map(c => c.name || `ID: ${c.id}`),
                     datasets: [{
                         data: data.top_channels.map(c => c.count),
                         backgroundColor: ['#74b816', '#00a8fc', '#ffaa00', '#f87171', '#a78bfa'],

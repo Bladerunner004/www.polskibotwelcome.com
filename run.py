@@ -239,21 +239,50 @@ def callback():
         }
         try:
             token_resp = requests.post("https://discord.com/api/v10/oauth2/token", data=data, timeout=10)
-            token_data = token_resp.json()
+            try:
+                token_data = token_resp.json()
+            except ValueError:
+                token_data = {"error": "Invalid JSON response", "text": token_resp.text}
             
-            with open("auth_debug.log", "a", encoding="utf-8") as f:
-                f.write(f"  Status tokena: {token_resp.status_code}\n")
-                f.write(f"  Token dane: {token_data}\n")
+            try:
+                with open("auth_debug.log", "a", encoding="utf-8") as f:
+                    f.write(f"  Status tokena: {token_resp.status_code}\n")
+                    f.write(f"  Token dane: {token_data}\n")
+            except Exception as log_err:
+                print(f"⚠️ [AUTH] Nie udało się zapisać statusu tokena do logu: {log_err}")
 
             if token_resp.status_code == 200:
                 access_token = token_data.get('access_token')
+                if not access_token:
+                    print("⚠️ [AUTH] Brak access_token w odpowiedzi Discorda.")
+                    return redirect(url_for('home.index'))
+
                 user_resp = requests.get("https://discord.com/api/v10/users/@me", headers={"Authorization": f"Bearer {access_token}"})
-                user_data = user_resp.json()
-                print(f"👤 [AUTH] Zalogowano użytkownika: {user_data.get('username')} (ID: {user_data.get('id')})")
+                if user_resp.status_code != 200:
+                    print(f"⚠️ [AUTH] Błąd pobierania profilu użytkownika ({user_resp.status_code}): {user_resp.text}")
+                    return redirect(url_for('home.index'))
+
+                try:
+                    user_data = user_resp.json()
+                except ValueError:
+                    print("⚠️ [AUTH] Błąd parsowania JSON profilu użytkownika.")
+                    return redirect(url_for('home.index'))
+
+                user_id = user_data.get('id')
+                if not user_id:
+                    print(f"⚠️ [AUTH] Brak ID użytkownika w danych profilu: {user_data}")
+                    return redirect(url_for('home.index'))
+
+                print(f"👤 [AUTH] Zalogowano użytkownika: {user_data.get('username')} (ID: {user_id})")
 
                 # Pobieramy najświeższe serwery użytkownika z Discorda
                 guilds_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers={"Authorization": f"Bearer {access_token}"})
-                all_guilds = guilds_resp.json() if guilds_resp.status_code == 200 else []
+                all_guilds = []
+                if guilds_resp.status_code == 200:
+                    try:
+                        all_guilds = guilds_resp.json()
+                    except ValueError:
+                        pass
                 print(f"📊 [AUTH] Pobrano {len(all_guilds)} serwerów użytkownika")
                 
                 # Filtrujemy i optymalizujemy serwery (admin/owner), aby zapobiec przepełnieniu ciasteczka sesji (limit 4KB)
@@ -269,24 +298,26 @@ def callback():
                             'owner': g.get('owner')
                         })
 
-                user_id = user_data['id']
                 session.permanent = True
-                session['user'] = {'id': user_id, 'username': user_data['username'], 'avatar': user_data['avatar']}
+                session['user'] = {'id': user_id, 'username': user_data.get('username'), 'avatar': user_data.get('avatar')}
                 session['user_avatar'] = get_user_avatar(session['user'])
                 session['access_token'] = access_token
                 session['last_profile_refresh'] = time.time()
                 session.modified = True
 
                 # Zapisujemy serwery w pamięci procesu (nie w cookie!) - brak limitu 4KB
-                # _guilds_memory_cache is a global variable in this module
                 _guilds_memory_cache[user_id] = managed_guilds
                 print(f"💾 [AUTH] Zapisano {len(managed_guilds)} serwerów w pamięci (user: {user_id})")
             else:
                 print(f"⚠️ [AUTH] Błąd tokena: {token_data}")
+                return redirect(url_for('home.index'))
         except Exception as e:
             print(f"❌ [AUTH] Błąd krytyczny przy wymianie tokena: {e}")
-            with open("auth_debug.log", "a", encoding="utf-8") as f:
-                f.write(f"  Blad krytyczny tokena: {e}\n")
+            try:
+                with open("auth_debug.log", "a", encoding="utf-8") as f:
+                    f.write(f"  Blad krytyczny tokena: {e}\n")
+            except: pass
+            return redirect(url_for('home.index'))
 
     # Obsługa dodania bota (powrót z zaproszenia bota na serwer)
     if guild_id:

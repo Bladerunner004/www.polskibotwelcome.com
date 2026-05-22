@@ -10,10 +10,8 @@ except ImportError:
 import uuid
 from datetime import datetime, timedelta
 
-# Ścieżka do statusu (dla PythonAnywhere)
-STATUS_FILE_PATH = "/home/BLADERUNNER009/AntigravityProjekt/bot_status.json"
-if not os.path.exists("/home/BLADERUNNER009"):
-    STATUS_FILE_PATH = "bot_status.json" # Fallback lokalny
+# Ścieżka do statusu (dla PythonAnywhere i lokalnie)
+STATUS_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_status.json")
 from flask import Blueprint, render_template, session, redirect, url_for, request, jsonify, flash
 from base import BOT_TOKEN
 from database import get_settings, save_settings, get_command_settings, save_command_settings, get_welcome_configs, save_welcome_config, delete_welcome_config, get_audit_logs

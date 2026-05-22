@@ -1,8 +1,8 @@
 import sys
 import os
 
-# Ścieżka do Twojego projektu na PythonAnywhere
-path = '/home/BLADERUNNER009/AntigravityProjekt'
+# Dynamicznie określamy ścieżkę do projektu (katalog, w którym znajduje się ten plik)
+path = os.path.dirname(os.path.abspath(__file__))
 if path not in sys.path:
     sys.path.insert(0, path)
 

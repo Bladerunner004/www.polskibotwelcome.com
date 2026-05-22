@@ -88,10 +88,18 @@ def refresh_discord_cache():
     now = time.time()
     last_refresh = session.get('last_profile_refresh', 0)
     
-    # Odświeżamy co 5 minut (300 sekund) lub gdy w URL jest refresh=true
+    # Odświeżamy co 60 sekund lub gdy w URL jest refresh=true
     force_refresh = request.args.get('refresh') == 'true'
     
-    if force_refresh or (now - last_refresh > 300):
+    if force_refresh:
+        try:
+            from routes_config import _bot_avatar_cache
+            _bot_avatar_cache.clear()
+            print("🧹 [REFRESH] Wyczyszczono cache awatarów botów (_bot_avatar_cache)")
+        except Exception as e:
+            print(f"❌ [REFRESH] Błąd czyszczenia cache awatarów botów: {e}")
+            
+    if force_refresh or (now - last_refresh > 60):
         access_token = session['access_token']
         headers = {"Authorization": f"Bearer {access_token}"}
         

@@ -44,8 +44,12 @@ def get_bot_avatar_cached(guild_id=None):
     except Exception:
         force_refresh = False
 
+    if force_refresh:
+        _bot_avatar_cache.clear()
+        print("🧹 [BOT AVATAR] Wyczyszczono cache awatarów botów z powodu force_refresh")
+
     cached = _bot_avatar_cache.get(cache_key)
-    if not force_refresh and cached and (now - cached.get("last_fetched", 0) < 600):
+    if not force_refresh and cached and (now - cached.get("last_fetched", 0) < 60):
         return cached["url"]
         
     try:

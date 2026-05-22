@@ -504,6 +504,7 @@
                 </div>
                 <a href="/" class="dropdown-item"><i class="fas fa-home"></i> Strona główna</a>
                 <a href="/dashboard" class="dropdown-item"><i class="fas fa-server"></i> Zmień serwer</a>
+                <a href="?refresh=true" class="dropdown-item" style="color: var(--accent-green); font-weight: 700;"><i class="fas fa-sync-alt"></i> Synchronizuj z Discordem</a>
                 <a href="{{ url_for('logout') }}" class="dropdown-item logout"><i class="fas fa-sign-out-alt"></i> Wyloguj się</a>
             </div>
         </div>
@@ -633,6 +634,13 @@
             cfgAvatarBtn.addEventListener('click', e => { e.stopPropagation(); cfgDropdown.classList.toggle('show'); });
         }
         window.addEventListener('click', () => { if (cfgDropdown && cfgDropdown.classList.contains('show')) cfgDropdown.classList.remove('show'); });
+
+        // Usuwanie ?refresh=true z paska adresu po załadowaniu
+        if (window.location.search.includes('refresh=true')) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('refresh');
+            window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+        }
 
 
         // Funkcja do aktualizacji opĂłĹşnienia bota w czasie rzeczywistym

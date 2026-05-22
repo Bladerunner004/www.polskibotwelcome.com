@@ -360,29 +360,27 @@
                 <p class="card-desc">Liczy wszystkich ludzi na serwerze.</p>
             </div>
             <label class="toggle-row">
-                <input type="checkbox" id="counter-humans-enabled" class="feature-toggle" data-target="humans-body" data-disable-target="humans-disabled-body" {% if main_settings.counter_humans_enabled %}checked{% endif %}>
+                <input type="checkbox" id="counter-humans-enabled" class="feature-toggle" data-target="humans-inputs-container" {% if main_settings.counter_humans_enabled %}checked{% endif %}>
                 <div class="toggle-switch"></div>
             </label>
         </div>
-        <div class="card-body {% if not main_settings.counter_humans_enabled %}hidden{% endif %}" id="humans-body">
-            <label class="ar-label-small">Nazwa kanału</label>
-            <div class="counter-input-preview">
-                <span id="preview-humans-text">{% if main_settings.counter_humans_name %}{{ main_settings.counter_humans_name.split('{count}')[0] }}{% else %}Humans: {% endif %}</span>
-                <span class="counter-tag">Liczba</span>
-                <span id="preview-humans-suffix">{% if main_settings.counter_humans_name and '{count}' in main_settings.counter_humans_name %}{{ main_settings.counter_humans_name.split('{count}')[1] }}{% endif %}</span>
+        <div class="card-body" id="humans-body" style="padding: 20px;">
+            <div id="humans-inputs-container" class="{% if not main_settings.counter_humans_enabled %}hidden{% endif %}">
+                <label class="ar-label-small">Nazwa kanału</label>
+                <div class="counter-input-preview">
+                    <span id="preview-humans-text">{% if main_settings.counter_humans_name %}{{ main_settings.counter_humans_name.split('{count}')[0] }}{% else %}Humans: {% endif %}</span>
+                    <span class="counter-tag">Liczba</span>
+                    <span id="preview-humans-suffix">{% if main_settings.counter_humans_name and '{count}' in main_settings.counter_humans_name %}{{ main_settings.counter_humans_name.split('{count}')[1] }}{% endif %}</span>
+                </div>
+                <input type="text" id="counter-humans-name-input" class="modal-select" 
+                       placeholder="Humans: {count}" value="{{ main_settings.counter_humans_name }}">
+                
+                <label class="checkbox-row">
+                    <input type="checkbox" id="counter-humans-thousands" {% if main_settings.counter_humans_thousands %}checked{% endif %}>
+                    Zaokrąglanie dużych liczb do tysięcy
+                </label>
             </div>
-            <input type="text" id="counter-humans-name-input" class="modal-select" 
-                   placeholder="Humans: {count}" value="{{ main_settings.counter_humans_name }}">
-            
-            <label class="checkbox-row">
-                <input type="checkbox" id="counter-humans-thousands" {% if main_settings.counter_humans_thousands %}checked{% endif %}>
-                Zaokrąglanie dużych liczb do tysięcy
-            </label>
             <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveSingleCounter('humans')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
-        </div>
-        <div class="card-body {% if main_settings.counter_humans_enabled %}hidden{% endif %}" id="humans-disabled-body" style="padding: 15px 20px; background: rgba(255, 71, 71, 0.02); border-top: 1px dashed rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap;">
-            <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fas fa-info-circle" style="color: #ff4747;"></i> Licznik jest wyłączony. Zapisz, aby usunąć kanał z Discorda.</span>
-            <button type="button" class="btn-del" onclick="saveSingleCounter('humans')" style="padding: 8px 16px; margin: 0; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;"><i class="fas fa-save"></i> Zapisz wyłączenie</button>
         </div>
     </div>
 
@@ -394,29 +392,27 @@
                 <p class="card-desc">Liczy wszystkie boty na serwerze.</p>
             </div>
             <label class="toggle-row">
-                <input type="checkbox" id="counter-bots-enabled" class="feature-toggle" data-target="bots-body" data-disable-target="bots-disabled-body" {% if main_settings.counter_bots_enabled %}checked{% endif %}>
+                <input type="checkbox" id="counter-bots-enabled" class="feature-toggle" data-target="bots-inputs-container" {% if main_settings.counter_bots_enabled %}checked{% endif %}>
                 <div class="toggle-switch"></div>
             </label>
         </div>
-        <div class="card-body {% if not main_settings.counter_bots_enabled %}hidden{% endif %}" id="bots-body">
-            <label class="ar-label-small">Nazwa kanału</label>
-            <div class="counter-input-preview">
-                <span id="preview-bots-text">{% if main_settings.counter_bots_name %}{{ main_settings.counter_bots_name.split('{count}')[0] }}{% else %}Bots: {% endif %}</span>
-                <span class="counter-tag">Liczba</span>
-                <span id="preview-bots-suffix">{% if main_settings.counter_bots_name and '{count}' in main_settings.counter_bots_name %}{{ main_settings.counter_bots_name.split('{count}')[1] }}{% endif %}</span>
+        <div class="card-body" id="bots-body" style="padding: 20px;">
+            <div id="bots-inputs-container" class="{% if not main_settings.counter_bots_enabled %}hidden{% endif %}">
+                <label class="ar-label-small">Nazwa kanału</label>
+                <div class="counter-input-preview">
+                    <span id="preview-bots-text">{% if main_settings.counter_bots_name %}{{ main_settings.counter_bots_name.split('{count}')[0] }}{% else %}Bots: {% endif %}</span>
+                    <span class="counter-tag">Liczba</span>
+                    <span id="preview-bots-suffix">{% if main_settings.counter_bots_name and '{count}' in main_settings.counter_bots_name %}{{ main_settings.counter_bots_name.split('{count}')[1] }}{% endif %}</span>
+                </div>
+                <input type="text" id="counter-bots-name-input" class="modal-select" 
+                       placeholder="Bots: {count}" value="{{ main_settings.counter_bots_name }}">
+                
+                <label class="checkbox-row">
+                    <input type="checkbox" id="counter-bots-thousands" {% if main_settings.counter_bots_thousands %}checked{% endif %}>
+                    Zaokrąglanie dużych liczb do tysięcy
+                </label>
             </div>
-            <input type="text" id="counter-bots-name-input" class="modal-select" 
-                   placeholder="Bots: {count}" value="{{ main_settings.counter_bots_name }}">
-            
-            <label class="checkbox-row">
-                <input type="checkbox" id="counter-bots-thousands" {% if main_settings.counter_bots_thousands %}checked{% endif %}>
-                Zaokrąglanie dużych liczb do tysięcy
-            </label>
             <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveSingleCounter('bots')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
-        </div>
-        <div class="card-body {% if main_settings.counter_bots_enabled %}hidden{% endif %}" id="bots-disabled-body" style="padding: 15px 20px; background: rgba(255, 71, 71, 0.02); border-top: 1px dashed rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap;">
-            <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fas fa-info-circle" style="color: #ff4747;"></i> Licznik jest wyłączony. Zapisz, aby usunąć kanał z Discorda.</span>
-            <button type="button" class="btn-del" onclick="saveSingleCounter('bots')" style="padding: 8px 16px; margin: 0; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;"><i class="fas fa-save"></i> Zapisz wyłączenie</button>
         </div>
     </div>
 
@@ -428,24 +424,22 @@
                 <p class="card-desc">Liczy wszystkie bany na serwerze.</p>
             </div>
             <label class="toggle-row">
-                <input type="checkbox" id="counter-bans-enabled" class="feature-toggle" data-target="bans-body" data-disable-target="bans-disabled-body" {% if main_settings.counter_bans_enabled %}checked{% endif %}>
+                <input type="checkbox" id="counter-bans-enabled" class="feature-toggle" data-target="bans-inputs-container" {% if main_settings.counter_bans_enabled %}checked{% endif %}>
                 <div class="toggle-switch"></div>
             </label>
         </div>
-        <div class="card-body {% if not main_settings.counter_bans_enabled %}hidden{% endif %}" id="bans-body">
-            <label class="ar-label-small">Nazwa kanału</label>
-            <div class="counter-input-preview">
-                <span id="preview-bans-text">{% if main_settings.counter_bans_name %}{{ main_settings.counter_bans_name.split('{count}')[0] }}{% else %}Bans: {% endif %}</span>
-                <span class="counter-tag">Liczba</span>
-                <span id="preview-bans-suffix">{% if main_settings.counter_bans_name and '{count}' in main_settings.counter_bans_name %}{{ main_settings.counter_bans_name.split('{count}')[1] }}{% endif %}</span>
+        <div class="card-body" id="bans-body" style="padding: 20px;">
+            <div id="bans-inputs-container" class="{% if not main_settings.counter_bans_enabled %}hidden{% endif %}">
+                <label class="ar-label-small">Nazwa kanału</label>
+                <div class="counter-input-preview">
+                    <span id="preview-bans-text">{% if main_settings.counter_bans_name %}{{ main_settings.counter_bans_name.split('{count}')[0] }}{% else %}Bans: {% endif %}</span>
+                    <span class="counter-tag">Liczba</span>
+                    <span id="preview-bans-suffix">{% if main_settings.counter_bans_name and '{count}' in main_settings.counter_bans_name %}{{ main_settings.counter_bans_name.split('{count}')[1] }}{% endif %}</span>
+                </div>
+                <input type="text" id="counter-bans-name-input" class="modal-select" 
+                       placeholder="Bans: {count}" value="{{ main_settings.counter_bans_name }}">
             </div>
-            <input type="text" id="counter-bans-name-input" class="modal-select" 
-                   placeholder="Bans: {count}" value="{{ main_settings.counter_bans_name }}">
             <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveSingleCounter('bans')" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
-        </div>
-        <div class="card-body {% if main_settings.counter_bans_enabled %}hidden{% endif %}" id="bans-disabled-body" style="padding: 15px 20px; background: rgba(255, 71, 71, 0.02); border-top: 1px dashed rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap;">
-            <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fas fa-info-circle" style="color: #ff4747;"></i> Licznik jest wyłączony. Zapisz, aby usunąć kanał z Discorda.</span>
-            <button type="button" class="btn-del" onclick="saveSingleCounter('bans')" style="padding: 8px 16px; margin: 0; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;"><i class="fas fa-save"></i> Zapisz wyłączenie</button>
         </div>
     </div>
 
@@ -467,25 +461,24 @@
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="role-counters-count" class="stat-badge {% if main_settings.premium %}premium{% endif %}" style="background: rgba(116,184,22,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--accent-green); font-weight: 700; border: 1px solid rgba(116,184,22,0.2);">{{ role_counters|length }} / {% if main_settings.premium %}5{% else %}1{% endif %}</span>
                 <label class="toggle-row">
-                    <input type="checkbox" id="counter-roles-master-enabled" class="feature-toggle" data-target="roles-body" data-disable-target="roles-disabled-body" {% if role_counters %}checked{% endif %} {% if not main_settings.premium and role_counters|length >= 1 %}disabled{% endif %}>
+                    <input type="checkbox" id="counter-roles-master-enabled" class="feature-toggle" data-target="roles-inputs-container" {% if role_counters %}checked{% endif %} {% if not main_settings.premium and role_counters|length >= 1 %}disabled{% endif %}>
                     <div class="{% if main_settings.premium %}premium-slider{% else %}toggle-switch{% endif %}"></div>
                 </label>
             </div>
         </div>
-        <div class="card-body {% if not role_counters %}hidden{% endif %}" id="roles-body">
-            <div id="role-counters-list">
-                <!-- Dynamiczne elementy -->
-            </div>
-            
-            <div id="add-role-btn-container">
-                <div class="new-config-btn" onclick="openRoleModal()">
-                    <i class="fas fa-plus"></i> Dodaj nową konfigurację liczenia ról
+        <div class="card-body" id="roles-body" style="padding: 20px;">
+            <div id="roles-inputs-container" class="{% if not role_counters %}hidden{% endif %}">
+                <div id="role-counters-list">
+                    <!-- Dynamiczne elementy -->
+                </div>
+                
+                <div id="add-role-btn-container">
+                    <div class="new-config-btn" onclick="openRoleModal()">
+                        <i class="fas fa-plus"></i> Dodaj nową konfigurację liczenia ról
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="card-body {% if role_counters %}hidden{% endif %}" id="roles-disabled-body" style="padding: 15px 20px; background: rgba(255, 71, 71, 0.02); border-top: 1px dashed rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap;">
-            <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fas fa-info-circle" style="color: #ff4747;"></i> Liczniki ról są wyłączone. Zapisz, aby usunąć je z Discorda.</span>
-            <button type="button" class="btn-del" onclick="saveCounterSettings()" style="padding: 8px 16px; margin: 0; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;"><i class="fas fa-save"></i> Zapisz wyłączenie</button>
+            <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" onclick="saveCounterSettings()" style="padding: 10px; margin-top: 15px;">ZAPISZ I WYŚLIJ NA DISCORD</button>
         </div>
     </div>
 
@@ -668,8 +661,8 @@
         document.getElementById('add-role-btn-container').style.display = stagedRoleCounters.length >= roleLimit ? 'none' : 'block';
         
         // Automatyczne pokazanie/ukrycie sekcji jeśli są elementy
-        const rolesBody = document.getElementById('roles-body');
-        if (stagedRoleCounters.length > 0) rolesBody.classList.remove('hidden');
+        const rolesInputsContainer = document.getElementById('roles-inputs-container');
+        if (stagedRoleCounters.length > 0 && rolesInputsContainer) rolesInputsContainer.classList.remove('hidden');
     }
 
     document.addEventListener('DOMContentLoaded', renderRoleCounters);

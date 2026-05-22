@@ -1,8 +1,18 @@
 import sys
 import io
+import builtins
+
 # Wymuszenie kodowania UTF-8 dla konsoli Windows, aby zapobiec crashom przy printowaniu emoji (np. 🔗)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+# Wymuszenie natychmiastowego wypisywania logów (wyłączenie buforowania stdout pod uWSGI)
+_orig_print = builtins.print
+def unbuffered_print(*args, **kwargs):
+    kwargs['flush'] = True
+    _orig_print(*args, **kwargs)
+builtins.print = unbuffered_print
+
 
 import datetime
 import os

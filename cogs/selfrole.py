@@ -85,32 +85,52 @@ class SelfRole(commands.Cog):
     async def on_raw_reaction_add(self, payload):
         if payload.user_id == self.bot.user.id: return
         from database import get_selfrole_configs
+        from cogs.embeds import emojis_match
         configs = get_selfrole_configs(payload.guild_id)
         for cfg in configs:
             if cfg['type'] == 'reaction' and str(payload.message_id) == str(cfg.get('message_id')):
                 roles = json.loads(cfg['roles_json'])
                 for r in roles:
-                    if str(payload.emoji) == str(r['emoji']):
+                    if emojis_match(payload.emoji, r.get('emoji')):
                         guild = self.bot.get_guild(payload.guild_id)
-                        role = guild.get_role(int(r['role_id']))
-                        member = payload.member or await guild.fetch_member(payload.user_id)
-                        if role and member: await member.add_roles(role)
+                        if guild:
+                            try:
+                                role_id = int(r['role_id'])
+                                role = guild.get_role(role_id)
+                                member = payload.member or await guild.fetch_member(payload.user_id)
+                                if role and member:
+                                    await member.add_roles(role)
+                                    print(f"✅ [COGS/SELFROLE] Nadano rolę {role.name} dla {member} przez reakcję")
+                            except discord.Forbidden:
+                                print(f"❌ [COGS/SELFROLE] Brak uprawnień do nadania roli {r.get('role_id')} przez reakcję. Upewnij się, że rola bota jest wyżej w hierarchii ról.")
+                            except Exception as e:
+                                print(f"⚠️ [COGS/SELFROLE] Nie można nadać roli przez reakcję: {e}")
                         break
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         if payload.user_id == self.bot.user.id: return
         from database import get_selfrole_configs
+        from cogs.embeds import emojis_match
         configs = get_selfrole_configs(payload.guild_id)
         for cfg in configs:
             if cfg['type'] == 'reaction' and str(payload.message_id) == str(cfg.get('message_id')):
                 roles = json.loads(cfg['roles_json'])
                 for r in roles:
-                    if str(payload.emoji) == str(r['emoji']):
+                    if emojis_match(payload.emoji, r.get('emoji')):
                         guild = self.bot.get_guild(payload.guild_id)
-                        role = guild.get_role(int(r['role_id']))
-                        member = await guild.fetch_member(payload.user_id)
-                        if role and member: await member.remove_roles(role)
+                        if guild:
+                            try:
+                                role_id = int(r['role_id'])
+                                role = guild.get_role(role_id)
+                                member = await guild.fetch_member(payload.user_id)
+                                if role and member:
+                                    await member.remove_roles(role)
+                                    print(f"❌ [COGS/SELFROLE] Odebrano rolę {role.name} dla {member} przez usunięcie reakcji")
+                            except discord.Forbidden:
+                                print(f"❌ [COGS/SELFROLE] Brak uprawnień do odebrania roli {r.get('role_id')} przez usunięcie reakcji. Upewnij się, że rola bota jest wyżej w hierarchii ról.")
+                            except Exception as e:
+                                print(f"⚠️ [COGS/SELFROLE] Nie można odebrać roli przez usunięcie reakcji: {e}")
                         break
 
 async def setup(bot):

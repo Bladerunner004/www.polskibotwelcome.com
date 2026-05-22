@@ -213,6 +213,8 @@
         overflow: hidden;
         max-width: 100%;
         display: none;
+        justify-content: center;
+        align-items: center;
     }
     .discord-embed-image {
         max-width: 100%;
@@ -1008,7 +1010,7 @@
             if (largeUrl && largeUrl.trim() !== '') {
                 largePreview.src = largeUrl;
                 largePreview.style.display = 'block';
-                largeWrap.style.display = 'block';
+                largeWrap.style.display = 'flex';
             } else {
                 largePreview.src = '';
                 largePreview.style.display = 'none';
@@ -1164,7 +1166,7 @@
         if (imgWrap && imgEl) {
             if (imgUrl && imgUrl.trim() !== '') {
                 imgEl.src = imgUrl;
-                imgWrap.style.display = 'block';
+                imgWrap.style.display = 'flex';
                 
                 // Zastosowanie ramki w podglądzie bloku regulaminu
                 const hasFrame = getE('r-has-frame') ? getE('r-has-frame').checked : false;
@@ -1260,7 +1262,7 @@
                                 <div class="discord-embed" style="border-left-color: ${window.mainSettings.embed_color || '#74b816'};">
                                     <div class="embed-main">
                                         <div id="rb-preview-img-wrap-${blockId}" class="discord-embed-image-wrap" style="display: none; margin-bottom: 8px;">
-                                            <img id="rb-preview-img-${blockId}" class="discord-embed-image" src="" style="max-height: 200px; box-sizing: border-box; width: 100%; object-fit: contain;">
+                                            <img id="rb-preview-img-${blockId}" class="discord-embed-image" src="" style="max-height: 200px; box-sizing: border-box; object-fit: contain;">
                                         </div>
                                         <div class="ee-desc" id="rb-preview-text-${blockId}" style="white-space: pre-wrap;"></div>
                                     </div>

@@ -473,6 +473,13 @@
         </div>
     </div>
 
+    <!-- Globalny Zapis -->
+    <div style="margin-top: 10px; margin-bottom: 30px; display: flex; justify-content: center; width: 100%;">
+        <button type="button" class="btn-save save-btn" onclick="saveCounterSettings()" style="max-width: 400px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <i class="fas fa-save"></i> ZAPISZ USTAWIENIA LICZNIKÓW
+        </button>
+    </div>
+
 </div>
 
 <!-- MODAL KONFIGURACJI RÓL -->
@@ -580,6 +587,17 @@
     let stagedRoleCounters = {{ (role_counters or [])|tojson|safe }};
     const allRoles = {{ (roles or [])|tojson|safe }};
     const roleLimit = {% if main_settings.premium %}5{% else %}1{% endif %};
+    let userHasEditedName = false;
+
+    // Śledzenie ręcznej modyfikacji nazwy przez użytkownika
+    document.addEventListener('DOMContentLoaded', () => {
+        const nameInput = document.getElementById('modal-name-input');
+        if (nameInput) {
+            nameInput.addEventListener('keydown', () => {
+                userHasEditedName = true;
+            });
+        }
+    });
 
     function renderRoleCounters() {
         const list = document.getElementById('role-counters-list');
@@ -631,16 +649,32 @@
         const nameInput = document.getElementById('modal-name-input');
         const checkboxes = document.querySelectorAll('.role-cb');
         
-        // Funkcja do aktualizacji tytułu na podstawie checkboxów
+        // Funkcja do aktualizacji tytułu i nazwy na podstawie checkboxów
         const updateTitle = () => {
-            const count = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+            const count = checkedBoxes.length;
             document.getElementById('modal-title').innerText = `Wybrane role: ${count}`;
+
+            // Auto-uzupełnianie nazwy kanału na podstawie wybranych ról (jeśli użytkownik sam jej nie edytował)
+            if (!userHasEditedName) {
+                if (count > 0) {
+                    const names = checkedBoxes.map(cb => {
+                        const span = cb.nextElementSibling;
+                        return span ? span.innerText.trim().replace(/^@/, '') : 'Role';
+                    });
+                    nameInput.value = `${names.join('+')}: {count}`;
+                } else {
+                    nameInput.value = 'Role: {count}';
+                }
+                nameInput.dispatchEvent(new Event('input'));
+            }
         };
 
         if (data) {
             currentEditingId = data.id;
             nameInput.value = data.name;
             document.getElementById('modal-enabled').checked = data.enabled !== 0;
+            userHasEditedName = true;
             
             checkboxes.forEach(cb => {
                 cb.checked = data.roles.includes(cb.value);
@@ -650,6 +684,7 @@
             currentEditingId = null;
             nameInput.value = 'Role: {count}';
             document.getElementById('modal-enabled').checked = true;
+            userHasEditedName = false;
             checkboxes.forEach(cb => cb.checked = false);
             updateTitle();
         }

@@ -119,12 +119,12 @@ def init_db():
             cursor.execute(f"ALTER TABLE settings ADD COLUMN {col_name} {col_type}")
         except: pass
 
-    # Tabela dynamicznych licznikĂłw rĂłl
+    # Tabela dynamicznych liczników ról
     cursor.execute('''CREATE TABLE IF NOT EXISTS role_counters (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         guild_id TEXT NOT NULL,
                         name TEXT NOT NULL,
-                        mode TEXT DEFAULT 'black',
+                        mode TEXT DEFAULT 'white',
                         roles TEXT DEFAULT '[]',
                         channel_id TEXT,
                         enabled INTEGER DEFAULT 1
@@ -132,6 +132,10 @@ def init_db():
     
     try:
         cursor.execute("ALTER TABLE role_counters ADD COLUMN enabled INTEGER DEFAULT 1")
+    except: pass
+
+    try:
+        cursor.execute("UPDATE role_counters SET mode = 'white' WHERE mode = 'black'")
     except: pass
 
     cursor.execute('''CREATE TABLE IF NOT EXISTS member_roles (

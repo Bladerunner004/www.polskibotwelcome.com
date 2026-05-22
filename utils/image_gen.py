@@ -44,14 +44,24 @@ async def generate_framed_image(image_url, width=600, height=300, color=0x74b816
                 if is_animated:
                     from PIL import ImageSequence
                     frames = []
-                    duration = img.info.get('duration', 100)
+                    durations = []
                     loop = img.info.get('loop', 0)
+                    if not isinstance(loop, int) or loop is None:
+                        loop = 0
+                    global_duration = img.info.get('duration', 100)
                     
                     for frame in ImageSequence.Iterator(img):
                         p_frame = frame.convert("RGBA")
                         p_frame = ImageOps.fit(p_frame, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.5))
                         p_frame = ImageOps.expand(p_frame, border=10, fill=color_tuple)
                         frames.append(p_frame)
+                        
+                        dur = frame.info.get('duration')
+                        if dur is None:
+                            dur = global_duration
+                        if not isinstance(dur, (int, float)) or dur <= 0:
+                            dur = 100
+                        durations.append(int(dur))
                     
                     buf = io.BytesIO()
                     frames[0].save(
@@ -59,8 +69,9 @@ async def generate_framed_image(image_url, width=600, height=300, color=0x74b816
                         format="GIF",
                         save_all=True,
                         append_images=frames[1:],
-                        duration=duration,
+                        duration=durations,
                         loop=loop,
+                        optimize=True,
                         disposal=2
                     )
                     buf.seek(0)
@@ -145,8 +156,11 @@ async def generate_welcome_card(bg_url, avatar_url, line1, line2, font_name='ari
         if is_gif:
             from PIL import ImageSequence
             frames = []
-            duration = bg.info.get('duration', 100)
+            durations = []
             loop = bg.info.get('loop', 0)
+            if not isinstance(loop, int) or loop is None:
+                loop = 0
+            global_duration = bg.info.get('duration', 100)
             
             for frame in ImageSequence.Iterator(bg):
                 p_frame = frame.convert("RGBA")
@@ -154,14 +168,22 @@ async def generate_welcome_card(bg_url, avatar_url, line1, line2, font_name='ari
                 p_frame = draw_frame_content(p_frame)
                 frames.append(p_frame)
                 
+                dur = frame.info.get('duration')
+                if dur is None:
+                    dur = global_duration
+                if not isinstance(dur, (int, float)) or dur <= 0:
+                    dur = 100
+                durations.append(int(dur))
+                
             buf = io.BytesIO()
             frames[0].save(
                 buf,
                 format="GIF",
                 save_all=True,
                 append_images=frames[1:],
-                duration=duration,
+                duration=durations,
                 loop=loop,
+                optimize=True,
                 disposal=2
             )
             buf.seek(0)

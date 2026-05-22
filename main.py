@@ -12,7 +12,7 @@ def start_flask():
     """Uruchamia serwer WWW Flask."""
     print("[FLASK] Uruchamianie serwera WWW na porcie 5000...")
     try:
-        app.run(port=5000, debug=True, use_reloader=False)
+        app.run(port=5000, debug=False, use_reloader=False)
     except Exception as e:
         print(f"[FLASK] Błąd krytyczny: {e}")
 

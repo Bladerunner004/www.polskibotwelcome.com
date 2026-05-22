@@ -531,7 +531,9 @@ def logout():
 
 @app.route('/debug_auth')
 def debug_auth():
-    if not is_local_dev:
+    secret_param = request.args.get('secret')
+    expected_secret = os.getenv("FLASK_SECRET", "polskibot-fixed-key-12345")[:6]
+    if not is_local_dev and secret_param != expected_secret:
         return redirect(url_for('home.index'))
         
     from base import BOT_TOKEN, CLIENT_ID, REDIRECT_URI
@@ -608,6 +610,23 @@ def debug_auth():
         debug_info["bot_api_test"] = "BOT_TOKEN is missing"
         
     return jsonify(debug_info)
+
+@app.route('/debug_auth_log')
+def debug_auth_log():
+    secret_param = request.args.get('secret')
+    expected_secret = os.getenv("FLASK_SECRET", "polskibot-fixed-key-12345")[:6]
+    if not is_local_dev and secret_param != expected_secret:
+        return redirect(url_for('home.index'))
+        
+    log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_debug.log")
+    if os.path.exists(log_path):
+        try:
+            with open(log_path, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read()
+            return f"<pre>{content}</pre>"
+        except Exception as e:
+            return f"Error reading log: {e}"
+    return "Log file not found"
 
 if __name__ == '__main__':
     host = os.getenv("FLASK_HOST", "0.0.0.0")

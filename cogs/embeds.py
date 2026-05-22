@@ -142,5 +142,88 @@ class Embeds(commands.Cog):
 
         return {'success': True}
 
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        if payload.user_id == self.bot.user.id: return
+        from database import get_embed_configs
+        configs = get_embed_configs(payload.guild_id)
+        for cfg in configs:
+            if cfg.get('category') == 'rules' and str(payload.message_id) == str(cfg.get('last_message_id')):
+                if cfg.get('reaction_emoji') and cfg.get('reaction_role_id'):
+                    cfg_emoji = cfg['reaction_emoji']
+                    if emojis_match(payload.emoji, cfg_emoji):
+                        guild = self.bot.get_guild(payload.guild_id)
+                        if guild:
+                            try:
+                                role = guild.get_role(int(cfg['reaction_role_id']))
+                                member = payload.member or await guild.fetch_member(payload.user_id)
+                                if role and member:
+                                    await member.add_roles(role)
+                                    print(f"✅ [COGS/EMBEDS] Nadano rolę {role.name} dla {member} w regulaminie")
+                            except discord.Forbidden:
+                                print(f"❌ [COGS/EMBEDS] Brak uprawnień do nadania roli {cfg['reaction_role_id']} w regulaminie. Upewnij się, że rola bota jest wyżej w hierarchii ról.")
+                            except Exception as e:
+                                print(f"⚠️ [COGS/EMBEDS] Nie można nadać roli w regulaminie: {e}")
+                        break
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_remove(self, payload):
+        if payload.user_id == self.bot.user.id: return
+        from database import get_embed_configs
+        configs = get_embed_configs(payload.guild_id)
+        for cfg in configs:
+            if cfg.get('category') == 'rules' and str(payload.message_id) == str(cfg.get('last_message_id')):
+                if cfg.get('reaction_emoji') and cfg.get('reaction_role_id'):
+                    cfg_emoji = cfg['reaction_emoji']
+                    if emojis_match(payload.emoji, cfg_emoji):
+                        guild = self.bot.get_guild(payload.guild_id)
+                        if guild:
+                            try:
+                                role = guild.get_role(int(cfg['reaction_role_id']))
+                                member = await guild.fetch_member(payload.user_id)
+                                if role and member:
+                                    await member.remove_roles(role)
+                                    print(f"❌ [COGS/EMBEDS] Odebrano rolę {role.name} dla {member} w regulaminie")
+                            except discord.Forbidden:
+                                print(f"❌ [COGS/EMBEDS] Brak uprawnień do odebrania roli {role.name} w regulaminie. Upewnij się, że rola bota jest wyżej w hierarchii ról.")
+                            except Exception as e:
+                                print(f"⚠️ [COGS/EMBEDS] Nie można odebrać roli w regulaminie: {e}")
+                        break
+
+def emojis_match(payload_emoji, cfg_emoji):
+    if not cfg_emoji:
+        return False
+    
+    # Czyszczenie znaków wariacji unicode (\ufe0f)
+    cfg_clean = cfg_emoji.replace('\ufe0f', '').strip()
+    payload_str = str(payload_emoji)
+    payload_clean = payload_str.replace('\ufe0f', '').strip()
+    
+    # 1. Bezpośrednie dopasowanie ciągów znaków
+    if payload_clean == cfg_clean:
+        return True
+        
+    # 2. Obsługa custom emoji
+    if payload_emoji.is_custom_emoji():
+        # Sprawdzanie czy ID emoji znajduje się w zapisanym ciągu
+        if str(payload_emoji.id) in cfg_clean:
+            return True
+        # Sprawdzanie jeśli zapisano samo ID jako liczbę
+        if cfg_clean.isdigit() and int(cfg_clean) == payload_emoji.id:
+            return True
+        # Sprawdzanie nazwy emoji (np. :nazwa: lub nazwa)
+        cfg_name = cfg_clean.strip(':')
+        if payload_emoji.name == cfg_name:
+            return True
+            
+    # 3. Zapasowe dopasowanie po nazwie (np. unicode)
+    if payload_emoji.name:
+        payload_name_clean = payload_emoji.name.replace('\ufe0f', '').strip()
+        if payload_name_clean == cfg_clean:
+            return True
+            
+    return False
+
 async def setup(bot):
     await bot.add_cog(Embeds(bot))
+

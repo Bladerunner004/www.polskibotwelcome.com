@@ -17,30 +17,57 @@ class AutoRole(commands.Cog):
         if member.bot:
             bot_roles_ids = settings.get('autorole_bot_roles', [])
             for r_id in bot_roles_ids:
-                role = guild.get_role(int(r_id))
+                try:
+                    role_id = int(r_id)
+                except ValueError:
+                    continue
+                role = guild.get_role(role_id)
                 if role:
-                    try: await member.add_roles(role)
-                    except Exception as e: print(f"⚠️ [AUTOROLE] Nie można nadać roli bota: {role.name} ({e})")
+                    try: 
+                        await member.add_roles(role)
+                        print(f"🤖 [AUTOROLE] Nadano rolę bota {role.name} dla {member}")
+                    except discord.Forbidden:
+                        print(f"❌ [AUTOROLE] Brak uprawnień do nadania roli bota {role.name} dla {member}. Upewnij się, że rola bota jest wyżej w hierarchii ról niż ta rola.")
+                    except Exception as e: 
+                        print(f"⚠️ [AUTOROLE] Nie można nadać roli bota: {role.name} ({e})")
         else:
             # Użytkownik (Human)
             # A. Nadanie domyślnych ról dla ludzi
             human_roles_ids = settings.get('autorole_human_roles', [])
             for r_id in human_roles_ids:
-                role = guild.get_role(int(r_id))
+                try:
+                    role_id = int(r_id)
+                except ValueError:
+                    continue
+                role = guild.get_role(role_id)
                 if role:
-                    try: await member.add_roles(role)
-                    except Exception as e: print(f"⚠️ [AUTOROLE] Nie można nadać roli użytkownika: {role.name} ({e})")
+                    try: 
+                        await member.add_roles(role)
+                        print(f"👤 [AUTOROLE] Nadano rolę użytkownika {role.name} dla {member}")
+                    except discord.Forbidden:
+                        print(f"❌ [AUTOROLE] Brak uprawnień do nadania roli użytkownika {role.name} dla {member}. Upewnij się, że rola bota jest wyżej w hierarchii ról niż ta rola.")
+                    except Exception as e: 
+                        print(f"⚠️ [AUTOROLE] Nie można nadać roli użytkownika: {role.name} ({e})")
             
             # B. Jeśli tryb to przywracanie ról (restore)
             mode = settings.get('autorole_mode', 'disabled')
             if mode == 'restore':
                 saved_role_ids = get_member_roles(str(guild.id), str(member.id))
                 for r_id in saved_role_ids:
-                    role = guild.get_role(int(r_id))
+                    try:
+                        role_id = int(r_id)
+                    except ValueError:
+                        continue
+                    role = guild.get_role(role_id)
                     # Nie nadajemy ról zarządzanych przez integracje ani default_role
                     if role and not role.managed and role != guild.default_role:
-                        try: await member.add_roles(role)
-                        except Exception as e: print(f"⚠️ [AUTOROLE] Nie można przywrócić roli {role.name} ({e})")
+                        try: 
+                            await member.add_roles(role)
+                            print(f"🔄 [AUTOROLE] Przywrócono rolę {role.name} dla {member}")
+                        except discord.Forbidden:
+                            print(f"❌ [AUTOROLE] Brak uprawnień do przywrócenia roli {role.name} dla {member}. Upewnij się, że rola bota jest wyżej w hierarchii ról niż ta rola.")
+                        except Exception as e: 
+                            print(f"⚠️ [AUTOROLE] Nie można przywrócić roli {role.name} ({e})")
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
@@ -68,11 +95,17 @@ class AutoRole(commands.Cog):
         if not was_boosting and is_boosting:
             # Zaczął boostować - dajemy role boosterów
             for r_id in booster_roles_ids:
-                role = guild.get_role(int(r_id))
+                try:
+                    role_id = int(r_id)
+                except ValueError:
+                    continue
+                role = guild.get_role(role_id)
                 if role:
                     try: 
                         await after.add_roles(role)
                         print(f"💎 [AUTOROLE] Użytkownik {after} zaczął boostować. Nadano rolę {role.name}.")
+                    except discord.Forbidden:
+                        print(f"❌ [AUTOROLE] Brak uprawnień do nadania roli boostera {role.name} dla {after}. Upewnij się, że rola bota jest wyżej w hierarchii ról niż ta rola.")
                     except Exception as e: 
                         print(f"⚠️ [AUTOROLE] Nie można nadać roli boostera: {role.name} ({e})")
 
@@ -81,11 +114,17 @@ class AutoRole(commands.Cog):
             should_remove = settings.get('autorole_booster_remove', True)
             if should_remove:
                 for r_id in booster_roles_ids:
-                    role = guild.get_role(int(r_id))
+                    try:
+                        role_id = int(r_id)
+                    except ValueError:
+                        continue
+                    role = guild.get_role(role_id)
                     if role and role in after.roles:
                         try:
                             await after.remove_roles(role)
                             print(f"❌ [AUTOROLE] Użytkownik {after} przestał boostować. Odebrano rolę {role.name}.")
+                        except discord.Forbidden:
+                            print(f"❌ [AUTOROLE] Brak uprawnień do odebrania roli boostera {role.name} dla {after}. Upewnij się, że rola bota jest wyżej w hierarchii ról niż ta rola.")
                         except Exception as e:
                             print(f"⚠️ [AUTOROLE] Nie można odebrać roli boostera: {role.name} ({e})")
 
@@ -100,32 +139,45 @@ class AutoRole(commands.Cog):
         # Pobieramy role discord.Role
         booster_roles = []
         for r_id in booster_roles_ids:
-            role = guild.get_role(int(r_id))
+            try:
+                role_id = int(r_id)
+            except ValueError:
+                continue
+            role = guild.get_role(role_id)
             if role: booster_roles.append(role)
 
         if not booster_roles: return
 
         print(f"🔄 [AUTOROLE] Rozpoczęto synchronizację boosterów dla serwera {guild.name}")
-        for member in guild.members:
-            is_boosting = member.premium_since is not None
-            
-            if is_boosting:
-                # Powinien mieć role
-                for role in booster_roles:
-                    if role not in member.roles:
-                        try: 
-                            await member.add_roles(role)
-                            print(f"💎 [AUTOROLE] Synchronizacja: Nadano rolę {role.name} dla {member}")
-                        except: pass
-            else:
-                # Nie boostuje - sprawdzamy czy odebrać role
-                if should_remove:
+        try:
+            async for member in guild.fetch_members(limit=None):
+                is_boosting = member.premium_since is not None
+                
+                if is_boosting:
+                    # Powinien mieć role
                     for role in booster_roles:
-                        if role in member.roles:
-                            try:
-                                await member.remove_roles(role)
-                                print(f"❌ [AUTOROLE] Synchronizacja: Odebrano rolę {role.name} dla {member}")
-                            except: pass
+                        if role not in member.roles:
+                            try: 
+                                await member.add_roles(role)
+                                print(f"💎 [AUTOROLE] Synchronizacja: Nadano rolę {role.name} dla {member}")
+                            except discord.Forbidden:
+                                print(f"❌ [AUTOROLE] Synchronizacja: Brak uprawnień do nadania roli {role.name} dla {member}. Upewnij się, że rola bota jest wyżej w hierarchii ról niż ta rola.")
+                            except Exception as e:
+                                print(f"⚠️ [AUTOROLE] Synchronizacja: Błąd podczas nadawania roli {role.name} dla {member}: {e}")
+                else:
+                    # Nie boostuje - sprawdzamy czy odebrać role
+                    if should_remove:
+                        for role in booster_roles:
+                            if role in member.roles:
+                                try:
+                                    await member.remove_roles(role)
+                                    print(f"❌ [AUTOROLE] Synchronizacja: Odebrano rolę {role.name} dla {member}")
+                                except discord.Forbidden:
+                                    print(f"❌ [AUTOROLE] Synchronizacja: Brak uprawnień do odebrania roli {role.name} dla {member}. Upewnij się, że rola bota jest wyżej w hierarchii ról niż ta rola.")
+                                except Exception as e:
+                                    print(f"⚠️ [AUTOROLE] Synchronizacja: Błąd podczas odbierania roli {role.name} dla {member}: {e}")
+        except Exception as e:
+            print(f"⚠️ [AUTOROLE] Błąd krytyczny pobierania członków gildii podczas synchronizacji boosterów: {e}")
 
 async def setup(bot):
     await bot.add_cog(AutoRole(bot))

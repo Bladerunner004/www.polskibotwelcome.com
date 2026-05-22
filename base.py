@@ -31,6 +31,14 @@ extracted_id = _extract_client_id(BOT_TOKEN)
 CLIENT_ID = extracted_id or os.getenv("DISCORD_CLIENT_ID") or "1489047223160541295"
 CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET", "NXfIWXi2Tdgcl1qBZBSLwJYTVelt_fFj")
 _raw_redirect = os.getenv("DISCORD_REDIRECT_URI", "https://polskibot-bladerunner009.pythonanywhere.com/callback").strip().strip("\"'")
+# Korekta częstego błędu podwójnego protokołu (np. https:https://)
+if _raw_redirect.startswith("https:https://"):
+    _raw_redirect = _raw_redirect.replace("https:https://", "https://")
+elif _raw_redirect.startswith("http:https://"):
+    _raw_redirect = _raw_redirect.replace("http:https://", "https://")
+elif _raw_redirect.startswith("http:http://"):
+    _raw_redirect = _raw_redirect.replace("http:http://", "http://")
+
 if not _raw_redirect.startswith("http"):
     _raw_redirect = "https://" + _raw_redirect
 REDIRECT_URI = _raw_redirect

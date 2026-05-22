@@ -1,4 +1,5 @@
 import os
+import sys
 
 env_path = ".env"
 
@@ -9,10 +10,8 @@ if not os.path.exists(env_path):
 with open(env_path, "r", encoding="utf-8") as f:
     content = f.read()
 
-old_uri = "https://BLADERUNNER009.pythonanywhere.com/callback"
-new_uri = "https://polskibot-bladerunner009.pythonanywhere.com/callback"
+correct_uri = "https://polskibot-bladerunner009.pythonanywhere.com/callback"
 
-# Elastyczna zamiana niezależnie od wielkości liter czy drobnych różnic
 updated = False
 lines = content.splitlines()
 new_lines = []
@@ -20,8 +19,8 @@ new_lines = []
 for line in lines:
     if line.strip().startswith("DISCORD_REDIRECT_URI"):
         print(f"Aktualna linia w .env: {line}")
-        # Ustawiamy nową wartość
-        line = f"DISCORD_REDIRECT_URI={new_uri}"
+        # Ustawiamy prawidłową wartość
+        line = f"DISCORD_REDIRECT_URI={correct_uri}"
         updated = True
         print(f"Zmieniono na: {line}")
     new_lines.append(line)

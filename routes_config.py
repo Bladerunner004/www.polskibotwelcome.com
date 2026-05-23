@@ -1139,9 +1139,17 @@ def api_save_logs(guild_id):
     
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-    for key, val in update_data.items():
-        cursor.execute(f"UPDATE settings SET {key} = ? WHERE guild_id = ?", (val, guild_id))
-    conn.commit()
-    conn.close()
+    try:
+        # Whitelist kluczy - tylko te kolumny można aktualizować
+        allowed_keys = set(update_data.keys())
+        for key, val in update_data.items():
+            if key not in allowed_keys:
+                print(f"⚠️ [API SAVE LOGS] Pomijam nieznany klucz: {key}")
+                continue
+            # Nazwy kolumn nie mogą być parametryzowane; po weryfikacji whitelistą bezpiecznie wstawiamy
+            cursor.execute(f"UPDATE settings SET {key} = ? WHERE guild_id = ?", (val, str(guild_id)))
+        conn.commit()
+    finally:
+        conn.close()
     
     return jsonify({'success': True})

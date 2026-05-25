@@ -10,6 +10,7 @@ try:
 except ImportError:
     stripe = None
 import uuid
+import urllib.parse
 from datetime import datetime, timedelta
 
 # Ścieżka do statusu (dla PythonAnywhere i lokalnie)
@@ -316,26 +317,51 @@ def premium_checkout(server_id):
         success_url = url_for('config.config', server_id=server_id, _external=True) + '?payment=success'
         cancel_url = url_for('config.config', server_id=server_id, _external=True) + '?payment=cancel'
 
-        session_data = stripe.checkout.Session.create(
-            success_url=success_url,
-            cancel_url=cancel_url,
-            payment_method_types=['card', 'blik'],
-            mode='subscription',
-            line_items=[{
-                'price_data': {
-                    'currency': 'pln',
-                    'product_data': {'name': 'PolskiBot Premium'},
-                    'unit_amount': 1500,
-                    'recurring': {'interval': 'month'},
-                },
-                'quantity': 1,
-            }],
-            metadata={'guild_id': server_id, 'plan': 'miesieczny'},
-            client_reference_id=server_id,
-        )
+        # Try to use STRIPE_PRODUCT_ID if provided, otherwise use fallback product
+        PROD_ID = os.getenv('STRIPE_PRODUCT_ID') or 'prod_UW2ioOiSPJG6Pn'
+        price_id = None
 
-        print(f"✅ [Checkout] Utworzono sesję Stripe: {session_data.id}")
-        return redirect(session_data.url, code=303)
+        try:
+            # Look for an existing monthly PLN price for this product (1500 = 15.00 PLN)
+            prices = stripe.Price.list(product=PROD_ID, limit=50)
+            for p in prices.data:
+                try:
+                    if p.currency == 'pln' and getattr(p, 'recurring', None) and p.recurring.get('interval') == 'month' and p.unit_amount == 1500:
+                        price_id = p.id
+                        break
+                except Exception:
+                    continue
+
+            # If not found, create a new recurring price for the product
+            if not price_id:
+                price = stripe.Price.create(product=PROD_ID, unit_amount=1500, currency='pln', recurring={'interval': 'month'})
+                price_id = price.id
+
+        except Exception as e:
+            print(f"❌ [Checkout] Error finding/creating price for product {PROD_ID}: {e}")
+            return redirect(url_for('config.config', server_id=server_id, payment_error=urllib.parse.quote(str(e))))
+
+        try:
+            session_data = stripe.checkout.Session.create(
+                success_url=success_url,
+                cancel_url=cancel_url,
+                payment_method_types=['card', 'blik'],
+                mode='subscription',
+                line_items=[{
+                    'price': price_id,
+                    'quantity': 1,
+                }],
+                metadata={'guild_id': server_id, 'plan': 'miesieczny', 'product': PROD_ID},
+                client_reference_id=server_id,
+            )
+
+            print(f"✅ [Checkout] Utworzono sesję Stripe: {session_data.id}")
+            return redirect(session_data.url, code=303)
+        except Exception as e:
+            print(f"❌ [Checkout Error] {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': f'Błąd podczas przetwarzania płatności: {str(e)}'}), 500
     except Exception as e:
         print(f"❌ [Checkout Error] {str(e)}")
         import traceback

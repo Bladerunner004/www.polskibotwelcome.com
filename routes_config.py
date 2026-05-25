@@ -644,17 +644,6 @@ def api_welcome(guild_id):
         return jsonify({'powitanie': powitanie, 'pozegnanie': pozegnanie})
 
 
-    # --- DEBUG: Stripe status (bez ujawniania klucza) ---
-    @config_bp.route('/debug/stripe')
-    def debug_stripe():
-        # Dostęp tylko dla zalogowanych użytkowników (nie ujawniemy sekretu publicznie)
-        if 'user' not in session:
-            return jsonify({'error': 'login required'}), 403
-        return jsonify({
-            'stripe_available': bool(globals().get('stripe_available')),
-            'stripe_config_error': globals().get('stripe_config_error')
-        })
-
     # POST - Zapisywanie
     data = request.json
     config_id = data.get('id')
@@ -666,6 +655,18 @@ def api_welcome(guild_id):
     if new_id:
         return jsonify({'success': True, 'id': new_id})
     return jsonify({'success': False, 'error': 'Błąd zapisu'}), 500
+
+# --- DEBUG: Stripe status (bez ujawniania klucza) ---
+@config_bp.route('/debug/stripe')
+def debug_stripe():
+    # Dostęp tylko dla zalogowanych użytkowników (nie ujawniemy sekretu publicznie)
+    if 'user' not in session:
+        return jsonify({'error': 'login required'}), 403
+    return jsonify({
+        'stripe_available': bool(globals().get('stripe_available')),
+        'stripe_config_error': globals().get('stripe_config_error')
+    })
+
 
 @config_bp.route('/api/<guild_id>/welcome_sync', methods=['POST'])
 def api_welcome_sync(guild_id):

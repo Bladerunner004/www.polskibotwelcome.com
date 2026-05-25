@@ -636,6 +636,18 @@ def api_welcome(guild_id):
         pozegnanie = get_welcome_configs(guild_id, 'pozegnanie')
         return jsonify({'powitanie': powitanie, 'pozegnanie': pozegnanie})
 
+
+    # --- DEBUG: Stripe status (bez ujawniania klucza) ---
+    @config_bp.route('/debug/stripe')
+    def debug_stripe():
+        # Dostęp tylko dla zalogowanych użytkowników (nie ujawniemy sekretu publicznie)
+        if 'user' not in session:
+            return jsonify({'error': 'login required'}), 403
+        return jsonify({
+            'stripe_available': bool(globals().get('stripe_available')),
+            'stripe_config_error': globals().get('stripe_config_error')
+        })
+
     # POST - Zapisywanie
     data = request.json
     config_id = data.get('id')

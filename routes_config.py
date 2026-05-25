@@ -3,6 +3,8 @@ import sqlite3
 import requests
 import json
 import time
+from dotenv import load_dotenv
+load_dotenv()
 try:
     import stripe
 except ImportError:
@@ -24,9 +26,19 @@ _bot_avatar_cache = {}
 
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
-stripe_available = bool(stripe and STRIPE_SECRET_KEY)
-if stripe_available:
-    stripe.api_key = STRIPE_SECRET_KEY
+stripe_config_error = None
+stripe_available = False
+
+if not stripe:
+    stripe_config_error = 'Brak modułu Stripe w środowisku.'
+elif not STRIPE_SECRET_KEY:
+    stripe_config_error = 'Nie ustawiono STRIPE_SECRET_KEY w .env.'
+else:
+    if STRIPE_SECRET_KEY.startswith(('sk_test_', 'sk_live_')):
+        stripe_available = True
+        stripe.api_key = STRIPE_SECRET_KEY
+    else:
+        stripe_config_error = 'STRIPE_SECRET_KEY powinien zaczynać się od sk_test_ lub sk_live_. Wygląda na klucz publiczny pk_.'
 
 def get_bot_avatar_cached(guild_id=None):
     now = time.time()
@@ -585,7 +597,8 @@ def config(server_id):
         days_left=days_left,
         bot_latency=bot_latency,
         member_count=guild['member_count'],
-        stripe_available=stripe_available
+        stripe_available=stripe_available,
+        stripe_config_error=stripe_config_error
     )
 
 

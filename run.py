@@ -24,6 +24,8 @@ import socket
 from flask import Flask, session, redirect, url_for, request, jsonify
 from dotenv import load_dotenv
 
+load_dotenv()
+
 # Importujemy dane konfiguracyjne z base.py
 from base import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, get_user_avatar, DISCORD_INVITE_URL, get_login_url
 
@@ -33,8 +35,6 @@ from routes_dashboard import dashboard_bp
 from routes_config import config_bp
 
 from werkzeug.middleware.proxy_fix import ProxyFix
-
-load_dotenv()
 
 template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')

@@ -146,9 +146,12 @@
                     <i class="fas fa-credit-card"></i> KUP PRZEZ STRIPE / BLIK
                 </a>
                 {% else %}
-                <a href="javascript:void(0)" class="btn-buy-now btn-buy-disabled" onclick="alert('Stripe nie jest skonfigurowany. Skontaktuj się z administratorem.')">
+                <a href="javascript:void(0)" class="btn-buy-now btn-buy-disabled" onclick="alert('{{ stripe_config_error or 'Stripe nie jest skonfigurowany. Skontaktuj się z administratorem.' }}')">
                     <i class="fas fa-credit-card"></i> STRIPE NIEDOSTĘPNY
                 </a>
+                {% if stripe_config_error %}
+                <p class="stripe-error-note">{{ stripe_config_error }}</p>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -213,6 +216,15 @@
 }
 
 .btn-buy-disabled:hover { transform: none; box-shadow: none; }
+
+.stripe-error-note {
+    margin-top: 12px;
+    color: #ffb3b3;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    max-width: 420px;
+    text-align: left;
+}
 
 </style>
 

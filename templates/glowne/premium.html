@@ -141,9 +141,15 @@
                 {% if not main_settings.trial_used %}
                 <button class="btn-trial" onclick="startTrial()">AKTYWUJ 7 DNI TRIAL</button>
                 {% endif %}
-                <a href="/config/{{ server_id }}/checkout?plan=MIESI%C4%98CZNY" class="btn-buy-now">
+                {% if stripe_available %}
+                <a href="{{ url_for('config.premium_checkout', server_id=server_id) }}?plan=miesieczny" class="btn-buy-now">
                     <i class="fas fa-credit-card"></i> KUP PRZEZ STRIPE / BLIK
                 </a>
+                {% else %}
+                <a href="javascript:void(0)" class="btn-buy-now btn-buy-disabled" onclick="alert('Stripe nie jest skonfigurowany. Skontaktuj się z administratorem.')">
+                    <i class="fas fa-credit-card"></i> STRIPE NIEDOSTĘPNY
+                </a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -197,6 +203,16 @@
     .plan-actions { display: flex; flex-direction: column; gap: 15px; }
     .btn-buy-now { background: #d4af37; color: black; padding: 18px; border-radius: 12px; font-weight: 900; text-decoration: none; display: block; transition: 0.3s; border: none; font-size: 1.1rem; }
     .btn-buy-now:hover { background: #e5c05b; transform: scale(1.02); box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); }
+
+.btn-buy-disabled {
+    background: #777 !important;
+    color: #f5f5f5 !important;
+    cursor: not-allowed !important;
+    opacity: 0.75;
+    pointer-events: auto;
+}
+
+.btn-buy-disabled:hover { transform: none; box-shadow: none; }
 
 </style>
 

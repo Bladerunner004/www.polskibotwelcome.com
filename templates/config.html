@@ -651,8 +651,8 @@
         
         if (urlParams.has('payment_error')) {
             const pError = urlParams.get('payment_error');
-            if (pError === 'stripe_not_installed') {
-                alert("❌ Błąd: Moduł płatności Stripe nie został zainstalowany na serwerze. Skontaktuj się z administratorem.");
+            if (pError === 'stripe_not_installed' || pError === 'stripe_not_configured') {
+                alert("❌ Błąd: Stripe nie jest skonfigurowany na serwerze. Skontaktuj się z administratorem.");
             } else {
                 alert("❌ Wystąpił błąd podczas płatności:\n" + decodeURIComponent(pError));
             }

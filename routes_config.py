@@ -24,7 +24,8 @@ _bot_avatar_cache = {}
 
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
-if stripe and STRIPE_SECRET_KEY:
+stripe_available = bool(stripe and STRIPE_SECRET_KEY)
+if stripe_available:
     stripe.api_key = STRIPE_SECRET_KEY
 
 def get_bot_avatar_cached(guild_id=None):
@@ -296,10 +297,9 @@ def premium_checkout(server_id):
             print(f"❌ [Checkout] Błędny server_id: {server_id}")
             return redirect(url_for('dashboard.dashboard'))
 
-        if not stripe or not STRIPE_SECRET_KEY:
+        if not stripe_available:
             print("❌ [Checkout] Stripe nie jest skonfigurowany")
-            flash('Stripe nie jest skonfigurowany. Skontaktuj się z administratorem.', 'error')
-            return redirect(url_for('config.config', server_id=server_id))
+            return redirect(url_for('config.config', server_id=server_id, payment_error='stripe_not_configured'))
 
         success_url = url_for('config.config', server_id=server_id, _external=True) + '?payment=success'
         cancel_url = url_for('config.config', server_id=server_id, _external=True) + '?payment=cancel'
@@ -584,7 +584,8 @@ def config(server_id):
         user=user_data,
         days_left=days_left,
         bot_latency=bot_latency,
-        member_count=guild['member_count']
+        member_count=guild['member_count'],
+        stripe_available=stripe_available
     )
 
 

@@ -35,11 +35,11 @@ if not stripe:
 elif not STRIPE_SECRET_KEY:
     stripe_config_error = 'Nie ustawiono STRIPE_SECRET_KEY w .env.'
 else:
-    if STRIPE_SECRET_KEY.startswith(('sk_test_', 'sk_live_')):
+    if STRIPE_SECRET_KEY.startswith(('sk_test_', 'sk_live_', 'rk_test_', 'rk_live_')):
         stripe_available = True
         stripe.api_key = STRIPE_SECRET_KEY
     else:
-        stripe_config_error = 'STRIPE_SECRET_KEY powinien zaczynać się od sk_test_ lub sk_live_. Wygląda na klucz publiczny pk_.'
+        stripe_config_error = 'STRIPE_SECRET_KEY powinien zaczynać się od sk_test_, sk_live_, rk_test_ lub rk_live_.'
 
 def get_bot_avatar_cached(guild_id=None):
     now = time.time()

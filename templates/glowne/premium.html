@@ -141,18 +141,9 @@
                 {% if not main_settings.trial_used %}
                 <button class="btn-trial" onclick="startTrial()">AKTYWUJ 7 DNI TRIAL</button>
                 {% endif %}
-                {% if stripe_available %}
                 <a href="{{ url_for('config.premium_checkout', server_id=server_id) }}?plan=miesieczny" class="btn-buy-now">
                     <i class="fas fa-credit-card"></i> KUP PRZEZ STRIPE / BLIK
                 </a>
-                {% else %}
-                <a href="javascript:void(0)" class="btn-buy-now btn-buy-disabled" onclick="alert('{{ stripe_config_error or 'Stripe nie jest skonfigurowany. Skontaktuj się z administratorem.' }}')">
-                    <i class="fas fa-credit-card"></i> STRIPE NIEDOSTĘPNY
-                </a>
-                {% if stripe_config_error %}
-                <p class="stripe-error-note">{{ stripe_config_error }}</p>
-                {% endif %}
-                {% endif %}
             </div>
         </div>
     </div>

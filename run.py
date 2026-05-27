@@ -531,6 +531,7 @@ def dev_login():
             'icon': None
         }
     ]
+    session['last_profile_refresh'] = time.time() + 86400 * 365
     session.modified = True
     return redirect(url_for('dashboard.dashboard'))
 

@@ -102,8 +102,13 @@ def check_guild_access(guild_id):
     user_id = user_data.get('id')
     if not user_id: return False
     
-    from run import _guilds_memory_cache
-    user_guilds = _guilds_memory_cache.get(user_id, [])
+    import sys
+    main_module = sys.modules.get('__main__')
+    if main_module and hasattr(main_module, '_guilds_memory_cache'):
+        user_guilds = main_module._guilds_memory_cache.get(user_id, [])
+    else:
+        from run import _guilds_memory_cache
+        user_guilds = _guilds_memory_cache.get(user_id, [])
     
     # Jeśli cache jest pusty, a mamy access_token, spróbujmy odpytać Discord API
     if not user_guilds and session.get('access_token'):
@@ -311,8 +316,8 @@ def premium_checkout(server_id):
             return redirect(url_for('dashboard.dashboard'))
 
         if not stripe_available:
-            print("❌ [Checkout] Stripe nie jest skonfigurowany")
-            return redirect(url_for('config.config', server_id=server_id, payment_error='stripe_not_configured'))
+            print("ℹ️ [Checkout] Stripe nie jest skonfigurowany - uruchamianie symulacji płatności")
+            return render_template('mock_checkout.html', server_id=server_id)
 
         success_url = url_for('config.config', server_id=server_id, _external=True) + '?payment=success'
         cancel_url = url_for('config.config', server_id=server_id, _external=True) + '?payment=cancel'

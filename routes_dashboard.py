@@ -95,8 +95,13 @@ def dashboard():
     user_id = user_data.get('id') if user_data else None
 
     # 2. Pobieramy serwery użytkownika z pamięci procesu (nie z cookie - brak limitu 4KB)
-    from run import _guilds_memory_cache
-    user_guilds = _guilds_memory_cache.get(user_id, [])
+    import sys
+    main_module = sys.modules.get('__main__')
+    if main_module and hasattr(main_module, '_guilds_memory_cache'):
+        user_guilds = main_module._guilds_memory_cache.get(user_id, [])
+    else:
+        from run import _guilds_memory_cache
+        user_guilds = _guilds_memory_cache.get(user_id, [])
 
     if not user_guilds or request.args.get('refresh') == 'true':
         user_headers = {"Authorization": f"Bearer {access_token}"}

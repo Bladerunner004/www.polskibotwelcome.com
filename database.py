@@ -1177,18 +1177,33 @@ def is_premium(guild_id):
 def set_premium(guild_id, status):
     """Nadaje lub odbiera status Premium dla serwera."""
     try:
+        from datetime import datetime, timedelta
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
-        c.execute('''
-            INSERT INTO settings (guild_id, premium)
-            VALUES (?, ?)
-            ON CONFLICT(guild_id) DO UPDATE SET premium=excluded.premium
-        ''', (str(guild_id), 1 if status else 0))
+        if status:
+            expiry_date = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M')
+            c.execute('''
+                INSERT INTO settings (guild_id, premium, premium_expiry, subscription_type)
+                VALUES (?, 1, ?, 'jednorazowa')
+                ON CONFLICT(guild_id) DO UPDATE SET 
+                    premium=1, 
+                    premium_expiry=excluded.premium_expiry,
+                    subscription_type=excluded.subscription_type
+            ''', (str(guild_id), expiry_date))
+        else:
+            c.execute('''
+                INSERT INTO settings (guild_id, premium, premium_expiry, subscription_type)
+                VALUES (?, 0, NULL, 'brak')
+                ON CONFLICT(guild_id) DO UPDATE SET 
+                    premium=0, 
+                    premium_expiry=NULL,
+                    subscription_type='brak'
+            ''', (str(guild_id),))
         conn.commit()
         conn.close()
         return True
     except Exception as e:
-        print(f"âťŚ BĹ‚Ä…d zapisu premium: {e}")
+        print(f"❌ Błąd zapisu premium: {e}")
         return False
 
 def get_media_configs(guild_id):

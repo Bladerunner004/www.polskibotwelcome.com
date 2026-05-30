@@ -365,9 +365,16 @@ def log_join_activity(guild_id):
         print(f"âťŚ [DB] BĹ‚Ä…d log_join: {e}")
 
 def get_activity_stats(guild_id, days=7):
-    """Pobiera dane aktywnoĹ›ci z ostatnich dni."""
+    """Pobiera dane aktywności z ostatnich dni."""
     import datetime
-    date_limit = (datetime.date.today() - datetime.timedelta(days=days)).isoformat()
+    today = datetime.date.today()
+    # Generuj kompletną listę dat z ostatnich 'days' dni (włącznie z dzisiaj)
+    dates_list = [(today - datetime.timedelta(days=i)).isoformat() for i in range(days - 1, -1, -1)]
+    date_limit = dates_list[0]
+    
+    # Tworzymy słownik z domyślnymi zerowymi wartościami dla każdego dnia
+    history_dict = {d: {'date': d, 'messages': 0, 'joins': 0} for d in dates_list}
+    
     try:
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
@@ -376,13 +383,25 @@ def get_activity_stats(guild_id, days=7):
         c.execute('SELECT channel_id, SUM(messages_count) as total FROM channel_stats WHERE guild_id=? AND date >= ? GROUP BY channel_id ORDER BY total DESC LIMIT 5', (str(guild_id), date_limit))
         top_channels = c.fetchall()
         conn.close()
+        
+        # Uzupełniamy słownik realnymi danymi
+        for r in rows:
+            d = r[0]
+            if d in history_dict:
+                history_dict[d]['messages'] = r[1]
+                history_dict[d]['joins'] = r[2]
+                
         return {
-            'history': [ {'date': r[0], 'messages': r[1], 'joins': r[2]} for r in rows ],
+            'history': list(history_dict.values()),
             'top_channels': [ {'id': r[0], 'count': r[1]} for r in top_channels ]
         }
     except Exception as e:
-        print(f"âťŚ [DB] BĹ‚Ä…d get_activity: {e}")
-        return {'history': [], 'top_channels': []}
+        print(f"❌ [DB] Błąd get_activity: {e}")
+        # W razie błędu i tak staramy się zwrócić pustą oś czasu
+        return {
+            'history': [ {'date': d, 'messages': 0, 'joins': 0} for d in dates_list ],
+            'top_channels': []
+        }
 
 def get_custom_bot(guild_id):
     """Pobiera konfiguracjÄ™ wĹ‚asnego bota."""

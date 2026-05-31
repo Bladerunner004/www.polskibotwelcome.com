@@ -95,7 +95,7 @@ def dashboard():
     user_id = user_data.get('id') if user_data else None
 
     # 2. Pobieramy serwery użytkownika z pamięci procesu (nie z cookie - brak limitu 4KB)
-    from run import _guilds_memory_cache
+    from base import _guilds_memory_cache
     user_guilds = _guilds_memory_cache.get(user_id, [])
 
     if not user_guilds or request.args.get('refresh') == 'true':

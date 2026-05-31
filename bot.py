@@ -8,6 +8,7 @@ import json
 import glob
 from aiohttp import web
 from dotenv import load_dotenv
+import math
 
 # Ustawienie kodowania dla Windows
 if sys.platform == 'win32':
@@ -64,7 +65,16 @@ class PolskiBot(commands.Bot):
     async def update_status_file(self):
         """Zapisuje status i obsługuje synchronizację plików z dashboardu."""
         try:
-            status = {"latency": round(self.latency * 1000) if self.latency else 0, "last_seen": datetime.datetime.now().timestamp(), "status": "online"}
+            latency = 0
+            if self.latency and not math.isnan(self.latency):
+                latency = round(self.latency * 1000)
+            
+            is_online = self.is_ready() and not self.is_closed()
+            status = {
+                "latency": latency,
+                "last_seen": datetime.datetime.now().timestamp(),
+                "status": "online" if is_online else "offline"
+            }
             with open(STATUS_FILE_PATH, "w") as f: json.dump(status, f)
             
             # Obsługa plików synchronizacji

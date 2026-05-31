@@ -122,3 +122,7 @@ LIMITS_PREMIUM = {
     "media_configs": 10
 }
 # Ostateczna poprawka linku i stylu
+
+# --- PAMIĘĆ PODRĘCZNA SERWERÓW UŻYTKOWNIKÓW ---
+# Współdzielona pamięć podręczna serwerów użytkowników w pamięci procesu (uniknięcie dual-import)
+_guilds_memory_cache = {}

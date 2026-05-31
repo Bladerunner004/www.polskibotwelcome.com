@@ -92,7 +92,7 @@ def start_bot_on_first_request():
 
 # --- PAMIĘĆ PODRĘCZNA SERWERÓW (zamiast cookie, brak limitu 4KB) ---
 # Słownik: user_id -> lista serwerów. Przechowywany w pamięci procesu.
-_guilds_memory_cache = {}
+from base import _guilds_memory_cache
 
 @app.before_request
 def refresh_discord_cache():
@@ -120,6 +120,13 @@ def refresh_discord_cache():
             print("🧹 [REFRESH] Wyczyszczono cache awatarów botów (_bot_avatar_cache)")
         except Exception as e:
             print(f"❌ [REFRESH] Błąd czyszczenia cache awatarów botów: {e}")
+            
+        try:
+            from routes_dashboard import clear_bot_guilds_cache
+            clear_bot_guilds_cache()
+            print("🧹 [REFRESH] Wyczyszczono cache serwerów bota (bot_guilds_cache.json)")
+        except Exception as e:
+            print(f"❌ [REFRESH] Błąd czyszczenia cache serwerów bota: {e}")
             
     if force_refresh or (now - last_refresh > 60):
         access_token = session['access_token']
@@ -219,7 +226,7 @@ def start_bot_background():
         
         def monitor_bot():
             consecutive_failures = 0
-            max_failures = 3
+            max_failures = 5
             quick_crash_threshold = 30  # sekundy
             last_env_mtime = 0
             env_path = os.path.join(bot_dir, ".env")
@@ -270,8 +277,8 @@ def start_bot_background():
                     except Exception as e:
                         print(f"[MONITOR] Błąd zapisu statusu awarii: {e}")
                     
-                    # Wstrzymujemy restarty na 15 minut, ale sprawdzamy plik .env co 5 sekund na wypadek modyfikacji
-                    for _ in range(180):
+                    # Wstrzymujemy restarty na 2 minuty, ale sprawdzamy plik .env co 5 sekund na wypadek modyfikacji
+                    for _ in range(24):
                         time.sleep(5)
                         if os.path.exists(env_path):
                             try:
@@ -572,7 +579,7 @@ def debug_auth():
         import time
         import json
         status_file_info = {}
-        status_path = "bot_status.json"
+        status_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_status.json")
         if os.path.exists(status_path):
             status_file_info["exists"] = True
             status_file_info["path"] = os.path.abspath(status_path)

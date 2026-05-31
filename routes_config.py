@@ -102,7 +102,7 @@ def check_guild_access(guild_id):
     user_id = user_data.get('id')
     if not user_id: return False
     
-    from run import _guilds_memory_cache
+    from base import _guilds_memory_cache
     user_guilds = _guilds_memory_cache.get(user_id, [])
     
     # Jeśli cache jest pusty, a mamy access_token, spróbujmy odpytać Discord API
@@ -457,7 +457,7 @@ def config(server_id):
     # Pobieramy statystyki (najpierw próbujemy z pliku statusu bota)
     bot_latency = None
     try:
-        status_path = "bot_status.json"
+        status_path = STATUS_FILE_PATH
         if os.path.exists(status_path):
             with open(status_path, "r") as f:
                 bot_status = json.load(f)
@@ -574,7 +574,7 @@ def config(server_id):
 
     if user_id:
         try:
-            from run import _guilds_memory_cache
+            from base import _guilds_memory_cache
             from routes_dashboard import get_bot_guilds_cached
             
             user_guilds = _guilds_memory_cache.get(user_id, [])

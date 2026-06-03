@@ -720,7 +720,7 @@ def get_settings(guild_id):
                            'logs_role_updates', 'logs_voice_activity', 'logs_guild_updates', 'logs_msg_updates', 'rgb_mode']
             for field in bool_fields:
                 if field in res:
-                    res[field] = (res[field] == 1)
+                    res[field] = str(res[field]) in ('1', 'True')
             
             # Automatycznie sprawdzanie wygaśnięcia triala
             if res.get('premium') and res.get('trial_start') and res.get('subscription_type') == 'Okres Próbny':

@@ -546,6 +546,8 @@ def save_autorole_settings(guild_id, mode, restore_roles, human_roles, bot_roles
     conn.close()
 
 def save_counter_settings(guild_id, type, enabled, name, thousands):
+    if type not in ('humans', 'bots', 'bans'):
+        raise ValueError("Invalid counter type")
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     # Upewnij się, że wiersz istnieje
@@ -559,6 +561,8 @@ def save_counter_settings(guild_id, type, enabled, name, thousands):
     conn.close()
 
 def update_counter_channel_id(guild_id, type, channel_id):
+    if type not in ('humans', 'bots', 'bans'):
+        raise ValueError("Invalid counter type")
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     # Upewnij się, że wiersz istnieje

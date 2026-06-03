@@ -1350,6 +1350,9 @@
             if (data.success) {
                 setV(`${p}-${type}-url`, data.url);
                 updatePreviewStyles(p);
+                if (p === 'g') {
+                    updateGeneralPreview();
+                }
             }
         } catch(e) {
             alert('Błąd przesyłania obrazu');
@@ -1361,6 +1364,9 @@
     window.removeEmbedImage = (type, p) => {
         setV(`${p}-${type}-url`, '');
         updatePreviewStyles(p);
+        if (p === 'g') {
+            updateGeneralPreview();
+        }
     };
 
     async function loadSelects(p) {

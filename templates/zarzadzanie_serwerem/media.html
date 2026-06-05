@@ -77,7 +77,7 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 30px;">
             <button type="button" class="{% if main_settings.premium %}btn-premium-gold{% else %}btn-save{% endif %}" style="padding: 14px; font-size: 0.8rem;" onclick="saveMediaLocal()">ZAPISZ I WYŚLIJ NA SERWER</button>
-            <button type="button" class="btn-save-secondary" style="margin-top: 0 !important; font-weight: 800 !important; background: rgba(116, 184, 22, 0.08) !important; border: 1px solid rgba(116, 184, 22, 0.2) !important; color: var(--accent-green) !important;" onclick="saveMediaLocal()">WYŚLIJ TEST <i class="fas fa-vial"></i></button>
+            <button type="button" class="btn-save-secondary" style="margin-top: 0 !important; font-weight: 800 !important; background: rgba(116, 184, 22, 0.08) !important; border: 1px solid rgba(116, 184, 22, 0.2) !important; color: var(--accent-green) !important;" onclick="testAllMediaConfigsForPlatform()">WYŚLIJ TEST <i class="fas fa-vial"></i></button>
         </div>
         <button type="button" onclick="saveMediaLocal()" class="btn-save-secondary">TYLKO ZAPISZ</button>
     </div>
@@ -281,7 +281,10 @@
                         <div class="toggle-switch"></div>
                         <span style="font-size: 0.85rem; font-weight: 600; color: #ddd;">Aktywne</span>
                     </label>
-                    <button type="button" class="btn-del" onclick="removeMediaConfig(${idx})" title="Usuń to konto"><i class="fas fa-trash"></i></button>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-save-secondary btn-test-item" style="margin-top: 0 !important; font-weight: 800 !important; background: rgba(116, 184, 22, 0.08) !important; border: 1px solid rgba(116, 184, 22, 0.2) !important; color: var(--accent-green) !important; padding: 6px 12px; font-size: 0.75rem;" onclick="testMediaConfig(${idx})">TEST <i class="fas fa-vial"></i></button>
+                        <button type="button" class="btn-del" onclick="removeMediaConfig(${idx})" title="Usuń to konto"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
             `;
             list.appendChild(div);
@@ -299,11 +302,33 @@
         renderMediaConfigsForPlatform();
     };
 
-    window.removeMediaConfig = (idxInPlatform) => {
+    window.removeMediaConfig = async (idxInPlatform) => {
         const platformConfigs = localMediaConfigs.filter(c => c.platform === currentPlatform);
         const configToRemove = platformConfigs[idxInPlatform];
+        
+        if (configToRemove && configToRemove.id) {
+            if (!confirm("Czy na pewno chcesz usunąć to konto? Ustawienia zostaną skasowane z bazy.")) {
+                return;
+            }
+            try {
+                const res = await fetch(`/api/${guildId}/media/${configToRemove.id}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert("Błąd podczas usuwania z serwera.");
+                    return;
+                }
+            } catch(e) {
+                console.error("Błąd delete:", e);
+                alert("Błąd połączenia podczas usuwania.");
+                return;
+            }
+        }
+        
         localMediaConfigs = localMediaConfigs.filter(c => c !== configToRemove);
         renderMediaConfigsForPlatform();
+        updatePlatformCounts();
     };
 
     window.saveMediaLocal = async function() {
@@ -335,7 +360,10 @@
                     body: JSON.stringify(data)
                 });
                 const resData = await res.json();
-                if (!resData.success) allOk = false;
+                if (!resData.success) {
+                    allOk = false;
+                    alert("Błąd zapisu konta " + data.account_id + ": " + (resData.error || "Nieznany błąd"));
+                }
             }
             
             if (allOk) {
@@ -359,6 +387,187 @@
             }
         } catch (err) {
             console.error("Save error:", err);
+            btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+            btn.style.background = '#7d2a2a';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 2000);
+        }
+    };
+
+    window.testMediaConfig = async (idx) => {
+        const items = document.querySelectorAll('.media-config-item');
+        const platformConfigs = localMediaConfigs.filter(c => c.platform === currentPlatform);
+        const item = items[idx];
+        const cfg = platformConfigs[idx];
+        
+        const data = {
+            id: cfg ? cfg.id : null,
+            platform: currentPlatform,
+            account_id: item.querySelector('.m-account-id').value,
+            discord_channel_id: item.querySelector('.m-discord-channel').value,
+            message: item.querySelector('.m-message').value,
+            enabled: item.querySelector('.m-enabled').checked
+        };
+        
+        if (!data.account_id || !data.discord_channel_id) {
+            alert("Podaj ID/link konta oraz wybierz kanał Discord przed wysłaniem testu!");
+            return;
+        }
+
+        const testBtn = item.querySelector('.btn-test-item');
+        const originalHTML = testBtn.innerHTML;
+        testBtn.disabled = true;
+        testBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>...';
+
+        try {
+            const saveRes = await fetch(`/api/${guildId}/media/item`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const saveResult = await saveRes.json();
+            
+            if (!saveResult.success) {
+                alert("Błąd zapisu konfiguracji: " + (saveResult.error || ""));
+                testBtn.innerHTML = originalHTML;
+                testBtn.disabled = false;
+                return;
+            }
+            
+            const savedConfigId = saveResult.id;
+            if (cfg) {
+                cfg.id = savedConfigId;
+                cfg.account_id = data.account_id;
+                cfg.discord_channel_id = data.discord_channel_id;
+                cfg.message = data.message;
+                cfg.enabled = data.enabled;
+            } else {
+                await loadMediaConfigs();
+            }
+            
+            const testRes = await fetch(`/api/${guildId}/media/${savedConfigId}/test`, {
+                method: 'POST'
+            });
+            const testResult = await testRes.json();
+            
+            if (testResult.success) {
+                testBtn.innerHTML = '<i class="fas fa-check"></i> OK!';
+                testBtn.style.background = '#2d7d2a';
+                testBtn.style.color = '#fff';
+                setTimeout(() => {
+                    testBtn.innerHTML = originalHTML;
+                    testBtn.style.background = '';
+                    testBtn.style.color = '';
+                    testBtn.disabled = false;
+                }, 2000);
+            } else {
+                alert("Błąd testu: " + (testResult.error || ""));
+                testBtn.innerHTML = '<i class="fas fa-times"></i>';
+                testBtn.style.background = '#7d2a2a';
+                testBtn.style.color = '#fff';
+                setTimeout(() => {
+                    testBtn.innerHTML = originalHTML;
+                    testBtn.style.background = '';
+                    testBtn.style.color = '';
+                    testBtn.disabled = false;
+                }, 2000);
+            }
+        } catch (err) {
+            console.error("Test error:", err);
+            testBtn.innerHTML = '<i class="fas fa-times"></i>';
+            testBtn.disabled = false;
+        }
+    };
+
+    window.testAllMediaConfigsForPlatform = async () => {
+        const btn = event.currentTarget;
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
+        
+        try {
+            const items = document.querySelectorAll('.media-config-item');
+            const platformConfigs = localMediaConfigs.filter(c => c.platform === currentPlatform);
+            
+            let allSaved = true;
+            let savedIds = [];
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const cfg = platformConfigs[i];
+                const data = {
+                    id: cfg ? cfg.id : null,
+                    platform: currentPlatform,
+                    account_id: item.querySelector('.m-account-id').value,
+                    discord_channel_id: item.querySelector('.m-discord-channel').value,
+                    message: item.querySelector('.m-message').value,
+                    enabled: item.querySelector('.m-enabled').checked
+                };
+                
+                if (!data.account_id || !data.discord_channel_id) continue;
+
+                const res = await fetch(`/api/${guildId}/media/item`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const resData = await res.json();
+                if (resData.success) {
+                    savedIds.push(resData.id);
+                } else {
+                    allSaved = false;
+                    alert("Błąd zapisu konta " + data.account_id + ": " + (resData.error || "Nieznany błąd"));
+                }
+            }
+            
+            if (!allSaved || savedIds.length === 0) {
+                btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD ZAPISU';
+                btn.style.background = '#7d2a2a';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 2000);
+                return;
+            }
+            
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> WYSYŁANIE TESTÓW...';
+            
+            let allTestsOk = true;
+            for (let id of savedIds) {
+                const testRes = await fetch(`/api/${guildId}/media/${id}/test`, {
+                    method: 'POST'
+                });
+                const testResult = await testRes.json();
+                if (!testResult.success) {
+                    allTestsOk = false;
+                    alert("Błąd podczas testu id " + id + ": " + (testResult.error || "Nieznany błąd"));
+                }
+            }
+            
+            if (allTestsOk) {
+                btn.innerHTML = '<i class="fas fa-check"></i> TESTY WYSŁANE!';
+                btn.style.background = '#2d7d2a';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                    closeMediaModal();
+                    location.reload();
+                }, 2000);
+            } else {
+                btn.innerHTML = '<i class="fas fa-times"></i> CZĘŚCIOWY BŁĄD';
+                btn.style.background = '#7d2a2a';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 2000);
+            }
+        } catch (err) {
+            console.error("Test error:", err);
             btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
             btn.style.background = '#7d2a2a';
             setTimeout(() => {

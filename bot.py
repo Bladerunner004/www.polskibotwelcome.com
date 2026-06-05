@@ -144,6 +144,7 @@ class PolskiBot(commands.Bot):
             web.post('/guilds/{guild_id}/sync_boosters', self.handle_api_sync_boosters),
             web.post('/guilds/{guild_id}/sync_counters', self.handle_api_sync_counters),
             web.post('/guilds/{guild_id}/delete_channel/{channel_id}', self.handle_api_delete_channel),
+            web.post('/test_media', self.handle_api_test_media),
         ])
         runner = web.AppRunner(app)
         await runner.setup()
@@ -272,6 +273,32 @@ class PolskiBot(commands.Bot):
                 else:
                     return web.json_response({'success': True, 'warning': 'Channel not found on Discord'})
             return web.json_response({'success': False, 'error': 'Gildia nieznaleziona'})
+        except Exception as e:
+            return web.json_response({'success': False, 'error': str(e)})
+
+    async def handle_api_test_media(self, request):
+        try:
+            data = await request.json()
+            guild_id = data.get('guild_id')
+            config_id = data.get('config_id')
+            
+            guild = self.get_guild(int(guild_id))
+            if guild:
+                cog = self.get_cog('MediaRadar')
+                if cog:
+                    from database import get_media_configs
+                    configs = get_media_configs(guild.id)
+                    cfg = next((c for c in configs if str(c['id']) == str(config_id)), None)
+                    if cfg:
+                        account = cfg.get('account_id', 'test_user')
+                        platform = cfg.get('platform', 'youtube')
+                        title = "Testowe powiadomienie z panelu PolskiBot!"
+                        url = f"https://{platform}.com"
+                        thumb = "https://cdn.discordapp.com/embed/avatars/0.png"
+                        await cog.send_notification(guild, cfg, title, url, thumb, account, platform)
+                        return web.json_response({'success': True})
+                    return web.json_response({'success': False, 'error': 'Konfiguracja nieznaleziona w bazie'})
+            return web.json_response({'success': False, 'error': 'Gildia lub moduł MediaRadar nieznalezione'})
         except Exception as e:
             return web.json_response({'success': False, 'error': str(e)})
 

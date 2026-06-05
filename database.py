@@ -1018,7 +1018,169 @@ def delete_welcome_config(guild_id, config_id):
 # FUNKCJE â€“ konfiguracje mediĂłw (Social Media)
 # =============================================
 
+def resolve_youtube_channel_id(input_val):
+    import re
+    import requests
+    input_val = input_val.strip()
+    
+    # 1. Sprawdzamy czy to bezpośrednie ID kanału
+    if re.match(r'^UC[A-Za-z0-9_-]{22}$', input_val):
+        return input_val
+        
+    # 2. Wyciąganie z URL
+    if "youtube.com" in input_val or "youtu.be" in input_val:
+        # Np. https://www.youtube.com/channel/UCxxxxxxxxxxxx
+        match = re.search(r'youtube\.com/channel/(UC[A-Za-z0-9_-]{22})', input_val)
+        if match:
+            return match.group(1)
+            
+        # Np. https://www.youtube.com/@handle
+        match_handle = re.search(r'youtube\.com/(@[A-Za-z0-9_.-]+)', input_val)
+        if match_handle:
+            handle = match_handle.group(1)
+            resolved = fetch_youtube_channel_id_by_handle(handle)
+            if resolved:
+                return resolved
+                
+        # Np. https://www.youtube.com/c/CustomName or user/CustomName (fallback na search)
+        match_c = re.search(r'youtube\.com/(c|user)/([A-Za-z0-9_.-]+)', input_val)
+        if match_c:
+            query = match_c.group(2)
+            resolved = search_youtube_channel_id(query)
+            if resolved:
+                return resolved
+                
+    # 3. Jeśli wpisano @handle lub samo handle
+    if input_val.startswith('@'):
+        resolved = fetch_youtube_channel_id_by_handle(input_val)
+        if resolved:
+            return resolved
+            
+    # Fallback - spróbujmy wyszukać jeśli to nie jest puste
+    if input_val:
+        query = input_val.replace('@', '')
+        resolved = search_youtube_channel_id(query)
+        if resolved:
+            return resolved
+            
+    return input_val
 
+def fetch_youtube_channel_id_by_handle(handle):
+    import requests
+    api_key = os.getenv("YOUTUBE_API_KEY")
+    if not api_key:
+        return None
+    try:
+        url = f"https://www.googleapis.com/youtube/v3/channels?part=id&forHandle={handle}&key={api_key}"
+        resp = requests.get(url, timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            items = data.get('items', [])
+            if items:
+                return items[0].get('id')
+    except Exception as e:
+        print(f"⚠️ [YT API] Błąd pobierania ID dla handle {handle}: {e}")
+    return None
+
+def search_youtube_channel_id(query):
+    import requests
+    api_key = os.getenv("YOUTUBE_API_KEY")
+    if not api_key:
+        return None
+    try:
+        url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q={query}&type=channel&maxResults=1&key={api_key}"
+        resp = requests.get(url, timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            items = data.get('items', [])
+            if items:
+                return items[0].get('id', {}).get('channelId')
+    except Exception as e:
+        print(f"⚠️ [YT API] Błąd wyszukiwania kanału {query}: {e}")
+    return None
+
+def clean_twitch_username(input_val):
+    input_val = input_val.strip()
+    if "twitch.tv" in input_val:
+        parts = input_val.split('/')
+        parts = [p for p in parts if p]
+        if parts:
+            return parts[-1].split('?')[0].replace('@', '')
+    return input_val.replace('@', '')
+
+def clean_kick_username(input_val):
+    input_val = input_val.strip()
+    if "kick.com" in input_val:
+        parts = input_val.split('/')
+        parts = [p for p in parts if p]
+        if parts:
+            return parts[-1].split('?')[0].replace('@', '')
+    return input_val.replace('@', '')
+
+def clean_tiktok_username(input_val):
+    input_val = input_val.strip()
+    if "tiktok.com" in input_val:
+        parts = input_val.split('/')
+        parts = [p for p in parts if p]
+        for part in parts:
+            if part.startswith("@"):
+                return part.split('?')[0]
+        if parts:
+            last = parts[-1].split('?')[0]
+            return f"@{last}" if not last.startswith('@') else last
+    return f"@{input_val}" if not input_val.startswith('@') else input_val
+
+def save_media_config(guild_id, data, config_id=None):
+    """Zapisuje lub aktualizuje konfigurację mediów społecznościowych."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        
+        platform = data.get('platform', '').strip().lower()
+        account_raw = data.get('account_id', '').strip()
+        discord_channel_id = str(data.get('discord_channel_id', '')).strip()
+        message = data.get('message', '').strip()
+        enabled = 1 if data.get('enabled') else 0
+        
+        if platform == 'youtube':
+            account_id = resolve_youtube_channel_id(account_raw)
+        elif platform == 'twitch':
+            account_id = clean_twitch_username(account_raw)
+        elif platform == 'kick':
+            account_id = clean_kick_username(account_raw)
+        elif platform == 'tiktok':
+            account_id = clean_tiktok_username(account_raw)
+        else:
+            account_id = account_raw
+            
+        new_id = config_id
+        if config_id:
+            c.execute('''
+                UPDATE media_configs 
+                SET platform = ?, account_id = ?, discord_channel_id = ?, message = ?, enabled = ?
+                WHERE id = ? AND guild_id = ?
+            ''', (platform, account_id, discord_channel_id, message, enabled, config_id, str(guild_id)))
+        else:
+            premium = is_premium(guild_id)
+            limit = LIMITS_PREMIUM["media_configs"] if premium else LIMITS_FREE["media_configs"]
+            
+            c.execute("SELECT COUNT(*) FROM media_configs WHERE guild_id = ?", (str(guild_id),))
+            if c.fetchone()[0] < limit:
+                c.execute('''
+                    INSERT INTO media_configs (guild_id, platform, account_id, discord_channel_id, message, enabled)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (str(guild_id), platform, account_id, discord_channel_id, message, enabled))
+                new_id = c.lastrowid
+            else:
+                conn.close()
+                return False, f"Osiągnięto limit powiadomień ({limit}). Kup Premium, aby dodać więcej!"
+                
+        conn.commit()
+        conn.close()
+        return True, new_id
+    except Exception as e:
+        print(f"❌ Błąd save_media_config: {e}")
+        return False, str(e)
 
 def delete_media_config(guild_id, config_id):
     """Usuwa konfiguracjÄ™ mediĂłw."""

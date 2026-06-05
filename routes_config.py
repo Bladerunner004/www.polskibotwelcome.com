@@ -954,8 +954,20 @@ def api_save_media_item(guild_id):
     from database import save_media_config
     data = request.json
     config_id = data.get('id')
-    new_id = save_media_config(guild_id, data, config_id)
-    return jsonify({'success': True, 'id': new_id})
+    success, result = save_media_config(guild_id, data, config_id)
+    if success:
+        return jsonify({'success': True, 'id': result})
+    return jsonify({'success': False, 'error': result}), 400
+
+@config_bp.route('/api/<guild_id>/media/<int:config_id>/test', methods=['POST'])
+def api_test_media(guild_id, config_id):
+    result = call_bot_api("/test_media", method="POST", data={
+        'guild_id': guild_id,
+        'config_id': config_id
+    })
+    if result: return jsonify(result)
+    return jsonify({'success': False, 'error': 'Błąd komunikacji z botem'}), 500
+
 
 @config_bp.route('/api/<guild_id>/embeds_sync', methods=['POST'])
 def api_embeds_sync(guild_id):

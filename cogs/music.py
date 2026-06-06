@@ -1,7 +1,50 @@
 import discord
 from discord.ext import commands
 import asyncio
+import yt_dlp
 from database import get_settings, is_command_enabled
+
+# Konfiguracja yt_dlp
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'ytsearch',
+    'source_address': '0.0.0.0', # bindowanie do IPv4
+}
+
+ffmpeg_options = {
+    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options': '-vn',
+}
+
+ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
+
+class YTDLSource(discord.PCMVolumeTransformer):
+    def __init__(self, source, *, data, volume=0.5):
+        super().__init__(source, volume)
+        self.data = data
+        self.title = data.get('title')
+        self.url = data.get('url')
+        self.duration = data.get('duration')
+
+    @classmethod
+    async def from_url(cls, url, *, loop=None, stream=False):
+        loop = loop or asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+
+        if 'entries' in data:
+            # Pobieramy pierwszy wynik wyszukiwania/playlisty
+            data = data['entries'][0]
+
+        filename = data['url'] if stream else ytdl.prepare_filename(data)
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
 def get_music_settings(ctx):
     if getattr(ctx.bot, 'IS_MUSIC_BOT', False):
@@ -50,17 +93,67 @@ def check_music_enabled():
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # Słownik przechowujący kolejki odtwarzania per serwer: guild_id -> list of dicts
+        # Kolejki odtwarzania per serwer: guild_id -> list of dicts
         self.queues = {}
-        # Słownik przechowujący aktualnie odtwarzany utwór: guild_id -> dict
+        # Aktualnie odtwarzany utwór: guild_id -> dict
         self.current_tracks = {}
-        # Słownik przechowujący status pauzy: guild_id -> bool
+        # Status pauzy: guild_id -> bool
         self.paused = {}
 
     def get_queue(self, guild_id):
         if guild_id not in self.queues:
             self.queues[guild_id] = []
         return self.queues[guild_id]
+
+    def format_duration(self, seconds):
+        if not seconds:
+            return "N/A"
+        minutes = seconds // 60
+        secs = seconds % 60
+        return f"{minutes}:{secs:02d}"
+
+    def play_next(self, ctx):
+        asyncio.run_coroutine_threadsafe(self.play_next_async(ctx), self.bot.loop)
+
+    async def play_next_async(self, ctx):
+        guild_id = ctx.guild.id
+        queue = self.get_queue(guild_id)
+        voice_client = ctx.guild.voice_client
+
+        if not voice_client or not voice_client.is_connected():
+            self.current_tracks[guild_id] = None
+            return
+
+        if len(queue) > 0:
+            next_track = queue.pop(0)
+            self.current_tracks[guild_id] = next_track
+
+            try:
+                source = await YTDLSource.from_url(next_track['query'], loop=self.bot.loop, stream=True)
+                settings = get_music_settings(ctx)
+                volume = settings.get("music_volume", 100) / 100.0
+                source.volume = volume
+
+                voice_client.play(source, after=lambda e: self.play_next(ctx))
+                
+                embed = discord.Embed(title="🎵 Odtwarzanie", color=0x74b816)
+                embed.add_field(name="Tytuł", value=f"**{source.title}**", inline=False)
+                embed.add_field(name="Długość", value=self.format_duration(source.duration), inline=True)
+                embed.add_field(name="Dodano przez", value=next_track['requester'], inline=True)
+                await ctx.send(embed=embed)
+            except Exception as e:
+                await ctx.send(f"❌ Wystąpił błąd podczas próby odtworzenia utworu `{next_track['title']}`: {e}")
+                self.play_next(ctx)
+        else:
+            self.current_tracks[guild_id] = None
+            # Wyłączenie po bezczynności, jeśli nie ma włączonego trybu 24/7
+            settings = get_music_settings(ctx)
+            if not settings.get("music_247", False):
+                await asyncio.sleep(15)
+                # Sprawdzamy czy nadal nic nie gra i kolejka jest pusta
+                if voice_client and not voice_client.is_playing() and len(self.get_queue(guild_id)) == 0:
+                    await voice_client.disconnect()
+                    await ctx.send("💤 Opuściłem kanał z powodu nieaktywności.")
 
     @commands.hybrid_command(name="join", description="Dołącza bota do wskazanego lub Twojego kanału głosowego.")
     @check_music_enabled()
@@ -85,24 +178,14 @@ class Music(commands.Cog):
                 await ctx.send(f"↪️ Przeniosłem się na kanał {target_channel.mention}!")
             except Exception as e:
                 print(f"[VOICE] Błąd przenoszenia na kanał {target_channel.name}: {e}")
-                await ctx.send(
-                    f"⚠️ **Tryb demonstracyjny / Symulacja**\n"
-                    f"Nie udało się przenieść na kanał {target_channel.mention}.\n"
-                    f"Powód: Brak biblioteki `PyNaCl` lub serwer (np. PythonAnywhere) blokuje połączenia głosowe UDP.\n"
-                    f"*(Szczegóły błędu: `{e}`)*"
-                )
+                await ctx.send(f"❌ Nie udało się przenieść na kanał {target_channel.mention}: `{e}`")
         else:
             try:
                 await target_channel.connect(timeout=10.0)
                 await ctx.send(f"👋 Połączyłem się z kanałem {target_channel.mention}!")
             except Exception as e:
                 print(f"[VOICE] Błąd łączenia z kanałem {target_channel.name}: {e}")
-                await ctx.send(
-                    f"⚠️ **Tryb demonstracyjny / Symulacja**\n"
-                    f"Nie udało się połączyć z kanałem {target_channel.mention}.\n"
-                    f"Powód: Brak biblioteki `PyNaCl` lub serwer (np. PythonAnywhere) blokuje połączenia głosowe UDP.\n"
-                    f"*(Szczegóły błędu: `{e}`)*"
-                )
+                await ctx.send(f"❌ Nie udało się połączyć z kanałem {target_channel.mention}: `{e}`")
 
     @commands.hybrid_command(name="leave", description="Rozłącza bota z kanału głosowego.")
     @check_music_enabled()
@@ -116,72 +199,96 @@ class Music(commands.Cog):
         guild_id = ctx.guild.id
         self.current_tracks[guild_id] = None
         self.paused[guild_id] = False
+        self.queues[guild_id] = []
         
         try:
             await voice_client.disconnect()
             await ctx.send("👋 Opuściłem kanał głosowy.")
         except Exception as e:
             print(f"[VOICE] Błąd rozłączania: {e}")
-            await ctx.send(
-                f"👋 **Rozłączono (Symulacja)**\n"
-                f"Zresetowano stan odtwarzacza. *(Błąd rozłączenia: `{e}`)*"
-            )
+            await ctx.send(f"❌ Wystąpił błąd podczas rozłączania: `{e}`")
 
-    @commands.hybrid_command(name="play", description="Odtwarza utwór z YouTube/Spotify lub wyszukuje frazę.")
+    @commands.hybrid_command(name="play", description="Odtwarza utwór z YouTube lub wyszukuje frazę.")
     @check_music_enabled()
     async def play(self, ctx, *, utwor: str):
         await ctx.defer()
         
-        # Sprawdzamy czy użytkownik jest na kanale głosowym
         if not ctx.author.voice or not ctx.author.voice.channel:
             await ctx.send("❌ Musisz znajdować się na kanale głosowym, aby odtwarzać muzykę!")
             return
 
         voice_channel = ctx.author.voice.channel
         
-        # Symulacja wyszukiwania i odtwarzania
-        mock_track = {
-            "title": utwor,
-            "duration": "3:45",
+        voice_client = ctx.guild.voice_client
+        if not voice_client:
+            try:
+                voice_client = await voice_channel.connect(timeout=10.0)
+            except Exception as e:
+                print(f"[VOICE] Błąd łączenia z kanałem {voice_channel.name}: {e}")
+                await ctx.send(f"❌ Nie udało się połączyć z kanałem głosowym: `{e}`")
+                return
+
+        # Szybkie pobranie metadanych
+        try:
+            loop = self.bot.loop or asyncio.get_event_loop()
+            data = await loop.run_in_executor(None, lambda: ytdl.extract_info(utwor, download=False, process=False))
+            
+            title = utwor
+            if 'entries' in data:
+                # Jeśli to wyszukiwanie, robimy pełny ekstrakt (bez pobierania pliku)
+                data = await loop.run_in_executor(None, lambda: ytdl.extract_info(utwor, download=False))
+                if 'entries' in data and len(data['entries']) > 0:
+                    data = data['entries'][0]
+            elif 'title' not in data:
+                data = await loop.run_in_executor(None, lambda: ytdl.extract_info(utwor, download=False))
+
+            title = data.get('title', utwor)
+            duration = self.format_duration(data.get('duration'))
+            url = data.get('webpage_url', data.get('url', ''))
+        except Exception as e:
+            title = utwor
+            duration = "N/A"
+            url = ""
+
+        track = {
+            "title": title,
+            "duration": duration,
             "requester": ctx.author.mention,
-            "url": "https://youtube.com/watch?v=mock"
+            "url": url,
+            "query": utwor
         }
         
         queue = self.get_queue(ctx.guild.id)
         
-        # Łączenie z kanałem głosowym (próba)
-        voice_client = ctx.guild.voice_client
-        voice_connected = True
-        if not voice_client:
+        if not voice_client.is_playing() and not voice_client.is_paused():
+            self.current_tracks[ctx.guild.id] = track
             try:
-                # Wymaga PyNaCl, jeśli go nie ma, złapie błąd i powiadomi
-                await voice_channel.connect(timeout=10.0)
-            except Exception as e:
-                # Brak bibliotek głosowych w systemie - działamy w trybie symulacji tekstowej
-                voice_connected = False
-
-        if len(queue) == 0 and not self.current_tracks.get(ctx.guild.id):
-            self.current_tracks[ctx.guild.id] = mock_track
-            
-            embed = discord.Embed(title="🎵 Odtwarzanie", color=0x74b816)
-            embed.add_field(name="Tytuł", value=f"**{mock_track['title']}**", inline=False)
-            embed.add_field(name="Długość", value=mock_track['duration'], inline=True)
-            embed.add_field(name="Dodano przez", value=mock_track['requester'], inline=True)
-            
-            if not voice_connected:
-                embed.set_footer(text="Tryb demonstracyjny (brak biblioteki PyNaCl w środowisku bota)")
+                source = await YTDLSource.from_url(utwor, loop=self.bot.loop, stream=True)
+                settings = get_music_settings(ctx)
+                volume = settings.get("music_volume", 100) / 100.0
+                source.volume = volume
                 
-            await ctx.send(embed=embed)
+                voice_client.play(source, after=lambda e: self.play_next(ctx))
+                
+                embed = discord.Embed(title="🎵 Odtwarzanie", color=0x74b816)
+                embed.add_field(name="Tytuł", value=f"**{source.title}**", inline=False)
+                embed.add_field(name="Długość", value=self.format_duration(source.duration), inline=True)
+                embed.add_field(name="Dodano przez", value=track['requester'], inline=True)
+                await ctx.send(embed=embed)
+            except Exception as e:
+                await ctx.send(f"❌ Wystąpił błąd podczas próby odtworzenia utworu: {e}")
+                self.current_tracks[ctx.guild.id] = None
         else:
-            queue.append(mock_track)
+            queue.append(track)
             embed = discord.Embed(title="📥 Dodano do kolejki", color=0x74b816)
-            embed.add_field(name="Tytuł", value=f"**{mock_track['title']}**", inline=False)
+            embed.add_field(name="Tytuł", value=f"**{track['title']}**", inline=False)
             embed.add_field(name="Pozycja w kolejce", value=str(len(queue)), inline=True)
             await ctx.send(embed=embed)
 
     @commands.hybrid_command(name="skip", description="Pomija aktualny utwór.")
     @check_music_enabled()
     async def skip(self, ctx):
+        await ctx.defer()
         guild_id = ctx.guild.id
         queue = self.get_queue(guild_id)
         
@@ -190,41 +297,41 @@ class Music(commands.Cog):
             return
             
         old_track = self.current_tracks[guild_id]
+        voice_client = ctx.guild.voice_client
         
-        if len(queue) > 0:
-            next_track = queue.pop(0)
-            self.current_tracks[guild_id] = next_track
-            
-            embed = discord.Embed(title="⏭️ Pominięto utwór", description=f"Pominięto: **{old_track['title']}**", color=0x74b816)
-            embed.add_field(name="Teraz gramy", value=f"**{next_track['title']}**", inline=False)
-            embed.add_field(name="Zażądane przez", value=next_track['requester'], inline=True)
-            await ctx.send(embed=embed)
+        if voice_client and (voice_client.is_playing() or voice_client.is_paused()):
+            voice_client.stop()
+            await ctx.send(f"⏭️ Pominięto: **{old_track['title']}**.")
         else:
-            self.current_tracks[guild_id] = None
-            self.paused[guild_id] = False
-            
-            # Odłączamy się od kanału
-            if ctx.guild.voice_client:
-                await ctx.guild.voice_client.disconnect()
-                
-            await ctx.send(f"⏭️ Pominięto: **{old_track['title']}**. Kolejka jest pusta. Bot opuścił kanał głosowy.")
+            if len(queue) > 0:
+                next_track = queue.pop(0)
+                self.current_tracks[guild_id] = next_track
+                await ctx.send(f"⏭️ Pominięto: **{old_track['title']}**. Przechodzę do następnego.")
+                self.play_next(ctx)
+            else:
+                self.current_tracks[guild_id] = None
+                await ctx.send(f"⏭️ Pominięto: **{old_track['title']}**. Kolejka jest pusta.")
 
     @commands.hybrid_command(name="stop", description="Zatrzymuje odtwarzanie i czyści kolejkę.")
     @check_music_enabled()
     async def stop(self, ctx):
+        await ctx.defer()
         guild_id = ctx.guild.id
         self.queues[guild_id] = []
         self.current_tracks[guild_id] = None
         self.paused[guild_id] = False
         
-        if ctx.guild.voice_client:
-            await ctx.guild.voice_client.disconnect()
+        voice_client = ctx.guild.voice_client
+        if voice_client:
+            voice_client.stop()
+            await voice_client.disconnect()
             
         await ctx.send("🛑 Zatrzymano odtwarzanie, wyczyszczono kolejkę i rozłączono bota.")
 
     @commands.hybrid_command(name="queue", description="Pokazuje aktualną kolejkę utworów.")
     @check_music_enabled()
     async def queue(self, ctx):
+        await ctx.defer()
         guild_id = ctx.guild.id
         queue = self.get_queue(guild_id)
         current = self.current_tracks.get(guild_id)
@@ -251,6 +358,7 @@ class Music(commands.Cog):
     @commands.hybrid_command(name="nowplaying", description="Pokazuje szczegóły aktualnie odtwarzanego utworu.")
     @check_music_enabled()
     async def nowplaying(self, ctx):
+        await ctx.defer()
         current = self.current_tracks.get(ctx.guild.id)
         if not current:
             await ctx.send("❌ Aktualnie nic nie jest odtwarzane!")
@@ -266,16 +374,21 @@ class Music(commands.Cog):
     @commands.hybrid_command(name="volume", description="Zmienia głośność odtwarzacza (10-100%).")
     @check_music_enabled()
     async def volume(self, ctx, glosnosc: int):
+        await ctx.defer()
         if not (10 <= glosnosc <= 100):
             await ctx.send("❌ Głośność musi mieścić się w przedziale od 10% do 100%!")
             return
             
-        # Zapisujemy głośność w sesji i bazie danych (opcjonalnie, tu tylko potwierdzamy zmianę)
+        voice_client = ctx.guild.voice_client
+        if voice_client and voice_client.source:
+            voice_client.source.volume = glosnosc / 100.0
+            
         await ctx.send(f"🔊 Głośność odtwarzacza została zmieniona na **{glosnosc}%**.")
 
     @commands.hybrid_command(name="lyrics", description="Wyszukuje tekst dla aktualnego lub podanego utworu.")
     @check_music_enabled()
     async def lyrics(self, ctx, utwor: str = None):
+        await ctx.defer()
         song_title = utwor
         if not song_title:
             current = self.current_tracks.get(ctx.guild.id)
@@ -285,11 +398,12 @@ class Music(commands.Cog):
                 await ctx.send("❌ Podaj nazwę utworu lub włącz odtwarzanie!")
                 return
                 
-        await ctx.send(f"🔍 Tekst dla utworu **{song_title}**:\n*(Tutaj pojawia się tekst piosenki, funkcja demonstracyjna)*")
+        await ctx.send(f"🔍 Tekst dla utworu **{song_title}**:\n*(Funkcja wyszukiwania tekstu piosenek zostanie dodana w przyszłości)*")
 
     @commands.hybrid_command(name="shuffle", description="Miesza kolejność utworów w kolejce.")
     @check_music_enabled()
     async def shuffle(self, ctx):
+        await ctx.defer()
         import random
         guild_id = ctx.guild.id
         queue = self.get_queue(guild_id)
@@ -304,22 +418,30 @@ class Music(commands.Cog):
     @commands.hybrid_command(name="pause", description="Wstrzymuje odtwarzanie muzyki.")
     @check_music_enabled()
     async def pause(self, ctx):
+        await ctx.defer()
         guild_id = ctx.guild.id
-        if self.paused.get(guild_id):
-            await ctx.send("❌ Odtwarzacz jest już wstrzymany!")
+        voice_client = ctx.guild.voice_client
+        
+        if not voice_client or not voice_client.is_playing():
+            await ctx.send("❌ Odtwarzacz nie gra żadnej muzyki!")
             return
             
+        voice_client.pause()
         self.paused[guild_id] = True
         await ctx.send("⏸️ Odtwarzanie wstrzymane. Użyj `/resume`, aby wznowić.")
 
     @commands.hybrid_command(name="resume", description="Wznawia wstrzymane odtwarzanie muzyki.")
     @check_music_enabled()
     async def resume(self, ctx):
+        await ctx.defer()
         guild_id = ctx.guild.id
-        if not self.paused.get(guild_id):
+        voice_client = ctx.guild.voice_client
+        
+        if not voice_client or not voice_client.is_paused():
             await ctx.send("❌ Odtwarzacz nie jest wstrzymany!")
             return
             
+        voice_client.resume()
         self.paused[guild_id] = False
         await ctx.send("▶️ Wznowiono odtwarzanie muzyki.")
 

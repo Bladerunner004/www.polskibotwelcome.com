@@ -425,20 +425,9 @@ def config(server_id):
     except:
         pass
 
-    music_tokens = []
-    try:
-        from database import get_music_bots
-        m_bots = get_music_bots(server_id)
-        for mb in m_bots:
-            if mb.get('token'):
-                music_tokens.append(mb['token'])
-    except:
-        pass
-
     tokens_to_try = [BOT_TOKEN]
     if custom_token:
         tokens_to_try.append(custom_token)
-    tokens_to_try.extend(music_tokens)
 
     guild_data = None
     successful_token = None

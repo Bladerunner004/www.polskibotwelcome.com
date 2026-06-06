@@ -36,12 +36,9 @@ if __name__ == "__main__":
     print("       POLSKIBOT - SYSTEM ZINTEGROWANY    ")
     print("==========================================")
 
-    # Uruchomienie wątków
-    bot_thread = threading.Thread(target=start_discord_bot, daemon=True)
+    # Uruchomienie wątku dla serwera Flask (bot zostanie automatycznie
+    # uruchomiony jako osobny podproces przez run.py)
     flask_thread = threading.Thread(target=start_flask, daemon=True)
-
-    bot_thread.start()
-    time.sleep(2)
     flask_thread.start()
 
     print("[SYSTEM] Serwisy uruchomione. Naciśnij Ctrl+C aby zatrzymać.")
@@ -49,10 +46,6 @@ if __name__ == "__main__":
     try:
         while True:
             time.sleep(5)
-            if not bot_thread.is_alive():
-                print("[SYSTEM] Restartowanie bota...")
-                bot_thread = threading.Thread(target=start_discord_bot, daemon=True)
-                bot_thread.start()
             if not flask_thread.is_alive():
                 print("[SYSTEM] Restartowanie Flask...")
                 flask_thread = threading.Thread(target=start_flask, daemon=True)

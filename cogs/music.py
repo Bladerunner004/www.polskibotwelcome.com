@@ -2,6 +2,11 @@ import discord
 from discord.ext import commands
 import asyncio
 import yt_dlp
+import os
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+import urllib.parse
+import requests
 from database import get_settings, is_command_enabled
 
 # Konfiguracja yt_dlp
@@ -17,12 +22,38 @@ ytdl_format_options = {
     'no_warnings': True,
     'default_search': 'ytsearch',
     'source_address': '0.0.0.0', # bindowanie do IPv4
-    'extractor_args': {
-        'youtube': {
-            'player_client': 'ios,android,web_embedded'
-        }
-    }
+    'remote_components': 'ejs:github',
 }
+
+# Sprawdzenie obecności pliku cookies.txt na serwerze lub lokalnie
+cookies_paths_to_check = [
+    '/root/polskibot/cookies.txt',
+    '/root/polskibot/cookies (1).txt',
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'cookies.txt'),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'cookies (1).txt')
+]
+
+cookies_path = None
+for path in cookies_paths_to_check:
+    if os.path.exists(path):
+        cookies_path = path
+        break
+
+if cookies_path:
+    ytdl_format_options['cookiefile'] = cookies_path
+    print(f"[MUSIC] Wykryto i załadowano cookies z: {cookies_path}")
+else:
+    print("[MUSIC] Brak pliku cookies.txt lub cookies (1).txt. Pobieranie z YouTube może zostać zablokowane.")
+
+# Obsługa ewentualnego tokenu PO (Proof of Origin) z .env
+po_token = os.getenv("YT_PO_TOKEN")
+if po_token:
+    if 'extractor_args' not in ytdl_format_options:
+        ytdl_format_options['extractor_args'] = {}
+    if 'youtube' not in ytdl_format_options['extractor_args']:
+        ytdl_format_options['extractor_args']['youtube'] = {}
+    ytdl_format_options['extractor_args']['youtube']['po_token'] = f"web+{po_token}"
+    print("[MUSIC] Skonfigurowano YT_PO_TOKEN w yt_dlp.")
 
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
@@ -30,6 +61,115 @@ ffmpeg_options = {
 }
 
 ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
+
+def get_stream_from_cobalt(query):
+    # Lista publicznych instancji Cobalt API
+    instances = [
+        "https://api.cobalt.tools/api/json",
+        "https://cobalt.moe/api/json",
+        "https://cobalt.k8s.sserve.app/api/json",
+        "https://api.cobalt.tools"
+    ]
+    
+    # Próbujemy tylko dla linków
+    if not query.startswith("http"):
+        return None
+        
+    for instance in instances:
+        try:
+            headers = {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            }
+            body = {
+                "url": query,
+                "downloadMode": "audio",
+                "audioFormat": "mp3",
+                "audioBitrate": "128"
+            }
+            url_target = instance if instance.endswith("/api/json") else f"{instance}/api/json"
+            r = requests.post(url_target, headers=headers, json=body, timeout=7)
+            if r.status_code == 200:
+                data = r.json()
+                if data.get("status") == "stream" and data.get("url"):
+                    print(f"[COBALT] Pomyślnie pobrano strumień z instancji: {instance}")
+                    return {
+                        "url": data.get("url"),
+                        "title": "Utwór z YouTube (Cobalt)",
+                        "duration": 0,
+                        "webpage_url": query
+                    }
+        except Exception as e:
+            print(f"[COBALT] Błąd dla instancji {instance}: {e}")
+            continue
+    return None
+
+def get_stream_from_invidious(query):
+    # Lista publicznych instancji Invidious
+    instances = [
+        "https://invidious.projectsegfau.lt",
+        "https://yewtu.be",
+        "https://invidious.flokinet.to",
+        "https://inv.tux.im"
+    ]
+    
+    # 1. Wyodrębnienie ID wideo jeśli zapytanie to link
+    video_id = None
+    if "youtube.com/watch" in query:
+        parsed_url = urllib.parse.urlparse(query)
+        params = urllib.parse.parse_qs(parsed_url.query)
+        if 'v' in params:
+            video_id = params['v'][0]
+    elif "youtu.be/" in query:
+        video_id = query.split("/")[-1].split("?")[0]
+        
+    for instance in instances:
+        try:
+            # 2. Jeśli to nie jest bezpośredni link, najpierw wyszukujemy wideo
+            if not video_id:
+                search_url = f"{instance}/api/v1/search?q={urllib.parse.quote(query)}&type=video"
+                r = requests.get(search_url, timeout=5)
+                if r.status_code == 200:
+                    results = r.json()
+                    if results and len(results) > 0:
+                        video_id = results[0].get("videoId")
+                        
+            if video_id:
+                # Wymuszamy proxy na serwerze Invidious (local=true) aby ominąć blokady IP YouTube dla strumienia!
+                video_url = f"{instance}/api/v1/videos/{video_id}?local=true"
+                r = requests.get(video_url, timeout=5)
+                if r.status_code == 200:
+                    data = r.json()
+                    title = data.get("title", "Utwór z YouTube")
+                    duration = data.get("lengthSeconds", 0)
+                    
+                    # Szukamy strumienia audio w adaptiveFormats
+                    audio_url = None
+                    best_bitrate = 0
+                    
+                    for fmt in data.get("adaptiveFormats", []):
+                        mime_type = fmt.get("type", "")
+                        if mime_type.startswith("audio/"):
+                            bitrate = int(fmt.get("bitrate", 0))
+                            if bitrate > best_bitrate:
+                                best_bitrate = bitrate
+                                audio_url = fmt.get("url")
+                                
+                    if audio_url:
+                        if audio_url.startswith("/"):
+                            audio_url = f"{instance}{audio_url}"
+                        
+                        return {
+                            "url": audio_url,
+                            "title": title,
+                            "duration": duration,
+                            "webpage_url": f"https://www.youtube.com/watch?v={video_id}"
+                        }
+        except Exception as e:
+            print(f"[INVIDIOUS] Błąd dla instancji {instance}: {e}")
+            continue
+            
+    raise Exception("Nie udało się pobrać utworu z YouTube ani przez yt-dlp, ani przez Invidious API.")
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
@@ -42,13 +182,41 @@ class YTDLSource(discord.PCMVolumeTransformer):
     @classmethod
     async def from_url(cls, url, *, loop=None, stream=False):
         loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+        
+        try:
+            # Próba pobrania przez standardowy yt-dlp (z ciasteczkami)
+            data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+            if 'entries' in data:
+                data = data['entries'][0]
+            filename = data['url'] if stream else ytdl.prepare_filename(data)
+        except Exception as ytdl_err:
+            print(f"[MUSIC] Błąd pobierania przez yt-dlp: {ytdl_err}. Przełączam na awaryjne Cobalt API...")
+            try:
+                invidious_data = None
+                
+                # 1. Próba przez Cobalt API (najszybszy i stabilny dla linków)
+                if url.startswith("http"):
+                    try:
+                        invidious_data = await loop.run_in_executor(None, lambda: get_stream_from_cobalt(url))
+                    except Exception as cobalt_err:
+                        print(f"[MUSIC] Błąd Cobalt API: {cobalt_err}")
+                
+                # 2. Próba przez Invidious API (z proxy local=true)
+                if not invidious_data:
+                    print("[MUSIC] Cobalt pominięty lub nieudany. Przełączam na Invidious z proxy...")
+                    invidious_data = await loop.run_in_executor(None, lambda: get_stream_from_invidious(url))
+                
+                filename = invidious_data['url']
+                data = {
+                    'title': invidious_data['title'],
+                    'duration': invidious_data['duration'],
+                    'url': invidious_data['url'],
+                    'webpage_url': invidious_data['webpage_url']
+                }
+            except Exception as backup_err:
+                print(f"[MUSIC] Błąd wszystkich systemów awaryjnych: {backup_err}")
+                raise Exception(f"Błąd odtwarzania utworu. Zarówno yt-dlp jak i Cobalt/Invidious zgłosiły błąd.\nyt-dlp: {ytdl_err}\nAwaryjny: {backup_err}")
 
-        if 'entries' in data:
-            # Pobieramy pierwszy wynik wyszukiwania/playlisty
-            data = data['entries'][0]
-
-        filename = data['url'] if stream else ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
 def get_music_settings(ctx):
@@ -104,6 +272,22 @@ class Music(commands.Cog):
         self.current_tracks = {}
         # Status pauzy: guild_id -> bool
         self.paused = {}
+
+        # Inicjalizacja integracji ze Spotify
+        spotify_id = os.getenv("SPOTIFY_CLIENT_ID")
+        spotify_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+        if spotify_id and spotify_secret:
+            try:
+                self.spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
+                    client_id=spotify_id,
+                    client_secret=spotify_secret
+                ))
+                print("[MUSIC] Skonfigurowano integrację ze Spotify.")
+            except Exception as e:
+                print(f"[MUSIC] Błąd konfiguracji Spotify: {e}")
+                self.spotify = None
+        else:
+            self.spotify = None
 
     def get_queue(self, guild_id):
         if guild_id not in self.queues:
@@ -232,6 +416,25 @@ class Music(commands.Cog):
                 print(f"[VOICE] Błąd łączenia z kanałem {voice_channel.name}: {e}")
                 await ctx.send(f"❌ Nie udało się połączyć z kanałem głosowym: `{e}`")
                 return
+
+        # --- OBSŁUGA LINKÓW SPOTIFY ---
+        if "spotify.com" in utwor:
+            if not self.spotify:
+                await ctx.send("ℹ️ Wykryto link Spotify, ale integracja ze Spotify nie jest skonfigurowana w pliku .env (brak SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET).")
+            else:
+                try:
+                    if "track" in utwor:
+                        track_info = self.spotify.track(utwor)
+                        track_name = track_info['name']
+                        artist_name = track_info['artists'][0]['name']
+                        utwor = f"{artist_name} - {track_name}"
+                        await ctx.send(f"🔍 Wykryto utwór Spotify: **{artist_name} - {track_name}**. Wyszukuję na YouTube...")
+                    else:
+                        await ctx.send("❌ Na ten moment bot obsługuje tylko pojedyncze utwory ze Spotify (track).")
+                        return
+                except Exception as e:
+                    await ctx.send(f"❌ Wystąpił problem z pobraniem danych ze Spotify: {e}")
+                    return
 
         # Szybkie pobranie metadanych
         try:

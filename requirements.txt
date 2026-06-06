@@ -10,3 +10,4 @@ Flask-Session
 PyNaCl
 davey
 yt-dlp
+spotipy

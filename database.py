@@ -25,9 +25,9 @@ def init_db():
     conn = sqlite3.connect(DB_NAME, timeout=10)
     cursor = conn.cursor()
     try:
-        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA journal_mode=DELETE")
     except Exception as e:
-        print(f"⚠️ [DB] Nie można włączyć trybu WAL: {e}")
+        print(f"⚠️ [DB] Nie można ustawić trybu journal: {e}")
     # Tabela ustawieĹ„ gĹ‚Ăłwnych
     cursor.execute('''CREATE TABLE IF NOT EXISTS settings (
                         guild_id TEXT PRIMARY KEY,

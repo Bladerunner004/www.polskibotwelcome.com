@@ -12,6 +12,20 @@ def get_bot_guilds_cached():
     import time
     import json
     
+    # Najpierw próbujemy odczytać dane o serwerach bezpośrednio z pliku statusu bota (współdzielonego na PythonAnywhere)
+    status_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_status.json")
+    if os.path.exists(status_file):
+        try:
+            with open(status_file, "r") as f:
+                status_data = json.load(f)
+                # Uznajemy status za świeży do 60 sekund
+                if time.time() - status_data.get('last_seen', 0) < 60:
+                    g_ids = status_data.get('guild_ids')
+                    if isinstance(g_ids, list):
+                        return set(g_ids)
+        except Exception:
+            pass
+            
     cache_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_guilds_cache.json")
     
     # Próbujemy odczytać cache z pliku

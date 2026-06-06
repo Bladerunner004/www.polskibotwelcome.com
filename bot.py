@@ -114,7 +114,8 @@ class PolskiBot(commands.Bot):
                 status = {
                     "latency": latency,
                     "last_seen": datetime.datetime.now().timestamp(),
-                    "status": "online" if is_online else "offline"
+                    "status": "online" if is_online else "offline",
+                    "guild_ids": [str(g.id) for g in self.guilds]
                 }
                 with open(STATUS_FILE_PATH, "w") as f: json.dump(status, f)
             

@@ -133,6 +133,7 @@
 <style>
     #bot-status-icon { transition: 0.3s; }
     .status-online { color: #74b816 !important; filter: drop-shadow(0 0 10px rgba(116, 184, 22, 0.5)); }
+    .status-suspended { color: #f1c40f !important; filter: drop-shadow(0 0 10px rgba(241, 196, 15, 0.5)); }
     .status-offline { color: #ff4444 !important; }
     
     #bot-status-container .stat-icon i { font-size: 0.8rem; }
@@ -142,7 +143,7 @@
         50% { transform: scale(1.2); opacity: 0.7; }
         100% { transform: scale(1); opacity: 1; }
     }
-    .status-online i { animation: pulse-status 2s infinite; }
+    .status-online i, .status-suspended i { animation: pulse-status 2s infinite; }
 </style>
 
 <script>
@@ -184,6 +185,10 @@
             icon.className = 'stat-icon status-online';
             text.textContent = 'ONLINE';
             text.style.color = '#74b816';
+        } else if (status === 'suspended') {
+            icon.className = 'stat-icon status-suspended';
+            text.textContent = 'ZAWIESZONY';
+            text.style.color = '#f1c40f';
         } else {
             icon.className = 'stat-icon status-offline';
             text.textContent = 'OFFLINE';

@@ -22,8 +22,12 @@ ALL_COMMANDS = [
 
 def init_db():
     """Tworzy bazÄ™ danych i tabele, jeĹ›li nie istniejÄ…."""
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_NAME, timeout=10)
     cursor = conn.cursor()
+    try:
+        cursor.execute("PRAGMA journal_mode=WAL")
+    except Exception as e:
+        print(f"⚠️ [DB] Nie można włączyć trybu WAL: {e}")
     # Tabela ustawieĹ„ gĹ‚Ăłwnych
     cursor.execute('''CREATE TABLE IF NOT EXISTS settings (
                         guild_id TEXT PRIMARY KEY,

@@ -369,16 +369,29 @@ def start_bot_background():
             custom_bot_processes = {}  # guild_id -> Popen process
             music_bot_processes = {}   # bot_id -> Popen process
             
+            # Statystyki awarii do ochrony przed crash-loopami
+            custom_bot_stats = {}  # guild_id -> {'failures': int, 'last_token': str, 'last_enabled': bool}
+            music_bot_stats = {}   # bot_id -> {'failures': int, 'last_token': str, 'last_enabled': bool}
+            
+            quick_crash_threshold = 30  # sekundy
+            max_failures = 3
+            
             while True:
                 try:
                     from database import DB_NAME
-                    conn = sqlite3.connect(DB_NAME, timeout=10)
-                    c = conn.cursor()
-                    c.execute('SELECT guild_id, token, enabled FROM custom_bots')
-                    rows = c.fetchall()
-                    c.execute('SELECT id, token, enabled FROM music_bots')
-                    m_rows = c.fetchall()
-                    conn.close()
+                    conn = None
+                    rows = []
+                    m_rows = []
+                    try:
+                        conn = sqlite3.connect(DB_NAME, timeout=10)
+                        c = conn.cursor()
+                        c.execute('SELECT guild_id, token, enabled FROM custom_bots')
+                        rows = c.fetchall()
+                        c.execute('SELECT id, token, enabled FROM music_bots')
+                        m_rows = c.fetchall()
+                    finally:
+                        if conn:
+                            conn.close()
                     
                     db_bots = {}
                     for row in rows:
@@ -392,14 +405,70 @@ def start_bot_background():
                         if tok and tok.strip():
                             db_music_bots[str(m_id)] = {'token': tok, 'enabled': bool(en)}
                     
+                    # Inicjalizacja/Aktualizacja liczników awarii dla custom botów
+                    for g_id, bot_info in db_bots.items():
+                        stats = custom_bot_stats.setdefault(g_id, {
+                            'failures': 0, 
+                            'last_token': bot_info['token'], 
+                            'last_enabled': bot_info['enabled']
+                        })
+                        if stats['last_token'] != bot_info['token']:
+                            stats['last_token'] = bot_info['token']
+                            stats['failures'] = 0
+                        if not stats['last_enabled'] and bot_info['enabled']:
+                            stats['failures'] = 0
+                        stats['last_enabled'] = bot_info['enabled']
+                        
+                    # Inicjalizacja/Aktualizacja liczników awarii dla botów muzycznych
+                    for m_id, bot_info in db_music_bots.items():
+                        stats = music_bot_stats.setdefault(m_id, {
+                            'failures': 0, 
+                            'last_token': bot_info['token'], 
+                            'last_enabled': bot_info['enabled']
+                        })
+                        if stats['last_token'] != bot_info['token']:
+                            stats['last_token'] = bot_info['token']
+                            stats['failures'] = 0
+                        if not stats['last_enabled'] and bot_info['enabled']:
+                            stats['failures'] = 0
+                        stats['last_enabled'] = bot_info['enabled']
+                    
                     # 1. Monitorowanie Custom Botów (White Label)
                     to_remove = []
                     for g_id, proc in list(custom_bot_processes.items()):
                         poll = proc.poll()
                         if poll is not None:
                             print(f"[CUSTOM BOT MONITOR] Proces dla gildii {g_id} zakończył się z kodem {poll}.")
-                            update_custom_bot_status(g_id, "offline")
                             to_remove.append(g_id)
+                            
+                            # Obsługa wykrywania szybkiego crashu
+                            elapsed = time.time() - getattr(proc, 'custom_bot_start_time', time.time())
+                            stats = custom_bot_stats.setdefault(g_id, {'failures': 0, 'last_token': '', 'last_enabled': True})
+                            
+                            if elapsed < quick_crash_threshold:
+                                stats['failures'] += 1
+                                print(f"[CUSTOM BOT MONITOR] Szybka awaria bota dla gildii {g_id}. Awarii z rzędu: {stats['failures']}/{max_failures}")
+                            else:
+                                stats['failures'] = 0
+                                print(f"[CUSTOM BOT MONITOR] Proces bota dla gildii {g_id} działał stabilnie. Resetuję licznik.")
+                                
+                            if stats['failures'] >= max_failures:
+                                print(f"[CUSTOM BOT MONITOR] Custom bot dla gildii {g_id} przekroczył limit awarii. Zawieszam go.")
+                                try:
+                                    conn_d = sqlite3.connect(DB_NAME, timeout=10)
+                                    try:
+                                        c_d = conn_d.cursor()
+                                        c_d.execute('UPDATE custom_bots SET enabled=0, status=? WHERE guild_id=?', ('suspended', str(g_id)))
+                                        conn_d.commit()
+                                    finally:
+                                        conn_d.close()
+                                except Exception as dbe:
+                                    print(f"[CUSTOM BOT MONITOR] Błąd zawieszania bota w bazie: {dbe}")
+                                stats['last_enabled'] = False
+                                update_custom_bot_status(g_id, "suspended")
+                            else:
+                                update_custom_bot_status(g_id, "offline")
+                                
                         elif g_id not in db_bots or not db_bots[g_id]['enabled']:
                             print(f"[CUSTOM BOT MONITOR] Zamykanie bota dla gildii {g_id}...")
                             proc.terminate()
@@ -415,7 +484,9 @@ def start_bot_background():
                             del custom_bot_processes[g_id]
                             
                     for g_id, bot_info in db_bots.items():
-                        if bot_info['enabled'] and g_id not in custom_bot_processes:
+                        stats = custom_bot_stats.get(g_id, {})
+                        failures = stats.get('failures', 0)
+                        if bot_info['enabled'] and g_id not in custom_bot_processes and failures < max_failures:
                             print(f"[CUSTOM BOT MONITOR] Uruchamianie bota dla gildii {g_id}...")
                             try:
                                 proc = subprocess.Popen(
@@ -423,6 +494,7 @@ def start_bot_background():
                                     cwd=bot_dir,
                                     creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
                                 )
+                                proc.custom_bot_start_time = time.time()
                                 custom_bot_processes[g_id] = proc
                                 update_custom_bot_status(g_id, "online")
                             except Exception as e:
@@ -435,8 +507,36 @@ def start_bot_background():
                         poll = proc.poll()
                         if poll is not None:
                             print(f"[MUSIC BOT MONITOR] Proces dla bota ID {m_id} zakończył się z kodem {poll}.")
-                            update_music_bot_status(m_id, "offline")
                             to_remove_music.append(m_id)
+                            
+                            # Obsługa wykrywania szybkiego crashu
+                            elapsed = time.time() - getattr(proc, 'custom_bot_start_time', time.time())
+                            stats = music_bot_stats.setdefault(m_id, {'failures': 0, 'last_token': '', 'last_enabled': True})
+                            
+                            if elapsed < quick_crash_threshold:
+                                stats['failures'] += 1
+                                print(f"[MUSIC BOT MONITOR] Szybka awaria bota ID {m_id}. Awarii z rzędu: {stats['failures']}/{max_failures}")
+                            else:
+                                stats['failures'] = 0
+                                print(f"[MUSIC BOT MONITOR] Proces bota ID {m_id} działał stabilnie. Resetuję licznik.")
+                                
+                            if stats['failures'] >= max_failures:
+                                print(f"[MUSIC BOT MONITOR] Bot muzyczny ID {m_id} przekroczył limit awarii. Zawieszam go.")
+                                try:
+                                    conn_d = sqlite3.connect(DB_NAME, timeout=10)
+                                    try:
+                                        c_d = conn_d.cursor()
+                                        c_d.execute('UPDATE music_bots SET enabled=0, status=? WHERE id=?', ('suspended', int(m_id)))
+                                        conn_d.commit()
+                                    finally:
+                                        conn_d.close()
+                                except Exception as dbe:
+                                    print(f"[MUSIC BOT MONITOR] Błąd zawieszania bota w bazie: {dbe}")
+                                stats['last_enabled'] = False
+                                update_music_bot_status(m_id, "suspended")
+                            else:
+                                update_music_bot_status(m_id, "offline")
+                                
                         elif m_id not in db_music_bots or not db_music_bots[m_id]['enabled']:
                             print(f"[MUSIC BOT MONITOR] Zamykanie bota dla ID {m_id}...")
                             proc.terminate()
@@ -452,7 +552,9 @@ def start_bot_background():
                             del music_bot_processes[m_id]
                             
                     for m_id, bot_info in db_music_bots.items():
-                        if bot_info['enabled'] and m_id not in music_bot_processes:
+                        stats = music_bot_stats.get(m_id, {})
+                        failures = stats.get('failures', 0)
+                        if bot_info['enabled'] and m_id not in music_bot_processes and failures < max_failures:
                             print(f"[MUSIC BOT MONITOR] Uruchamianie bota dla ID {m_id}...")
                             try:
                                 proc = subprocess.Popen(
@@ -460,6 +562,7 @@ def start_bot_background():
                                     cwd=bot_dir,
                                     creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
                                 )
+                                proc.custom_bot_start_time = time.time()
                                 music_bot_processes[m_id] = proc
                                 update_music_bot_status(m_id, "online")
                             except Exception as e:

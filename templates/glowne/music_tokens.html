@@ -110,6 +110,11 @@
         box-shadow: 0 0 8px #74b816;
         animation: pulse-music-status 2s infinite;
     }
+    .music-status-dot.suspended {
+        background: #f1c40f;
+        box-shadow: 0 0 8px #f1c40f;
+        animation: pulse-music-status 2s infinite;
+    }
     .music-status-dot.offline {
         background: #ff4444;
     }
@@ -201,8 +206,15 @@
             let html = '';
             bots.forEach(bot => {
                 const isChecked = bot.enabled ? 'checked' : '';
-                const statusClass = bot.status === 'online' ? 'online' : 'offline';
-                const statusLabel = bot.status.toUpperCase();
+                let statusClass = 'offline';
+                let statusLabel = 'OFFLINE';
+                if (bot.status === 'online') {
+                    statusClass = 'online';
+                    statusLabel = 'ONLINE';
+                } else if (bot.status === 'suspended') {
+                    statusClass = 'suspended';
+                    statusLabel = 'ZAWIESZONY (Błędny token lub za dużo awarii)';
+                }
                 
                 html += `
                     <div class="music-bot-item" id="music-bot-row-${bot.id}">

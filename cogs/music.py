@@ -17,6 +17,11 @@ ytdl_format_options = {
     'no_warnings': True,
     'default_search': 'ytsearch',
     'source_address': '0.0.0.0', # bindowanie do IPv4
+    'extractor_args': {
+        'youtube': {
+            'player_client': 'ios,android,web_embedded'
+        }
+    }
 }
 
 ffmpeg_options = {

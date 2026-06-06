@@ -1287,7 +1287,8 @@ def api_save_music(guild_id):
         'music_volume': int(data.get('music_volume', 100)),
         'music_dj_role_id': data.get('music_dj_role_id') or None,
         'music_247': 1 if data.get('music_247') else 0,
-        'music_high_quality': 1 if data.get('music_high_quality') else 0
+        'music_high_quality': 1 if data.get('music_high_quality') else 0,
+        'commands_channel_id': data.get('commands_channel_id') or None
     }
     
     conn = sqlite3.connect("database.db")
@@ -1303,3 +1304,32 @@ def api_save_music(guild_id):
         conn.close()
         
     return jsonify({'success': True})
+
+@config_bp.route('/api/<guild_id>/music_bots/<int:bot_id>/settings', methods=['GET'])
+def api_get_music_bot_settings(guild_id, bot_id):
+    if not check_guild_access(guild_id):
+        return jsonify({'error': 'Brak dostępu'}), 403
+    from database import get_music_bot_by_id
+    m_bot = get_music_bot_by_id(bot_id)
+    if not m_bot or str(m_bot['guild_id']) != str(guild_id):
+        return jsonify({'error': 'Bot nieznaleziony'}), 404
+        
+    return jsonify({
+        'music_enabled': m_bot.get('music_enabled', True),
+        'music_volume': m_bot.get('music_volume', 100),
+        'music_dj_role_id': m_bot.get('music_dj_role_id') or '',
+        'music_247': m_bot.get('music_247', False),
+        'music_high_quality': m_bot.get('music_high_quality', False),
+        'commands_channel_id': m_bot.get('commands_channel_id') or ''
+    })
+
+@config_bp.route('/api/<guild_id>/music_bots/<int:bot_id>/settings', methods=['POST'])
+def api_save_music_bot_settings(guild_id, bot_id):
+    if not check_guild_access(guild_id):
+        return jsonify({'error': 'Brak dostępu'}), 403
+    from database import save_music_bot_settings
+    data = request.json
+    
+    ok = save_music_bot_settings(guild_id, bot_id, data)
+    return jsonify({'success': ok})
+

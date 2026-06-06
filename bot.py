@@ -64,6 +64,8 @@ def get_dynamic_prefix(bot, message):
 class PolskiBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=get_dynamic_prefix, intents=intents)
+        self.IS_MUSIC_BOT = IS_MUSIC_BOT
+        self.MUSIC_BOT_ID = MUSIC_BOT_ID
         if IS_MUSIC_BOT:
             self.initial_extensions = ['cogs.music']
         else:
@@ -350,8 +352,14 @@ async def check_commands_channel(ctx):
     if ctx.author.guild_permissions.manage_guild:
         return True
     
-    settings = get_settings(str(ctx.guild.id))
-    cmd_channel_id = settings.get("commands_channel_id")
+    if getattr(ctx.bot, 'IS_MUSIC_BOT', False):
+        from database import get_music_bot_by_id
+        m_bot = get_music_bot_by_id(ctx.bot.MUSIC_BOT_ID)
+        cmd_channel_id = m_bot.get("commands_channel_id") if m_bot else None
+    else:
+        settings = get_settings(str(ctx.guild.id))
+        cmd_channel_id = settings.get("commands_channel_id")
+        
     if cmd_channel_id and str(cmd_channel_id).isdigit():
         if ctx.channel.id != int(cmd_channel_id):
             await ctx.send(f"❌ Komendy na tym serwerze są dozwolone tylko na kanale <#{cmd_channel_id}>!", ephemeral=True)

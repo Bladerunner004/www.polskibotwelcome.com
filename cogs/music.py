@@ -3,13 +3,28 @@ from discord.ext import commands
 import asyncio
 from database import get_settings, is_command_enabled
 
+def get_music_settings(ctx):
+    if getattr(ctx.bot, 'IS_MUSIC_BOT', False):
+        from database import get_music_bot_by_id
+        m_bot = get_music_bot_by_id(ctx.bot.MUSIC_BOT_ID)
+        if m_bot:
+            return {
+                "music_enabled": m_bot.get("music_enabled", True),
+                "music_volume": m_bot.get("music_volume", 100),
+                "music_dj_role_id": m_bot.get("music_dj_role_id"),
+                "music_247": m_bot.get("music_247", False),
+                "music_high_quality": m_bot.get("music_high_quality", False),
+                "commands_channel_id": m_bot.get("commands_channel_id")
+            }
+    return get_settings(str(ctx.guild.id))
+
 def check_music_enabled():
     async def predicate(ctx):
         if not ctx.guild:
             return False
         
         # 1. Sprawdzamy czy cały moduł muzyczny jest włączony na serwerze
-        settings = get_settings(str(ctx.guild.id))
+        settings = get_music_settings(ctx)
         if not settings.get("music_enabled", True):
             await ctx.send("❌ Moduł muzyczny jest wyłączony na tym serwerze! Włącz go w panelu WWW.", ephemeral=True)
             return False

@@ -324,6 +324,20 @@ def init_db():
                         enabled INTEGER DEFAULT 1
                     )''')
 
+    # Migracja dla music_bots
+    music_bot_cols = [
+        ("music_enabled", "INTEGER DEFAULT 1"),
+        ("music_volume", "INTEGER DEFAULT 100"),
+        ("music_dj_role_id", "TEXT"),
+        ("music_247", "INTEGER DEFAULT 0"),
+        ("music_high_quality", "INTEGER DEFAULT 0"),
+        ("commands_channel_id", "TEXT")
+    ]
+    for col_name, col_type in music_bot_cols:
+        try:
+            cursor.execute(f"ALTER TABLE music_bots ADD COLUMN {col_name} {col_type}")
+        except: pass
+
     # Tabela OstrzeĹĽeĹ„ (Warnings)
     cursor.execute('''CREATE TABLE IF NOT EXISTS user_warnings (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -570,7 +584,10 @@ def get_music_bots(guild_id):
     try:
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
-        c.execute('SELECT id, token, bot_name, status, enabled FROM music_bots WHERE guild_id=?', (str(guild_id),))
+        c.execute('''SELECT id, token, bot_name, status, enabled, 
+                            music_enabled, music_volume, music_dj_role_id, 
+                            music_247, music_high_quality, commands_channel_id 
+                     FROM music_bots WHERE guild_id=?''', (str(guild_id),))
         rows = c.fetchall()
         conn.close()
         return [
@@ -579,7 +596,13 @@ def get_music_bots(guild_id):
                 'token': row[1],
                 'bot_name': row[2],
                 'status': row[3],
-                'enabled': bool(row[4])
+                'enabled': bool(row[4]),
+                'music_enabled': bool(row[5]),
+                'music_volume': row[6],
+                'music_dj_role_id': row[7],
+                'music_247': bool(row[8]),
+                'music_high_quality': bool(row[9]),
+                'commands_channel_id': row[10]
             }
             for row in rows
         ]
@@ -592,7 +615,10 @@ def get_music_bot_by_id(bot_id):
     try:
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
-        c.execute('SELECT id, guild_id, token, bot_name, status, enabled FROM music_bots WHERE id=?', (int(bot_id),))
+        c.execute('''SELECT id, guild_id, token, bot_name, status, enabled, 
+                            music_enabled, music_volume, music_dj_role_id, 
+                            music_247, music_high_quality, commands_channel_id 
+                     FROM music_bots WHERE id=?''', (int(bot_id),))
         row = c.fetchone()
         conn.close()
         if row:
@@ -602,12 +628,41 @@ def get_music_bot_by_id(bot_id):
                 'token': row[2],
                 'bot_name': row[3],
                 'status': row[4],
-                'enabled': bool(row[5])
+                'enabled': bool(row[5]),
+                'music_enabled': bool(row[6]),
+                'music_volume': row[7],
+                'music_dj_role_id': row[8],
+                'music_247': bool(row[9]),
+                'music_high_quality': bool(row[10]),
+                'commands_channel_id': row[11]
             }
         return None
     except Exception as e:
         print(f"❌ [DB] Błąd get_music_bot_by_id: {e}")
         return None
+
+def save_music_bot_settings(guild_id, bot_id, data):
+    """Zapisuje ustawienia konkretnego bota muzycznego."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('''UPDATE music_bots 
+                     SET music_enabled=?, music_volume=?, music_dj_role_id=?, 
+                         music_247=?, music_high_quality=?, commands_channel_id=? 
+                     WHERE id=? AND guild_id=?''',
+                  (1 if data.get('music_enabled') else 0,
+                   int(data.get('music_volume', 100)),
+                   data.get('music_dj_role_id'),
+                   1 if data.get('music_247') else 0,
+                   1 if data.get('music_high_quality') else 0,
+                   data.get('commands_channel_id'),
+                   int(bot_id), str(guild_id)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ [DB] Błąd save_music_bot_settings: {e}")
+        return False
 
 def add_music_bot(guild_id, token, bot_name):
     """Dodaje nowy bot muzyczny."""

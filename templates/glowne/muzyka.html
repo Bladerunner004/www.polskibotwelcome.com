@@ -26,6 +26,21 @@
     </div>
     <div class="card-body">
         <div class="music-form">
+            <!-- Wybór bota do konfiguracji (widoczny tylko jeśli dodano custom boty) -->
+            <div class="config-item" id="music-bot-selector-container" style="display: none; padding: 20px; flex-direction: column; align-items: stretch; gap: 12px; border: 1px solid rgba(212, 175, 55, 0.35); background: rgba(212, 175, 55, 0.03); border-radius: 12px; margin-bottom: 25px;">
+                <div class="config-info">
+                    <div class="config-title" style="display: flex; align-items: center; gap: 8px; color: var(--accent-gold); font-weight: 700;">
+                        <i class="fas fa-robot"></i> Wybierz bota do konfiguracji
+                    </div>
+                    <div class="config-desc">Możesz skonfigurować niezależne ustawienia dla każdego ze swoich botów muzycznych.</div>
+                </div>
+                <div style="position: relative;">
+                    <select id="config-selected-bot" onchange="changeConfiguredBot()" class="modal-select" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); color: white; width: 100%; border-radius: 12px; padding: 12px 16px; font-weight: 600;">
+                        <option value="main">Główny Bot</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- Włącznik modułu -->
             <div class="config-item">
                 <div class="config-info">
@@ -65,6 +80,22 @@
                         <option value="">Brak (Dla każdego)</option>
                         {% for role in roles %}
                         <option value="{{ role.id }}" {% if main_settings.music_dj_role_id == role.id %}selected{% endif %}>{{ role.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dedykowany Kanał dla Komend bota -->
+            <div class="config-item" style="flex-direction: column; align-items: stretch; gap: 12px; padding: 20px;">
+                <div class="config-info">
+                    <div class="config-title">Kanał dla komend bota</div>
+                    <div class="config-desc">Wpisanie komendy tego bota będzie dozwolone wyłącznie na wybranym kanale. Wybierz puste, aby komendy działały wszędzie.</div>
+                </div>
+                <div style="position: relative;">
+                    <select id="music-commands-channel" class="modal-select" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); color: white; width: 100%; border-radius: 12px; padding: 12px 16px;">
+                        <option value="">Wszystkie kanały</option>
+                        {% for ch in channels %}
+                        <option value="{{ ch.id }}" {% if main_settings.commands_channel_id == ch.id %}selected{% endif %}>{{ ch.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -184,6 +215,16 @@
 </style>
 
 <script>
+    // Globalny cache dla głównego bota (Main Bot)
+    const mainBotSettings = {
+        music_enabled: {% if main_settings.music_enabled %}true{% else %}false{% endif %},
+        music_volume: {{ main_settings.music_volume or 100 }},
+        music_dj_role_id: "{{ main_settings.music_dj_role_id or '' }}",
+        music_247: {% if main_settings.music_247 %}true{% else %}false{% endif %},
+        music_high_quality: {% if main_settings.music_high_quality %}true{% else %}false{% endif %},
+        commands_channel_id: "{{ main_settings.commands_channel_id or '' }}"
+    };
+
     // Live update range slider values
     const volRange = document.getElementById('music-volume-range');
     const volDisplay = document.getElementById('volume-val-display');
@@ -193,28 +234,100 @@
         });
     }
 
+    // Załaduj listę botów muzycznych, aby zdecydować czy pokazać selektor bota
+    async function initMusicBotSelector() {
+        try {
+            const res = await fetch(`/api/{{ server_id }}/music_bots`);
+            const bots = await res.json();
+            
+            if (Array.isArray(bots) && bots.length > 0) {
+                const container = document.getElementById('music-bot-selector-container');
+                const selector = document.getElementById('config-selected-bot');
+                
+                if (container && selector) {
+                    // Czyścimy opcje oprócz "Główny Bot"
+                    selector.innerHTML = '<option value="main">Główny Bot</option>';
+                    bots.forEach(bot => {
+                        const opt = document.createElement('option');
+                        opt.value = bot.id;
+                        opt.textContent = `${bot.bot_name || 'Muzyczny Bot'} (ID: ${bot.id})`;
+                        selector.appendChild(opt);
+                    });
+                    container.style.display = 'flex';
+                }
+            }
+        } catch (e) {
+            console.error("Error loading music bots for selector:", e);
+        }
+    }
+
+    // Wywołanie przy zmianie wybranego bota
+    async function changeConfiguredBot() {
+        const selector = document.getElementById('config-selected-bot');
+        const botId = selector.value;
+
+        if (botId === 'main') {
+            applySettingsToUI(mainBotSettings);
+        } else {
+            try {
+                const res = await fetch(`/api/{{ server_id }}/music_bots/${botId}/settings`);
+                const data = await res.json();
+                applySettingsToUI(data);
+            } catch (e) {
+                alert("Błąd podczas ładowania ustawień dla wybranego bota.");
+            }
+        }
+    }
+
+    function applySettingsToUI(settings) {
+        document.getElementById('music-enabled-toggle').checked = !!settings.music_enabled;
+        
+        const vol = settings.music_volume !== undefined ? settings.music_volume : 100;
+        document.getElementById('music-volume-range').value = vol;
+        if (volDisplay) volDisplay.innerText = vol + '%';
+        
+        document.getElementById('music-dj-role').value = settings.music_dj_role_id || '';
+        document.getElementById('music-commands-channel').value = settings.commands_channel_id || '';
+        document.getElementById('music-247-toggle').checked = !!settings.music_247;
+        document.getElementById('music-hq-toggle').checked = !!settings.music_high_quality;
+    }
+
     async function saveMusicSettings() {
         const btn = event.currentTarget;
         const originalHTML = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
 
+        const selector = document.getElementById('config-selected-bot');
+        const botId = selector.value;
+
         const payload = {
             music_enabled: document.getElementById('music-enabled-toggle').checked,
             music_volume: parseInt(document.getElementById('music-volume-range').value),
             music_dj_role_id: document.getElementById('music-dj-role').value,
             music_247: document.getElementById('music-247-toggle').checked,
-            music_high_quality: document.getElementById('music-hq-toggle').checked
+            music_high_quality: document.getElementById('music-hq-toggle').checked,
+            commands_channel_id: document.getElementById('music-commands-channel').value
         };
 
+        let url = `/api/{{ server_id }}/music`;
+        if (botId !== 'main') {
+            url = `/api/{{ server_id }}/music_bots/${botId}/settings`;
+        }
+
         try {
-            const res = await fetch(`/api/{{ server_id }}/music`, {
+            const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
             if (res.ok) {
+                // Jeśli zapisujemy Główny Bot, aktualizujemy cache w JS
+                if (botId === 'main') {
+                    Object.assign(mainBotSettings, payload);
+                }
+                
                 btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
                 btn.style.background = '#2d7d2a';
                 setTimeout(() => {
@@ -235,4 +348,7 @@
             }, 2000);
         }
     }
+
+    // Inicjalizacja przy ładowaniu strony
+    initMusicBotSelector();
 </script>

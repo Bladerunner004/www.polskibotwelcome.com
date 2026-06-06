@@ -83,13 +83,25 @@ class Music(commands.Cog):
                 await voice_client.move_to(target_channel)
                 await ctx.send(f"↪️ Przeniosłem się na kanał {target_channel.mention}!")
             except Exception as e:
-                await ctx.send(f"👋 Przeniosłem się na kanał {target_channel.mention}! (Symulacja)")
+                print(f"[VOICE] Błąd przenoszenia na kanał {target_channel.name}: {e}")
+                await ctx.send(
+                    f"⚠️ **Tryb demonstracyjny / Symulacja**\n"
+                    f"Nie udało się przenieść na kanał {target_channel.mention}.\n"
+                    f"Powód: Brak biblioteki `PyNaCl` lub serwer (np. PythonAnywhere) blokuje połączenia głosowe UDP.\n"
+                    f"*(Szczegóły błędu: `{e}`)*"
+                )
         else:
             try:
                 await target_channel.connect()
                 await ctx.send(f"👋 Połączyłem się z kanałem {target_channel.mention}!")
             except Exception as e:
-                await ctx.send(f"👋 Połączyłem się z kanałem {target_channel.mention}! (Symulacja)")
+                print(f"[VOICE] Błąd łączenia z kanałem {target_channel.name}: {e}")
+                await ctx.send(
+                    f"⚠️ **Tryb demonstracyjny / Symulacja**\n"
+                    f"Nie udało się połączyć z kanałem {target_channel.mention}.\n"
+                    f"Powód: Brak biblioteki `PyNaCl` lub serwer (np. PythonAnywhere) blokuje połączenia głosowe UDP.\n"
+                    f"*(Szczegóły błędu: `{e}`)*"
+                )
 
     @commands.hybrid_command(name="leave", description="Rozłącza bota z kanału głosowego.")
     @check_music_enabled()
@@ -107,7 +119,11 @@ class Music(commands.Cog):
             await voice_client.disconnect()
             await ctx.send("👋 Opuściłem kanał głosowy.")
         except Exception as e:
-            await ctx.send("👋 Rozłączyłem się z kanałem! (Symulacja)")
+            print(f"[VOICE] Błąd rozłączania: {e}")
+            await ctx.send(
+                f"👋 **Rozłączono (Symulacja)**\n"
+                f"Zresetowano stan odtwarzacza. *(Błąd rozłączenia: `{e}`)*"
+            )
 
     @commands.hybrid_command(name="play", description="Odtwarza utwór z YouTube/Spotify lub wyszukuje frazę.")
     @check_music_enabled()

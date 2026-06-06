@@ -118,7 +118,8 @@ def init_db():
         ("music_volume", "INTEGER DEFAULT 100"),
         ("music_dj_role_id", "TEXT"),
         ("music_247", "INTEGER DEFAULT 0"),
-        ("music_high_quality", "INTEGER DEFAULT 0")
+        ("music_high_quality", "INTEGER DEFAULT 0"),
+        ("commands_channel_id", "TEXT")
     ]
     for col_name, col_type in needed_columns:
         try:
@@ -778,7 +779,8 @@ def get_settings(guild_id):
             "premium": False, "premium_expiry": None, "subscription_type": "jednorazowa", 
             "trial_used": False, "trial_start": None, "language": "pl",
             "music_enabled": True, "music_volume": 100, "music_dj_role_id": None,
-            "music_247": False, "music_high_quality": False
+            "music_247": False, "music_high_quality": False,
+            "commands_channel_id": None
         }
     except Exception as e:
         print(f"❌ Błąd odczytu bazy: {e}")
@@ -792,7 +794,8 @@ def get_settings(guild_id):
             "counter_humans_enabled": False, "counter_humans_name": "Humans: {count}", 
             "premium": False, "premium_expiry": None, "subscription_type": "jednorazowa", "language": "pl",
             "music_enabled": True, "music_volume": 100, "music_dj_role_id": None,
-            "music_247": False, "music_high_quality": False
+            "music_247": False, "music_high_quality": False,
+            "commands_channel_id": None
         }
 
 def get_setting(guild_id, module_column):
@@ -800,14 +803,14 @@ def get_setting(guild_id, module_column):
     res = get_settings(guild_id)
     return res.get(module_column, True)
 
-def save_settings(guild_id, ticket, moderation, levels, prefix="!", language="pl", embed_color="#74b816", rgb_mode=0, moderation_confirm=0, automod_antilink=0, automod_anticaps=0, automod_antispam=0, automod_badwords=0, automod_badwords_list="[]", automod_antiphishing=0):
+def save_settings(guild_id, ticket, moderation, levels, prefix="!", language="pl", embed_color="#74b816", rgb_mode=0, moderation_confirm=0, automod_antilink=0, automod_anticaps=0, automod_antispam=0, automod_badwords=0, automod_badwords_list="[]", automod_antiphishing=0, commands_channel_id=None):
     """Zapisuje ustawienia przysĹ‚ane ze strony WWW."""
     try:
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
         c.execute('''
-            INSERT INTO settings (guild_id, ticket_enabled, moderation_enabled, levels_enabled, prefix, language, embed_color, rgb_mode, moderation_confirm, automod_antilink, automod_anticaps, automod_antispam, automod_badwords, automod_badwords_list, automod_antiphishing)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO settings (guild_id, ticket_enabled, moderation_enabled, levels_enabled, prefix, language, embed_color, rgb_mode, moderation_confirm, automod_antilink, automod_anticaps, automod_antispam, automod_badwords, automod_badwords_list, automod_antiphishing, commands_channel_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(guild_id) DO UPDATE SET
                 ticket_enabled=excluded.ticket_enabled,
                 moderation_enabled=excluded.moderation_enabled,
@@ -822,8 +825,9 @@ def save_settings(guild_id, ticket, moderation, levels, prefix="!", language="pl
                 automod_antispam=excluded.automod_antispam,
                 automod_badwords=excluded.automod_badwords,
                 automod_badwords_list=excluded.automod_badwords_list,
-                automod_antiphishing=excluded.automod_antiphishing
-        ''', (guild_id, 1 if ticket else 0, 1 if moderation else 0, 1 if levels else 0, prefix, language, embed_color, 1 if rgb_mode else 0, 1 if moderation_confirm else 0, 1 if automod_antilink else 0, 1 if automod_anticaps else 0, 1 if automod_antispam else 0, 1 if automod_badwords else 0, automod_badwords_list, 1 if automod_antiphishing else 0))
+                automod_antiphishing=excluded.automod_antiphishing,
+                commands_channel_id=excluded.commands_channel_id
+        ''', (guild_id, 1 if ticket else 0, 1 if moderation else 0, 1 if levels else 0, prefix, language, embed_color, 1 if rgb_mode else 0, 1 if moderation_confirm else 0, 1 if automod_antilink else 0, 1 if automod_anticaps else 0, 1 if automod_antispam else 0, 1 if automod_badwords else 0, automod_badwords_list, 1 if automod_antiphishing else 0, commands_channel_id))
         conn.commit()
         conn.close()
         print(f"[OK] Zapisano ustawienia dla {guild_id}")

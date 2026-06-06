@@ -50,6 +50,22 @@
                 </div>
             </div>
         </div>
+
+        <div class="config-item">
+            <div class="config-info">
+                <span class="config-title">Kanał dla komend bota</span>
+                <span class="config-desc">Kanał tekstowy, na którym użytkownicy mogą wpisywać komendy. Pozostaw puste, aby komendy działały wszędzie.</span>
+            </div>
+            <div class="config-control" style="width: 200px;">
+                <select id="commands-channel-id" class="modal-select" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); color: white; width: 100%; border-radius: 10px; padding: 10px 15px;">
+                    <option value="">Wszystkie kanały</option>
+                    {% for channel in channels %}
+                    <option value="{{ channel.id }}" {% if main_settings.commands_channel_id == channel.id %}selected{% endif %}>#{{ channel.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
         <button type="button" class="btn-save" onclick="saveGeneralSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
             <i class="fas fa-save"></i> ZAPISZ USTAWIENIA GŁÓWNE
         </button>
@@ -79,6 +95,7 @@ window.saveGeneralSettings = async function() {
         const embedColor = document.getElementById('global-embed-color')?.value || '#74b816';
         const rgbSwitch = document.getElementById('global-rgb-switch');
         const rgbMode = rgbSwitch?.checked ? 1 : 0;
+        const cmdChannelId = document.getElementById('commands-channel-id')?.value || null;
 
         await fetch(`/config/{{ server_id }}`, {
             method: 'POST',
@@ -86,7 +103,8 @@ window.saveGeneralSettings = async function() {
             body: JSON.stringify({ 
                 prefix: prefix, 
                 embed_color: embedColor,
-                rgb_mode: rgbMode
+                rgb_mode: rgbMode,
+                commands_channel_id: cmdChannelId
             })
         });
 

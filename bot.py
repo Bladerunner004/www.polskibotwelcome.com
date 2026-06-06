@@ -325,6 +325,21 @@ class PolskiBot(commands.Bot):
 
 bot = PolskiBot()
 
+@bot.check
+async def check_commands_channel(ctx):
+    if not ctx.guild:
+        return True
+    if ctx.author.guild_permissions.manage_guild:
+        return True
+    
+    settings = get_settings(str(ctx.guild.id))
+    cmd_channel_id = settings.get("commands_channel_id")
+    if cmd_channel_id and str(cmd_channel_id).isdigit():
+        if ctx.channel.id != int(cmd_channel_id):
+            await ctx.send(f"❌ Komendy na tym serwerze są dozwolone tylko na kanale <#{cmd_channel_id}>!", ephemeral=True)
+            return False
+    return True
+
 @bot.event
 async def on_ready():
     print(f"🚀 PolskiBot (Modularny) zalogowany jako {bot.user}")

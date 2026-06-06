@@ -400,9 +400,10 @@ def config(server_id):
         
         rgb_mode = data.get('rgb_mode', 0)
         enabled_cmds = data.get('commands', [])
+        cmd_channel_id = data.get('commands_channel_id')
         
         # Zapisujemy prefix, język, kolory i moderację + automod
-        save_settings(server_id, True, mod_enabled, True, prefix, language, embed_color, rgb_mode, mod_confirm, am_antilink, am_anticaps, am_antispam, am_badwords, am_badwords_list, am_antiphishing)
+        save_settings(server_id, True, mod_enabled, True, prefix, language, embed_color, rgb_mode, mod_confirm, am_antilink, am_anticaps, am_antispam, am_badwords, am_badwords_list, am_antiphishing, cmd_channel_id)
         # Zapisujemy stan komend
         save_command_settings(server_id, enabled_cmds)
         

@@ -65,6 +65,7 @@ class Music(commands.Cog):
     @commands.hybrid_command(name="join", description="Dołącza bota do wskazanego lub Twojego kanału głosowego.")
     @check_music_enabled()
     async def join(self, ctx, kanal: discord.VoiceChannel = None):
+        await ctx.defer()
         target_channel = kanal
         
         if not target_channel:
@@ -106,6 +107,7 @@ class Music(commands.Cog):
     @commands.hybrid_command(name="leave", description="Rozłącza bota z kanału głosowego.")
     @check_music_enabled()
     async def leave(self, ctx):
+        await ctx.defer()
         voice_client = ctx.guild.voice_client
         if not voice_client:
             await ctx.send("❌ Nie jestem połączony z żadnym kanałem głosowym!")

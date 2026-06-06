@@ -16,7 +16,8 @@ ALL_COMMANDS = [
     "ban", "unban", "kick", "mute", "unmute",
     "slowmode", "warn", "warns", "modinfo", "clear",
     "temprole", "votemute", "massrole",
-    "iq", "cat", "meme", "slap", "info", "pomoc"
+    "iq", "cat", "meme", "slap", "info", "pomoc",
+    "play", "skip", "stop", "queue", "nowplaying", "volume", "lyrics", "shuffle", "pause", "resume"
 ]
 
 def init_db():
@@ -112,7 +113,12 @@ def init_db():
         ("ticket_logs_channel_id", "TEXT"),
         ("ticket_msg_title", "TEXT DEFAULT '📢 Nowe Zgłoszenie'"),
         ("ticket_msg_desc", "TEXT DEFAULT 'Witaj {user}! Nasza administracja zaraz Ci pomoże.'"),
-        ("ticket_limit", "INTEGER DEFAULT 1")
+        ("ticket_limit", "INTEGER DEFAULT 1"),
+        ("music_enabled", "INTEGER DEFAULT 1"),
+        ("music_volume", "INTEGER DEFAULT 100"),
+        ("music_dj_role_id", "TEXT"),
+        ("music_247", "INTEGER DEFAULT 0"),
+        ("music_high_quality", "INTEGER DEFAULT 0")
     ]
     for col_name, col_type in needed_columns:
         try:
@@ -535,6 +541,19 @@ def save_custom_bot(guild_id, token, bot_name, enabled):
         print(f"âťŚ [DB] BĹ‚Ä…d save_custom_bot: {e}")
         return False
 
+def update_custom_bot_status(guild_id, status):
+    """Aktualizuje status własnego bota (online/offline)."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('UPDATE custom_bots SET status=? WHERE guild_id=?', (status, str(guild_id)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ [DB] Błąd update_custom_bot_status: {e}")
+        return False
+
 def save_autorole_settings(guild_id, mode, restore_roles, human_roles, bot_roles, booster_roles, booster_remove):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -721,7 +740,8 @@ def get_settings(guild_id):
                            'counter_humans_enabled', 'counter_bots_enabled', 'counter_bans_enabled',
                            'counter_humans_thousands', 'counter_bots_thousands', 'counter_bans_thousands',
                            'autorole_booster_remove', 'logs_join_leave', 'logs_mod_actions',
-                           'logs_role_updates', 'logs_voice_activity', 'logs_guild_updates', 'logs_msg_updates', 'rgb_mode']
+                           'logs_role_updates', 'logs_voice_activity', 'logs_guild_updates', 'logs_msg_updates', 'rgb_mode',
+                           'music_enabled', 'music_247', 'music_high_quality']
             for field in bool_fields:
                 if field in res:
                     res[field] = str(res[field]) in ('1', 'True')
@@ -756,7 +776,9 @@ def get_settings(guild_id):
             "autorole_bot_roles": [], "autorole_booster_roles": [], "autorole_booster_remove": True,
             "counter_humans_enabled": False, "counter_humans_name": "Humans: {count}", 
             "premium": False, "premium_expiry": None, "subscription_type": "jednorazowa", 
-            "trial_used": False, "trial_start": None, "language": "pl"
+            "trial_used": False, "trial_start": None, "language": "pl",
+            "music_enabled": True, "music_volume": 100, "music_dj_role_id": None,
+            "music_247": False, "music_high_quality": False
         }
     except Exception as e:
         print(f"❌ Błąd odczytu bazy: {e}")
@@ -768,7 +790,9 @@ def get_settings(guild_id):
             "autorole_mode": 'disabled', "autorole_roles": [], "autorole_human_roles": [], 
             "autorole_bot_roles": [], "autorole_booster_roles": [], "autorole_booster_remove": True,
             "counter_humans_enabled": False, "counter_humans_name": "Humans: {count}", 
-            "premium": False, "premium_expiry": None, "subscription_type": "jednorazowa", "language": "pl"
+            "premium": False, "premium_expiry": None, "subscription_type": "jednorazowa", "language": "pl",
+            "music_enabled": True, "music_volume": 100, "music_dj_role_id": None,
+            "music_247": False, "music_high_quality": False
         }
 
 def get_setting(guild_id, module_column):

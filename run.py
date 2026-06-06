@@ -360,6 +360,73 @@ def start_bot_background():
         monitor_thread = threading.Thread(target=monitor_bot, daemon=True)
         monitor_thread.start()
         
+        def monitor_custom_bots():
+            import time
+            import subprocess
+            import sqlite3
+            from database import update_custom_bot_status
+            
+            custom_bot_processes = {}  # guild_id -> Popen process
+            
+            while True:
+                try:
+                    from database import DB_NAME
+                    conn = sqlite3.connect(DB_NAME, timeout=10)
+                    c = conn.cursor()
+                    c.execute('SELECT guild_id, token, enabled FROM custom_bots')
+                    rows = c.fetchall()
+                    conn.close()
+                    
+                    db_bots = {}
+                    for row in rows:
+                        g_id, tok, en = row
+                        if tok and tok.strip():
+                            db_bots[str(g_id)] = {'token': tok, 'enabled': bool(en)}
+                    
+                    to_remove = []
+                    for g_id, proc in list(custom_bot_processes.items()):
+                        poll = proc.poll()
+                        if poll is not None:
+                            print(f"[CUSTOM BOT MONITOR] Proces dla gildii {g_id} zakończył się z kodem {poll}.")
+                            update_custom_bot_status(g_id, "offline")
+                            to_remove.append(g_id)
+                        elif g_id not in db_bots or not db_bots[g_id]['enabled']:
+                            print(f"[CUSTOM BOT MONITOR] Zamykanie bota dla gildii {g_id}...")
+                            proc.terminate()
+                            try:
+                                proc.wait(timeout=5)
+                            except subprocess.TimeoutExpired:
+                                proc.kill()
+                            update_custom_bot_status(g_id, "offline")
+                            to_remove.append(g_id)
+                            
+                    for g_id in to_remove:
+                        if g_id in custom_bot_processes:
+                            del custom_bot_processes[g_id]
+                            
+                    for g_id, bot_info in db_bots.items():
+                        if bot_info['enabled'] and g_id not in custom_bot_processes:
+                            print(f"[CUSTOM BOT MONITOR] Uruchamianie bota dla gildii {g_id}...")
+                            try:
+                                proc = subprocess.Popen(
+                                    [python_exe, "-u", os.path.join(bot_dir, "bot.py"), "--guild", g_id],
+                                    cwd=bot_dir,
+                                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                                )
+                                custom_bot_processes[g_id] = proc
+                                update_custom_bot_status(g_id, "online")
+                            except Exception as e:
+                                print(f"[CUSTOM BOT MONITOR] Błąd podczas uruchamiania bota dla {g_id}: {e}")
+                                update_custom_bot_status(g_id, "offline")
+                                
+                except Exception as ex:
+                    print(f"[CUSTOM BOT MONITOR] Wyjątek w pętli monitorowania: {ex}")
+                    
+                time.sleep(5)
+
+        custom_bots_thread = threading.Thread(target=monitor_custom_bots, daemon=True)
+        custom_bots_thread.start()
+        
     except socket.error:
         # Bot już prawdopodobnie działa w innym procesie (port zablokowany przez inny worker)
         pass

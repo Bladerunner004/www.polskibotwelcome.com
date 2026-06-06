@@ -16,14 +16,30 @@ if sys.platform == 'win32':
     try: sys.stdout.reconfigure(encoding='utf-8')
     except: pass
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--guild', type=str, default=None)
+args, unknown = parser.parse_known_args()
+
 # Konfiguracja ścieżek
 STATUS_FILE_PATH = "bot_status.json"
 SYNC_DIR = os.path.dirname(os.path.abspath(__file__))
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+IS_CUSTOM_BOT = False
+GUILD_ID = None
 
-from database import get_prefix, get_settings, DB_NAME
+from database import get_prefix, get_settings, DB_NAME, get_custom_bot, update_custom_bot_status
+
+if args.guild:
+    GUILD_ID = args.guild
+    c_bot = get_custom_bot(GUILD_ID)
+    if c_bot and c_bot.get('token'):
+        TOKEN = c_bot['token']
+        IS_CUSTOM_BOT = True
+        STATUS_FILE_PATH = f"bot_status_custom_{GUILD_ID}.json"
 
 intents = discord.Intents.default()
 intents.members = True
@@ -47,7 +63,8 @@ class PolskiBot(commands.Bot):
             'cogs.levels',
             'cogs.fun',
             'cogs.general',
-            'cogs.autorole'
+            'cogs.autorole',
+            'cogs.music'
         ]
 
     async def setup_hook(self):
@@ -58,7 +75,8 @@ class PolskiBot(commands.Bot):
             except Exception as e:
                 print(f"❌ Błąd ładowania {ext}: {e}")
         
-        asyncio.create_task(self.run_internal_api())
+        if not IS_CUSTOM_BOT:
+            asyncio.create_task(self.run_internal_api())
         self.update_status_file.start()
 
     @tasks.loop(seconds=5)
@@ -70,12 +88,15 @@ class PolskiBot(commands.Bot):
                 latency = round(self.latency * 1000)
             
             is_online = self.is_ready() and not self.is_closed()
-            status = {
-                "latency": latency,
-                "last_seen": datetime.datetime.now().timestamp(),
-                "status": "online" if is_online else "offline"
-            }
-            with open(STATUS_FILE_PATH, "w") as f: json.dump(status, f)
+            if IS_CUSTOM_BOT:
+                update_custom_bot_status(GUILD_ID, "online" if is_online else "offline")
+            else:
+                status = {
+                    "latency": latency,
+                    "last_seen": datetime.datetime.now().timestamp(),
+                    "status": "online" if is_online else "offline"
+                }
+                with open(STATUS_FILE_PATH, "w") as f: json.dump(status, f)
             
             # Obsługa plików synchronizacji
             for sf in glob.glob(os.path.join(SYNC_DIR, "sync_needed_*.json")):
@@ -307,12 +328,16 @@ bot = PolskiBot()
 @bot.event
 async def on_ready():
     print(f"🚀 PolskiBot (Modularny) zalogowany jako {bot.user}")
-    try:
-        print("[SYSTEM] Synchronizuję komendy (hybrid/slash) globalnie z Discordem...")
-        synced = await bot.tree.sync()
-        print(f"✅ Zsynchronizowano pomyślnie {len(synced)} komend globalnie!")
-    except Exception as e:
-        print(f"❌ Błąd synchronizacji komend: {e}")
+    if IS_CUSTOM_BOT:
+        print(f"[CUSTOM BOT] Zalogowano dla gildii {GUILD_ID}")
+        update_custom_bot_status(GUILD_ID, "online")
+    else:
+        try:
+            print("[SYSTEM] Synchronizuję komendy (hybrid/slash) globalnie z Discordem...")
+            synced = await bot.tree.sync()
+            print(f"✅ Zsynchronizowano pomyślnie {len(synced)} komend globalnie!")
+        except Exception as e:
+            print(f"❌ Błąd synchronizacji komend: {e}")
 
 if __name__ == "__main__":
     asyncio.run(bot.start(TOKEN))

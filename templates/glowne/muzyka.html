@@ -1,0 +1,238 @@
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('{{ url_for('static', filename='uploads/commands_banner_premium.png') }}'); {% if main_settings.premium %}border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);{% endif %}">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">PolskiBot</span> Music
+            </h1>
+            <p class="hero-subtitle">
+                Zarządzaj odtwarzaczem muzycznym na swoim serwerze. Skonfigurowane role DJ i ustawienia głośności zapewnią porządek na kanałach głosowych.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-headphones-alt"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">Dostępny</span>
+                    <span class="stat-label">Odtwarzacz Hi-Fi</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="settings-card">
+    <div class="card-header">
+        <h3><i class="fas fa-sliders-h"></i> Ustawienia Odtwarzacza</h3>
+    </div>
+    <div class="card-body">
+        <div class="music-form">
+            <!-- Włącznik modułu -->
+            <div class="config-item">
+                <div class="config-info">
+                    <div class="config-title">Włącz moduł muzyczny</div>
+                    <div class="config-desc">Umożliwia użytkownikom odtwarzanie muzyki na kanałach głosowych.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="music-enabled-toggle" {% if main_settings.music_enabled %}checked{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <!-- Głośność domyślna -->
+            <div class="config-item" style="flex-direction: column; align-items: stretch; gap: 15px; padding: 20px;">
+                <div class="config-info" style="display: flex; justify-content: space-between; flex-direction: row; align-items: center; width: 100%;">
+                    <div>
+                        <div class="config-title">Domyślna głośność</div>
+                        <div class="config-desc">Głośność startowa dla nowych utworów na kanale.</div>
+                    </div>
+                    <span id="volume-val-display" style="font-weight: 800; font-size: 1.1rem; color: var(--accent-green); background: var(--green-dim); padding: 4px 12px; border-radius: 8px;">{{ main_settings.music_volume or 100 }}%</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+                    <i class="fas fa-volume-down" style="color: var(--text-gray);"></i>
+                    <input type="range" id="music-volume-range" min="10" max="100" step="5" value="{{ main_settings.music_volume or 100 }}" style="flex: 1; accent-color: var(--accent-green); cursor: pointer; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08);">
+                    <i class="fas fa-volume-up" style="color: var(--accent-green);"></i>
+                </div>
+            </div>
+
+            <!-- Rola DJ -->
+            <div class="config-item" style="flex-direction: column; align-items: stretch; gap: 12px; padding: 20px;">
+                <div class="config-info">
+                    <div class="config-title">Rola DJ (Wymaganie)</div>
+                    <div class="config-desc">Osoby z tą rolą będą mogły pomijać i zatrzymywać muzykę bez głosowania. Pozostaw puste, aby każdy mógł korzystać.</div>
+                </div>
+                <div style="position: relative;">
+                    <select id="music-dj-role" class="modal-select" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); color: white; width: 100%; border-radius: 12px; padding: 12px 16px;">
+                        <option value="">Brak (Dla każdego)</option>
+                        {% for role in roles %}
+                        <option value="{{ role.id }}" {% if main_settings.music_dj_role_id == role.id %}selected{% endif %}>{{ role.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Sekcja Premium -->
+            <div style="margin-top: 30px; margin-bottom: 15px; font-size: 0.75rem; font-weight: 900; color: #d4af37; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-crown"></i> USTAWIENIA ODTWARZANIA <span class="badge-gold">PREMIUM</span>
+            </div>
+
+            <div class="config-item {% if not main_settings.premium %}premium-locked-row{% else %}premium-border-gold{% endif %}" style="border: 1px solid {% if main_settings.premium %}rgba(212,175,55,0.3){% else %}var(--border-gray){% endif %};">
+                <div class="config-info">
+                    <div class="config-title" style="display: flex; align-items: center; gap: 8px;">
+                        Tryb 24/7 <i class="fas fa-crown" style="color: #d4af37; font-size: 0.75rem;"></i>
+                    </div>
+                    <div class="config-desc">Bot nie opuści kanału głosowego po zakończeniu odtwarzania kolejki.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="music-247-toggle" {% if main_settings.music_247 %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="config-item {% if not main_settings.premium %}premium-locked-row{% else %}premium-border-gold{% endif %}" style="border: 1px solid {% if main_settings.premium %}rgba(212,175,55,0.3){% else %}var(--border-gray){% endif %};">
+                <div class="config-info">
+                    <div class="config-title" style="display: flex; align-items: center; gap: 8px;">
+                        Wysoka Jakość Audio <i class="fas fa-crown" style="color: #d4af37; font-size: 0.75rem;"></i>
+                    </div>
+                    <div class="config-desc">Odtwarzanie audio o gęstości 320kbps z algorytmem redukcji zakłóceń.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="music-hq-toggle" {% if main_settings.music_high_quality %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <button type="button" class="btn-save" onclick="saveMusicSettings()" style="margin-top: 25px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
+                <i class="fas fa-save"></i> ZAPISZ USTAWIENIA MUZYKI
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="settings-card" style="margin-top: 25px;">
+    <div class="card-header">
+        <h3><i class="fas fa-info-circle"></i> Dostępne Komendy Muzyczne</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border-gray);">
+            <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/play [link/nazwa]</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Uruchamia odtwarzanie muzyki z YouTube, Spotify lub SoundCloud.</div>
+                </div>
+                <span class="badge-status-on">KOMENDA</span>
+            </div>
+            <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/skip</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Pomija aktualnie grany utwór i przechodzi do kolejnego.</div>
+                </div>
+                <span class="badge-status-on">KOMENDA</span>
+            </div>
+            <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/stop</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Zatrzymuje odtwarzanie i całkowicie czyści serwerową kolejkę utworów.</div>
+                </div>
+                <span class="badge-status-on">KOMENDA</span>
+            </div>
+            <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/queue</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Pokazuje listę nadchodzących utworów w kolejce.</div>
+                </div>
+                <span class="badge-status-on">KOMENDA</span>
+            </div>
+            <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/volume [10-100]</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Zmienia głośność odtwarzacza w czasie rzeczywistym.</div>
+                </div>
+                <span class="badge-status-on">KOMENDA</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .premium-locked-row {
+        opacity: 0.65;
+        border-color: rgba(212, 175, 55, 0.15) !important;
+        background: rgba(212, 175, 55, 0.01) !important;
+    }
+    .badge-gold {
+        background: linear-gradient(135deg, #d4af37, #f1c40f);
+        color: black;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        margin-left: 5px;
+    }
+    .badge-status-on {
+        background: rgba(116, 184, 22, 0.1);
+        color: var(--accent-green);
+        border: 1px solid rgba(116, 184, 22, 0.2);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+    .premium-border-gold {
+        border-color: rgba(212, 175, 55, 0.35) !important;
+        background: rgba(212, 175, 55, 0.03) !important;
+    }
+</style>
+
+<script>
+    // Live update range slider values
+    const volRange = document.getElementById('music-volume-range');
+    const volDisplay = document.getElementById('volume-val-display');
+    if (volRange && volDisplay) {
+        volRange.addEventListener('input', (e) => {
+            volDisplay.innerText = e.target.value + '%';
+        });
+    }
+
+    async function saveMusicSettings() {
+        const btn = event.currentTarget;
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
+
+        const payload = {
+            music_enabled: document.getElementById('music-enabled-toggle').checked,
+            music_volume: parseInt(document.getElementById('music-volume-range').value),
+            music_dj_role_id: document.getElementById('music-dj-role').value,
+            music_247: document.getElementById('music-247-toggle').checked,
+            music_high_quality: document.getElementById('music-hq-toggle').checked
+        };
+
+        try {
+            const res = await fetch(`/api/{{ server_id }}/music`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
+                btn.style.background = '#2d7d2a';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 2000);
+            } else {
+                throw new Error("API responded with error");
+            }
+        } catch (err) {
+            btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+            btn.style.background = '#7d2a2a';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 2000);
+        }
+    }
+</script>

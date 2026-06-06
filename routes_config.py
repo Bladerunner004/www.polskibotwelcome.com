@@ -1225,3 +1225,30 @@ def api_save_logs(guild_id):
         conn.close()
     
     return jsonify({'success': True})
+
+@config_bp.route('/api/<guild_id>/music', methods=['POST'])
+def api_save_music(guild_id):
+    import sqlite3
+    data = request.json
+    
+    update_data = {
+        'music_enabled': 1 if data.get('music_enabled') else 0,
+        'music_volume': int(data.get('music_volume', 100)),
+        'music_dj_role_id': data.get('music_dj_role_id') or None,
+        'music_247': 1 if data.get('music_247') else 0,
+        'music_high_quality': 1 if data.get('music_high_quality') else 0
+    }
+    
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    try:
+        allowed_keys = set(update_data.keys())
+        for key, val in update_data.items():
+            if key not in allowed_keys:
+                continue
+            cursor.execute(f"UPDATE settings SET {key} = ? WHERE guild_id = ?", (val, str(guild_id)))
+        conn.commit()
+    finally:
+        conn.close()
+        
+    return jsonify({'success': True})

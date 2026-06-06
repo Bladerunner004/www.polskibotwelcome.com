@@ -569,6 +569,9 @@
                 <div class="menu-item" onclick="openTab(event, 'zmiany_na_serwerze')"><i class="fas fa-history"></i> <span>Zmiany na serwerze</span></div>
                 <div class="menu-item" onclick="openTab(event, 'formularz')"><i class="fas fa-clipboard-list"></i> <span>Formularz</span></div>
                 <div class="menu-item" onclick="openTab(event, 'zgloszenia')"><i class="fas fa-ticket-alt"></i> <span>Zgłoszenia</span></div>
+                
+                <div class="category-label">Muzyka</div>
+                <div class="menu-item" onclick="openTab(event, 'polskibot_music')"><i class="fas fa-music"></i> <span>PolskiBot Music</span></div>
             </div>
 
 
@@ -605,6 +608,7 @@
                 <div id="zmiany_na_serwerze" class="tab-content">{% include 'moderacja/zmiany_na_serwerze.html' %}</div>
                 <div id="formularz" class="tab-content">{% include 'moderacja/formularz.html' %}</div>
                 <div id="zgloszenia" class="tab-content">{% include 'moderacja/zgloszenia.html' %}</div>
+                <div id="polskibot_music" class="tab-content">{% include 'glowne/muzyka.html' %}</div>
             </form>
         </div>
     </div>

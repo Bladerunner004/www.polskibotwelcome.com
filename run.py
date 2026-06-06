@@ -489,8 +489,13 @@ def start_bot_background():
                         if bot_info['enabled'] and g_id not in custom_bot_processes and failures < max_failures:
                             print(f"[CUSTOM BOT MONITOR] Uruchamianie bota dla gildii {g_id}...")
                             try:
+                                log_path = os.path.join(bot_dir, f"bot_error_custom_{g_id}.log")
+                                f_log = open(log_path, "a", encoding="utf-8", errors="replace")
+                                f_log.write(f"\n--- START CUSTOM BOT {datetime.datetime.now()} ---\n")
                                 proc = subprocess.Popen(
                                     [python_exe, "-u", os.path.join(bot_dir, "bot.py"), "--guild", g_id],
+                                    stdout=f_log,
+                                    stderr=f_log,
                                     cwd=bot_dir,
                                     creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
                                 )
@@ -557,8 +562,13 @@ def start_bot_background():
                         if bot_info['enabled'] and m_id not in music_bot_processes and failures < max_failures:
                             print(f"[MUSIC BOT MONITOR] Uruchamianie bota dla ID {m_id}...")
                             try:
+                                log_path = os.path.join(bot_dir, f"bot_error_music_{m_id}.log")
+                                f_log = open(log_path, "a", encoding="utf-8", errors="replace")
+                                f_log.write(f"\n--- START MUSIC BOT {datetime.datetime.now()} ---\n")
                                 proc = subprocess.Popen(
                                     [python_exe, "-u", os.path.join(bot_dir, "bot.py"), "--music-bot-id", m_id],
+                                    stdout=f_log,
+                                    stderr=f_log,
                                     cwd=bot_dir,
                                     creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
                                 )

@@ -101,33 +101,33 @@
                 </div>
             </div>
 
-            <!-- Sekcja Premium -->
-            <div style="margin-top: 30px; margin-bottom: 15px; font-size: 0.75rem; font-weight: 900; color: #d4af37; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-crown"></i> USTAWIENIA ODTWARZANIA <span class="badge-gold">PREMIUM</span>
+            <!-- Zaawansowane ustawienia odtwarzania -->
+            <div style="margin-top: 30px; margin-bottom: 15px; font-size: 0.75rem; font-weight: 900; color: var(--text-gray); letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-sliders-h"></i> ZAAWANSOWANE USTAWIENIA ODTWARZANIA
             </div>
 
-            <div class="config-item {% if not main_settings.premium %}premium-locked-row{% else %}premium-border-gold{% endif %}" style="border: 1px solid {% if main_settings.premium %}rgba(212,175,55,0.3){% else %}var(--border-gray){% endif %};">
+            <div class="config-item">
                 <div class="config-info">
                     <div class="config-title" style="display: flex; align-items: center; gap: 8px;">
-                        Tryb 24/7 <i class="fas fa-crown" style="color: #d4af37; font-size: 0.75rem;"></i>
+                        Tryb 24/7
                     </div>
                     <div class="config-desc">Bot nie opuści kanału głosowego po zakończeniu odtwarzania kolejki.</div>
                 </div>
                 <label class="switch">
-                    <input type="checkbox" id="music-247-toggle" {% if main_settings.music_247 %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
+                    <input type="checkbox" id="music-247-toggle" {% if main_settings.music_247 %}checked{% endif %}>
                     <span class="slider round"></span>
                 </label>
             </div>
 
-            <div class="config-item {% if not main_settings.premium %}premium-locked-row{% else %}premium-border-gold{% endif %}" style="border: 1px solid {% if main_settings.premium %}rgba(212,175,55,0.3){% else %}var(--border-gray){% endif %};">
+            <div class="config-item">
                 <div class="config-info">
                     <div class="config-title" style="display: flex; align-items: center; gap: 8px;">
-                        Wysoka Jakość Audio <i class="fas fa-crown" style="color: #d4af37; font-size: 0.75rem;"></i>
+                        Wysoka Jakość Audio
                     </div>
                     <div class="config-desc">Odtwarzanie audio o gęstości 320kbps z algorytmem redukcji zakłóceń.</div>
                 </div>
                 <label class="switch">
-                    <input type="checkbox" id="music-hq-toggle" {% if main_settings.music_high_quality %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
+                    <input type="checkbox" id="music-hq-toggle" {% if main_settings.music_high_quality %}checked{% endif %}>
                     <span class="slider round"></span>
                 </label>
             </div>

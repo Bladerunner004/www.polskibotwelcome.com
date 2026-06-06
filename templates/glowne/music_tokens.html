@@ -1,0 +1,309 @@
+<div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('{{ url_for('static', filename='uploads/commands_banner_premium.png') }}'); border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);">
+    <div class="hero-glass">
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <span class="decorative-text">Tokeny</span> do Muzyki
+            </h1>
+            <p class="hero-subtitle">
+                Dodaj wiele własnych botów muzycznych. Dzięki temu Twoi użytkownicy będą mogli słuchać muzyki na wielu kanałach głosowych jednocześnie!
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-item">
+                <div class="stat-icon"><i class="fas fa-music" style="color: var(--accent-gold);"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="music-bots-count">0</span>
+                    <span class="stat-label">Aktywnych botów</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="music-tokens-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 25px;">
+    <!-- Dodawanie bota -->
+    <div class="settings-card premium-card-gold" style="border: 1px solid rgba(212, 175, 55, 0.3);">
+        <div class="card-header">
+            <h3><i class="fas fa-plus-circle"></i> Dodaj Bot Muzyczny</h3>
+        </div>
+        <div class="card-body">
+            <div class="modal-section">
+                <label>NAZWA BOTA:</label>
+                <input type="text" id="music-bot-name" class="modal-input" placeholder="np. PolskiBot Muzyka 1">
+            </div>
+
+            <div class="modal-section" style="margin-top: 20px;">
+                <label>TOKEN BOTA (DISCORD Developer Portal):</label>
+                <div style="position: relative;">
+                    <input type="password" id="music-bot-token" class="modal-input" style="padding-right: 50px;" placeholder="Wklej token bota tutaj...">
+                    <i class="fas fa-eye" id="toggle-music-token-eye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666;" onclick="toggleMusicTokenVisibility()"></i>
+                </div>
+                <p style="font-size: 0.75rem; color: #888; margin-top: 8px;">Przejdź do <a href="https://discord.com/developers/applications" target="_blank" style="color: var(--accent-green);">Discord Developer Portal</a>, utwórz aplikację bota i skopiuj jego token.</p>
+            </div>
+
+            <button class="btn-sidebar-save btn-gold" style="margin-top: 30px; width: 100%;" onclick="addMusicBotLocal()">
+                <i class="fas fa-plus"></i> DODAJ NOWEGO BOTA
+            </button>
+        </div>
+    </div>
+
+    <!-- Lista botów -->
+    <div class="settings-card premium-card-gold" style="border: 1px solid rgba(212, 175, 55, 0.3);">
+        <div class="card-header">
+            <h3><i class="fas fa-list"></i> Twoje Boty Muzyczne</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div id="music-bots-list" style="display: flex; flex-direction: column; gap: 1px; background: var(--border-gray);">
+                <!-- Załadowane dynamicznie przez JS -->
+                <div style="padding: 30px; text-align: center; color: var(--text-gray);">
+                    <i class="fas fa-circle-notch fa-spin" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+                    Ładowanie listy botów...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .music-bot-item {
+        background: var(--bg2);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        transition: 0.2s;
+    }
+    .music-bot-item:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .music-bot-details {
+        flex: 1;
+    }
+    .music-bot-title {
+        font-weight: 700;
+        color: white;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .music-bot-token-masked {
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: var(--text-gray);
+        margin-top: 4px;
+    }
+    .music-bot-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .music-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .music-status-dot.online {
+        background: #74b816;
+        box-shadow: 0 0 8px #74b816;
+        animation: pulse-music-status 2s infinite;
+    }
+    .music-status-dot.offline {
+        background: #ff4444;
+    }
+    @keyframes pulse-music-status {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.3); opacity: 0.6; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .btn-delete-music-bot {
+        background: rgba(248, 113, 113, 0.1);
+        color: #f87171;
+        border: 1px solid rgba(248, 113, 113, 0.2);
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 0.8rem;
+    }
+    .btn-delete-music-bot:hover {
+        background: #f87171;
+        color: black;
+    }
+</style>
+
+<script>
+(function() {
+    const guildId = '{{ server_id }}';
+
+    window.toggleMusicTokenVisibility = () => {
+        const input = document.getElementById('music-bot-token');
+        const eye = document.getElementById('toggle-music-token-eye');
+        if (input.type === 'password') {
+            input.type = 'text';
+            eye.classList.remove('fa-eye');
+            eye.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            eye.classList.remove('fa-eye-slash');
+            eye.classList.add('fa-eye');
+        }
+    };
+
+    async function loadMusicBots() {
+        try {
+            const res = await fetch(`/api/${guildId}/music_bots`);
+            const bots = await res.json();
+            const listContainer = document.getElementById('music-bots-list');
+            const countBadge = document.getElementById('music-bots-count');
+            
+            if (!listContainer) return;
+            
+            if (bots.error) {
+                listContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: #f87171;"><i class="fas fa-exclamation-circle"></i> Błąd: ${bots.error}</div>`;
+                return;
+            }
+            
+            countBadge.textContent = bots.length;
+
+            if (bots.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: var(--text-gray);">
+                        <i class="fas fa-music" style="font-size: 2rem; margin-bottom: 15px; display: block; opacity: 0.3;"></i>
+                        Brak dodanych botów muzycznych. Wklej token po lewej, aby dodać swojego pierwszego bota!
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            bots.forEach(bot => {
+                const isChecked = bot.enabled ? 'checked' : '';
+                const statusClass = bot.status === 'online' ? 'online' : 'offline';
+                const statusLabel = bot.status.toUpperCase();
+                
+                html += `
+                    <div class="music-bot-item" id="music-bot-row-${bot.id}">
+                        <div class="music-bot-details">
+                            <div class="music-bot-title">
+                                <span class="music-status-dot ${statusClass}" title="${statusLabel}"></span>
+                                ${bot.bot_name || 'Muzyczny Bot'}
+                            </div>
+                            <div class="music-bot-token-masked">Token: <code>${bot.token}</code></div>
+                        </div>
+                        <div class="music-bot-actions">
+                            <label class="switch">
+                                <input type="checkbox" onchange="toggleMusicBotLocal(${bot.id}, this.checked)" ${isChecked}>
+                                <span class="slider round"></span>
+                            </label>
+                            <button class="btn-delete-music-bot" onclick="deleteMusicBotLocal(${bot.id})">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+        } catch(e) {
+            console.error("Error loading music bots:", e);
+        }
+    }
+
+    window.addMusicBotLocal = async function() {
+        const btn = event.currentTarget;
+        const originalHTML = btn.innerHTML;
+        const tokenInput = document.getElementById('music-bot-token');
+        const nameInput = document.getElementById('music-bot-name');
+        
+        const token = tokenInput.value.trim();
+        const botName = nameInput.value.trim();
+        
+        if (!token) {
+            alert("Proszę podać token bota!");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> DODAWANIE...';
+
+        try {
+            const res = await fetch(`/api/${guildId}/music_bots`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token, bot_name: botName })
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                btn.innerHTML = '<i class="fas fa-check"></i> DODANO!';
+                btn.style.background = '#2d7d2a';
+                tokenInput.value = '';
+                nameInput.value = '';
+                await loadMusicBots();
+            } else {
+                btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+                btn.style.background = '#7d2a2a';
+                alert("Wystąpił błąd: " + (result.error || "nieznany błąd"));
+            }
+
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 2000);
+        } catch (err) {
+            btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+            btn.style.background = '#7d2a2a';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 2000);
+        }
+    };
+
+    window.deleteMusicBotLocal = async function(botId) {
+        if (!confirm("Czy na pewno chcesz usunąć tego bota muzycznego?")) return;
+        
+        try {
+            const res = await fetch(`/api/${guildId}/music_bots/${botId}`, {
+                method: 'DELETE'
+            });
+            const result = await res.json();
+            if (result.success) {
+                await loadMusicBots();
+            } else {
+                alert("Błąd podczas usuwania bota.");
+            }
+        } catch(e) {
+            alert("Błąd połączenia.");
+        }
+    };
+
+    window.toggleMusicBotLocal = async function(botId, isEnabled) {
+        try {
+            const res = await fetch(`/api/${guildId}/music_bots/${botId}/toggle`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: isEnabled })
+            });
+            const result = await res.json();
+            if (!result.success) {
+                alert("Nie udało się przełączyć stanu bota.");
+                await loadMusicBots(); // reload to revert state
+            }
+        } catch(e) {
+            alert("Błąd połączenia.");
+            await loadMusicBots();
+        }
+    };
+
+    // Load initial list
+    loadMusicBots();
+
+    // Auto-update status list every 10 seconds
+    setInterval(loadMusicBots, 10000);
+})();
+</script>

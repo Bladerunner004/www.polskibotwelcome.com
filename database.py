@@ -305,13 +305,23 @@ def init_db():
                     )''')
 
 
-    # Tabela WĹ‚asny Bot (White Label)
+    # Tabela Własny Bot (White Label)
     cursor.execute('''CREATE TABLE IF NOT EXISTS custom_bots (
                         guild_id TEXT PRIMARY KEY,
                         token TEXT,
                         bot_name TEXT,
                         status TEXT DEFAULT 'offline',
                         enabled INTEGER DEFAULT 0
+                    )''')
+
+    # Tabela Tokeny do Muzyki (Wiele botów muzycznych na serwer)
+    cursor.execute('''CREATE TABLE IF NOT EXISTS music_bots (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        guild_id TEXT NOT NULL,
+                        token TEXT NOT NULL,
+                        bot_name TEXT,
+                        status TEXT DEFAULT 'offline',
+                        enabled INTEGER DEFAULT 1
                     )''')
 
     # Tabela OstrzeĹĽeĹ„ (Warnings)
@@ -554,6 +564,104 @@ def update_custom_bot_status(guild_id, status):
     except Exception as e:
         print(f"❌ [DB] Błąd update_custom_bot_status: {e}")
         return False
+
+def get_music_bots(guild_id):
+    """Pobiera listę botów muzycznych dla danej gildii."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('SELECT id, token, bot_name, status, enabled FROM music_bots WHERE guild_id=?', (str(guild_id),))
+        rows = c.fetchall()
+        conn.close()
+        return [
+            {
+                'id': row[0],
+                'token': row[1],
+                'bot_name': row[2],
+                'status': row[3],
+                'enabled': bool(row[4])
+            }
+            for row in rows
+        ]
+    except Exception as e:
+        print(f"❌ [DB] Błąd get_music_bots: {e}")
+        return []
+
+def get_music_bot_by_id(bot_id):
+    """Pobiera konfigurację konkretnego bota muzycznego po ID."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('SELECT id, guild_id, token, bot_name, status, enabled FROM music_bots WHERE id=?', (int(bot_id),))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return {
+                'id': row[0],
+                'guild_id': row[1],
+                'token': row[2],
+                'bot_name': row[3],
+                'status': row[4],
+                'enabled': bool(row[5])
+            }
+        return None
+    except Exception as e:
+        print(f"❌ [DB] Błąd get_music_bot_by_id: {e}")
+        return None
+
+def add_music_bot(guild_id, token, bot_name):
+    """Dodaje nowy bot muzyczny."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('INSERT INTO music_bots (guild_id, token, bot_name, enabled) VALUES (?, ?, ?, 1)',
+                  (str(guild_id), token, bot_name))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ [DB] Błąd add_music_bot: {e}")
+        return False
+
+def delete_music_bot(guild_id, bot_id):
+    """Usuwa bot muzyczny."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('DELETE FROM music_bots WHERE id=? AND guild_id=?', (int(bot_id), str(guild_id)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ [DB] Błąd delete_music_bot: {e}")
+        return False
+
+def toggle_music_bot(guild_id, bot_id, enabled):
+    """Włącza lub wyłącza bot muzyczny."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('UPDATE music_bots SET enabled=? WHERE id=? AND guild_id=?', (1 if enabled else 0, int(bot_id), str(guild_id)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ [DB] Błąd toggle_music_bot: {e}")
+        return False
+
+def update_music_bot_status(bot_id, status):
+    """Aktualizuje status bota muzycznego (online/offline)."""
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('UPDATE music_bots SET status=? WHERE id=?', (status, int(bot_id)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ [DB] Błąd update_music_bot_status: {e}")
+        return False
+
 
 def save_autorole_settings(guild_id, mode, restore_roles, human_roles, bot_roles, booster_roles, booster_remove):
     conn = sqlite3.connect(DB_NAME)

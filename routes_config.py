@@ -1106,6 +1106,56 @@ def api_sync_custom_bot(guild_id):
             del _bot_avatar_cache[g_id_str]
     return jsonify({'success': ok})
 
+# --- TOKENY DO MUZYKI ---
+@config_bp.route('/api/<guild_id>/music_bots', methods=['GET'])
+def api_get_music_bots(guild_id):
+    if not check_guild_access(guild_id):
+        return jsonify({'error': 'Brak dostępu'}), 403
+    from database import get_music_bots
+    bots = get_music_bots(guild_id)
+    # Maskujemy token dla bezpieczeństwa, np. zostawiając tylko pierwsze i ostatnie znaki
+    for b in bots:
+        if b.get('token'):
+            tok = b['token']
+            if len(tok) > 15:
+                b['token'] = tok[:6] + '...' + tok[-6:]
+            else:
+                b['token'] = '...'
+    return jsonify(bots)
+
+@config_bp.route('/api/<guild_id>/music_bots', methods=['POST'])
+def api_add_music_bot(guild_id):
+    if not check_guild_access(guild_id):
+        return jsonify({'error': 'Brak dostępu'}), 403
+    from database import add_music_bot
+    data = request.json
+    token = data.get('token', '').strip()
+    bot_name = data.get('bot_name', '').strip() or "Muzyczny Bot"
+    if not token:
+        return jsonify({'success': False, 'error': 'Token jest wymagany'}), 400
+    ok = add_music_bot(guild_id, token, bot_name)
+    return jsonify({'success': ok})
+
+@config_bp.route('/api/<guild_id>/music_bots/<int:bot_id>', methods=['DELETE'])
+def api_delete_music_bot(guild_id, bot_id):
+    if not check_guild_access(guild_id):
+        return jsonify({'error': 'Brak dostępu'}), 403
+    from database import delete_music_bot
+    ok = delete_music_bot(guild_id, bot_id)
+    return jsonify({'success': ok})
+
+@config_bp.route('/api/<guild_id>/music_bots/<int:bot_id>/toggle', methods=['POST'])
+def api_toggle_music_bot(guild_id, bot_id):
+    if not check_guild_access(guild_id):
+        return jsonify({'error': 'Brak dostępu'}), 403
+    from database import toggle_music_bot
+    data = request.json
+    enabled = data.get('enabled', False)
+    ok = toggle_music_bot(guild_id, bot_id, enabled)
+    return jsonify({'success': ok})
+
+
+
 # --- WEBHOOKS (Stripe/PayPal) ---
 @config_bp.route('/webhook/stripe', methods=['POST'])
 def stripe_webhook():

@@ -356,7 +356,7 @@ def start_bot_background():
                 
                 time.sleep(5)
 
-        # Uruchamiamy wątek monitorujący
+        # Uruchamiamy wątek monitorujący bota
         monitor_thread = threading.Thread(target=monitor_bot, daemon=True)
         monitor_thread.start()
         
@@ -364,9 +364,10 @@ def start_bot_background():
             import time
             import subprocess
             import sqlite3
-            from database import update_custom_bot_status
+            from database import update_custom_bot_status, update_music_bot_status
             
             custom_bot_processes = {}  # guild_id -> Popen process
+            music_bot_processes = {}   # bot_id -> Popen process
             
             while True:
                 try:
@@ -375,6 +376,8 @@ def start_bot_background():
                     c = conn.cursor()
                     c.execute('SELECT guild_id, token, enabled FROM custom_bots')
                     rows = c.fetchall()
+                    c.execute('SELECT id, token, enabled FROM music_bots')
+                    m_rows = c.fetchall()
                     conn.close()
                     
                     db_bots = {}
@@ -382,7 +385,14 @@ def start_bot_background():
                         g_id, tok, en = row
                         if tok and tok.strip():
                             db_bots[str(g_id)] = {'token': tok, 'enabled': bool(en)}
+                            
+                    db_music_bots = {}
+                    for row in m_rows:
+                        m_id, tok, en = row
+                        if tok and tok.strip():
+                            db_music_bots[str(m_id)] = {'token': tok, 'enabled': bool(en)}
                     
+                    # 1. Monitorowanie Custom Botów (White Label)
                     to_remove = []
                     for g_id, proc in list(custom_bot_processes.items()):
                         poll = proc.poll()
@@ -419,11 +429,48 @@ def start_bot_background():
                                 print(f"[CUSTOM BOT MONITOR] Błąd podczas uruchamiania bota dla {g_id}: {e}")
                                 update_custom_bot_status(g_id, "offline")
                                 
+                    # 2. Monitorowanie Botów Muzycznych
+                    to_remove_music = []
+                    for m_id, proc in list(music_bot_processes.items()):
+                        poll = proc.poll()
+                        if poll is not None:
+                            print(f"[MUSIC BOT MONITOR] Proces dla bota ID {m_id} zakończył się z kodem {poll}.")
+                            update_music_bot_status(m_id, "offline")
+                            to_remove_music.append(m_id)
+                        elif m_id not in db_music_bots or not db_music_bots[m_id]['enabled']:
+                            print(f"[MUSIC BOT MONITOR] Zamykanie bota dla ID {m_id}...")
+                            proc.terminate()
+                            try:
+                                proc.wait(timeout=5)
+                            except subprocess.TimeoutExpired:
+                                proc.kill()
+                            update_music_bot_status(m_id, "offline")
+                            to_remove_music.append(m_id)
+                            
+                    for m_id in to_remove_music:
+                        if m_id in music_bot_processes:
+                            del music_bot_processes[m_id]
+                            
+                    for m_id, bot_info in db_music_bots.items():
+                        if bot_info['enabled'] and m_id not in music_bot_processes:
+                            print(f"[MUSIC BOT MONITOR] Uruchamianie bota dla ID {m_id}...")
+                            try:
+                                proc = subprocess.Popen(
+                                    [python_exe, "-u", os.path.join(bot_dir, "bot.py"), "--music-bot-id", m_id],
+                                    cwd=bot_dir,
+                                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                                )
+                                music_bot_processes[m_id] = proc
+                                update_music_bot_status(m_id, "online")
+                            except Exception as e:
+                                print(f"[MUSIC BOT MONITOR] Błąd podczas uruchamiania bota dla ID {m_id}: {e}")
+                                update_music_bot_status(m_id, "offline")
+                                
                 except Exception as ex:
-                    print(f"[CUSTOM BOT MONITOR] Wyjątek w pętli monitorowania: {ex}")
+                    print(f"[BOT MONITOR] Wyjątek w pętli monitorowania: {ex}")
                     
                 time.sleep(5)
-
+            
         custom_bots_thread = threading.Thread(target=monitor_custom_bots, daemon=True)
         custom_bots_thread.start()
         

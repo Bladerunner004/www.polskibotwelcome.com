@@ -20,6 +20,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--guild', type=str, default=None)
+parser.add_argument('--music-bot-id', type=str, default=None)
 args, unknown = parser.parse_known_args()
 
 # Konfiguracja ścieżek
@@ -29,11 +30,22 @@ SYNC_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv()
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 IS_CUSTOM_BOT = False
+IS_MUSIC_BOT = False
+MUSIC_BOT_ID = None
 GUILD_ID = None
 
-from database import get_prefix, get_settings, DB_NAME, get_custom_bot, update_custom_bot_status
+from database import get_prefix, get_settings, DB_NAME, get_custom_bot, update_custom_bot_status, get_music_bot_by_id, update_music_bot_status
 
-if args.guild:
+if args.music_bot_id:
+    MUSIC_BOT_ID = args.music_bot_id
+    IS_MUSIC_BOT = True
+    m_bot = get_music_bot_by_id(MUSIC_BOT_ID)
+    if m_bot and m_bot.get('token'):
+        TOKEN = m_bot['token']
+        GUILD_ID = str(m_bot['guild_id'])
+        IS_CUSTOM_BOT = True
+        STATUS_FILE_PATH = f"bot_status_music_{MUSIC_BOT_ID}.json"
+elif args.guild:
     GUILD_ID = args.guild
     c_bot = get_custom_bot(GUILD_ID)
     if c_bot and c_bot.get('token'):
@@ -52,20 +64,23 @@ def get_dynamic_prefix(bot, message):
 class PolskiBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=get_dynamic_prefix, intents=intents)
-        self.initial_extensions = [
-            'cogs.embeds',
-            'cogs.welcome',
-            'cogs.counters',
-            'cogs.media_radar',
-            'cogs.selfrole',
-            'cogs.moderation',
-            'cogs.tickets',
-            'cogs.levels',
-            'cogs.fun',
-            'cogs.general',
-            'cogs.autorole',
-            'cogs.music'
-        ]
+        if IS_MUSIC_BOT:
+            self.initial_extensions = ['cogs.music']
+        else:
+            self.initial_extensions = [
+                'cogs.embeds',
+                'cogs.welcome',
+                'cogs.counters',
+                'cogs.media_radar',
+                'cogs.selfrole',
+                'cogs.moderation',
+                'cogs.tickets',
+                'cogs.levels',
+                'cogs.fun',
+                'cogs.general',
+                'cogs.autorole',
+                'cogs.music'
+            ]
 
     async def setup_hook(self):
         for ext in self.initial_extensions:
@@ -88,7 +103,10 @@ class PolskiBot(commands.Bot):
                 latency = round(self.latency * 1000)
             
             is_online = self.is_ready() and not self.is_closed()
-            if IS_CUSTOM_BOT:
+            if IS_MUSIC_BOT:
+                update_music_bot_status(MUSIC_BOT_ID, "online" if is_online else "offline")
+                return # Skip sync files for music bots
+            elif IS_CUSTOM_BOT:
                 update_custom_bot_status(GUILD_ID, "online" if is_online else "offline")
             else:
                 status = {
@@ -343,9 +361,24 @@ async def check_commands_channel(ctx):
 @bot.event
 async def on_ready():
     print(f"🚀 PolskiBot (Modularny) zalogowany jako {bot.user}")
-    if IS_CUSTOM_BOT:
+    if IS_MUSIC_BOT:
+        print(f"[MUSIC BOT] Zalogowano dla gildii {GUILD_ID} (ID: {MUSIC_BOT_ID})")
+        update_music_bot_status(MUSIC_BOT_ID, "online")
+        try:
+            print(f"[MUSIC BOT] Synchronizuję komendy dla bota ID: {MUSIC_BOT_ID}...")
+            synced = await bot.tree.sync()
+            print(f"✅ [MUSIC BOT] Zsynchronizowano pomyślnie {len(synced)} komend!")
+        except Exception as e:
+            print(f"❌ [MUSIC BOT] Błąd synchronizacji komend: {e}")
+    elif IS_CUSTOM_BOT:
         print(f"[CUSTOM BOT] Zalogowano dla gildii {GUILD_ID}")
         update_custom_bot_status(GUILD_ID, "online")
+        try:
+            print(f"[CUSTOM BOT] Synchronizuję komendy dla custom bota gildii {GUILD_ID}...")
+            synced = await bot.tree.sync()
+            print(f"✅ [CUSTOM BOT] Zsynchronizowano pomyślnie {len(synced)} komend!")
+        except Exception as e:
+            print(f"❌ [CUSTOM BOT] Błąd synchronizacji komend: {e}")
     else:
         try:
             print("[SYSTEM] Synchronizuję komendy (hybrid/slash) globalnie z Discordem...")

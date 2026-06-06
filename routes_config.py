@@ -416,44 +416,114 @@ def config(server_id):
         return redirect(url_for('dashboard.dashboard'))
 
     # Pobieramy dane serwera przez API (bot może być w innym procesie)
-    headers = {"Authorization": f"Bot {BOT_TOKEN}"}
-    
-    # Pobieramy podstawowe info o serwerze (z ilością osób)
-    guild_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}?with_counts=true", headers=headers)
-    if guild_resp.status_code != 200:
-        return redirect(url_for('dashboard.dashboard'))
-    guild_data = guild_resp.json()
+    custom_token = None
+    try:
+        from database import get_custom_bot
+        c_bot = get_custom_bot(server_id)
+        if c_bot and c_bot.get('token'):
+            custom_token = c_bot['token']
+    except:
+        pass
+
+    music_tokens = []
+    try:
+        from database import get_music_bots
+        m_bots = get_music_bots(server_id)
+        for mb in m_bots:
+            if mb.get('token'):
+                music_tokens.append(mb['token'])
+    except:
+        pass
+
+    tokens_to_try = [BOT_TOKEN]
+    if custom_token:
+        tokens_to_try.append(custom_token)
+    tokens_to_try.extend(music_tokens)
+
+    guild_data = None
+    successful_token = None
+
+    for tok in tokens_to_try:
+        if not tok or tok.strip() == "" or tok.strip() == "your_discord_bot_token_here":
+            continue
+        try:
+            h = {"Authorization": f"Bot {tok}"}
+            resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}?with_counts=true", headers=h, timeout=5)
+            if resp.status_code == 200:
+                guild_data = resp.json()
+                successful_token = tok
+                break
+        except Exception as e:
+            print(f"[CONFIG] Błąd pobierania guild za pomocą tokenu: {e}")
+
+    if not guild_data:
+        # Fallback: budujemy podstawowe dane z cache serwerów użytkownika
+        user_data = session.get('user')
+        user_id = user_data.get('id') if user_data else None
+        from base import _guilds_memory_cache
+        user_guilds = _guilds_memory_cache.get(user_id, [])
+        target_g = next((g for g in user_guilds if str(g.get('id')) == str(server_id)), None)
+        
+        if target_g:
+            guild_data = {
+                "id": str(server_id),
+                "name": target_g.get('name', 'Serwer Discord'),
+                "icon": target_g.get('icon'),
+                "approximate_member_count": "?",
+                "approximate_presence_count": "?"
+            }
+        else:
+            guild_data = {
+                "id": str(server_id),
+                "name": "Serwer Discord",
+                "icon": None,
+                "approximate_member_count": "?",
+                "approximate_presence_count": "?"
+            }
 
     # Pobieramy kanały i role
     channels = []
     roles = []
     
-    # 1. Próbujemy pobrać z lokalnego API bota (szybciej, brak limitów)
-    try:
-        c_resp = requests.get(f"http://127.0.0.1:5006/guilds/{server_id}/channels", timeout=1.0)
-        r_resp = requests.get(f"http://127.0.0.1:5006/guilds/{server_id}/roles", timeout=1.0)
-        if c_resp.status_code == 200 and r_resp.status_code == 200:
-            channels = c_resp.json()
-            roles = r_resp.json()
-    except Exception as e:
-        pass
+    # 1. Próbujemy pobrać z lokalnego API bota (szybciej, brak limitów) - tylko dla głównego bota
+    if successful_token == BOT_TOKEN:
+        try:
+            c_resp = requests.get(f"http://127.0.0.1:5006/guilds/{server_id}/channels", timeout=1.0)
+            r_resp = requests.get(f"http://127.0.0.1:5006/guilds/{server_id}/roles", timeout=1.0)
+            if c_resp.status_code == 200 and r_resp.status_code == 200:
+                channels = c_resp.json()
+                roles = r_resp.json()
+        except Exception as e:
+            pass
 
-    # 2. Fallback: Jeśli lokalne API nie odpowiedziało, odpytujemy bezpośrednio Discorda
+    # 2. Fallback: Jeśli lokalne API nie odpowiedziało lub używamy innego tokenu (custom/music):
     if not channels or not roles:
-        if not channels:
-            channels_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/channels", headers=headers)
-            all_channels = channels_resp.json() if channels_resp.status_code == 200 else []
-            channels = [{"id": str(c['id']), "name": c['name']} for c in all_channels if c['type'] in (0, 5)]
-        
-        if not roles:
-            roles_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/roles", headers=headers)
-            all_roles = roles_resp.json() if roles_resp.status_code == 200 else []
-            roles = []
-            for r in all_roles:
-                if r['name'] != "@everyone" and not r.get('managed'):
-                    color_int = r.get('color', 0)
-                    color_hex = f"#{color_int:06x}" if color_int != 0 else "#b5bac1"
-                    roles.append({"id": str(r['id']), "name": r['name'], "color": color_hex})
+        tok_to_use = successful_token if successful_token else BOT_TOKEN
+        if tok_to_use and tok_to_use.strip() and tok_to_use.strip() != "your_discord_bot_token_here":
+            h = {"Authorization": f"Bot {tok_to_use}"}
+            
+            if not channels:
+                try:
+                    channels_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/channels", headers=h, timeout=5)
+                    if channels_resp.status_code == 200:
+                        all_channels = channels_resp.json()
+                        channels = [{"id": str(c['id']), "name": c['name']} for c in all_channels if c['type'] in (0, 5)]
+                except Exception as e:
+                    print(f"[CONFIG] Błąd pobierania kanałów: {e}")
+            
+            if not roles:
+                try:
+                    roles_resp = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/roles", headers=h, timeout=5)
+                    if roles_resp.status_code == 200:
+                        all_roles = roles_resp.json()
+                        roles = []
+                        for r in all_roles:
+                            if r['name'] != "@everyone" and not r.get('managed'):
+                                color_int = r.get('color', 0)
+                                color_hex = f"#{color_int:06x}" if color_int != 0 else "#b5bac1"
+                                roles.append({"id": str(r['id']), "name": r['name'], "color": color_hex})
+                except Exception as e:
+                    print(f"[CONFIG] Błąd pobierania ról: {e}")
     
     # Pobieramy statystyki (najpierw próbujemy z pliku statusu bota)
     bot_latency = None

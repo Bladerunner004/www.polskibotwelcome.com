@@ -134,7 +134,23 @@ def dashboard():
 
         if is_admin:
             guild_id = str(guild.get('id')) 
-            bot_present = guild_id in bot_guild_ids
+            
+            # Sprawdzamy obecność bota - albo jest główny bot na serwerze,
+            # albo istnieje w bazie danych skonfigurowany custom bot lub bot muzyczny dla tej gildii
+            has_custom_bot = False
+            has_music_bot = False
+            try:
+                from database import get_custom_bot, get_music_bots
+                c_bot = get_custom_bot(guild_id)
+                if c_bot and c_bot.get('token'):
+                    has_custom_bot = True
+                m_bots = get_music_bots(guild_id)
+                if m_bots:
+                    has_music_bot = True
+            except:
+                pass
+
+            bot_present = (guild_id in bot_guild_ids) or has_custom_bot or has_music_bot
 
             from database import is_premium
             premium_status = is_premium(guild_id) if bot_present else False

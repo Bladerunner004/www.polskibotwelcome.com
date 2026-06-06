@@ -688,14 +688,14 @@
                 const data = await response.json();
                 
                 if (data.status === 'error') {
-                    latencyElement.innerText = 'BĹ Ă„D KRYTYCZNY';
+                    latencyElement.innerText = 'BŁĄD KRYTYCZNY';
                     latencyElement.style.color = '#ff4444';
-                    // WyĹ›wietlamy alert tylko raz lub logujemy do konsoli
-                    console.error("Krytyczny bĹ‚Ä…d bota:", data.error_msg);
+                    const errorMsg = data.error || data.error_msg || 'Nieznany błąd bota';
+                    console.error("Krytyczny błąd bota:", errorMsg);
                     const errorBox = document.getElementById('bot-error-info');
                     if (errorBox) {
                         errorBox.style.display = 'block';
-                        errorBox.innerText = data.error_msg;
+                        errorBox.innerText = errorMsg;
                     }
                 } else if (data.latency && data.latency > 0) {
                     latencyElement.innerText = data.latency + 'ms';

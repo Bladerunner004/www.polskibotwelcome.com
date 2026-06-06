@@ -67,6 +67,13 @@
             <button class="btn-sidebar-save {% if main_settings.premium %}btn-gold{% endif %}" style="margin-top: 30px; width: 100%;" onclick="saveCustomBotLocal()" {% if not main_settings.premium %}disabled style="opacity: 0.5;"{% endif %}>
                 <i class="fas fa-save"></i> ZAPISZ KONFIGURACJĘ
             </button>
+
+            <!-- Link zaproszenia dla własnego bota -->
+            <div id="custom-bot-invite-container" style="margin-top: 15px; display: none;">
+                <a id="custom-bot-invite-link" href="#" target="_blank" class="btn" style="background: rgba(116, 184, 22, 0.1); border: 1px solid var(--accent-green); color: var(--accent-green); text-transform: uppercase; font-weight: 800; font-size: 0.8rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 15px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.background='var(--accent-green)'; this.style.color='black'" onmouseout="this.style.background='rgba(116, 184, 22, 0.1)'; this.style.color='var(--accent-green)'">
+                    <i class="fas fa-user-plus"></i> Zaproś swojego bota
+                </a>
+            </div>
         </div>
     </div>
 
@@ -173,6 +180,7 @@
                 document.getElementById('custom-bot-name').value = data.bot_name || '';
                 document.getElementById('custom-bot-enabled').checked = data.enabled || false;
                 updateStatusUI(data.status || 'offline');
+                updateInviteLinkLocal(data.token);
             }
         } catch(e) {}
     }
@@ -194,6 +202,27 @@
             text.textContent = 'OFFLINE';
             text.style.color = '#ff4444';
         }
+    }
+
+    function updateInviteLinkLocal(token) {
+        const inviteContainer = document.getElementById('custom-bot-invite-container');
+        const inviteLink = document.getElementById('custom-bot-invite-link');
+        if (!inviteContainer || !inviteLink) return;
+        
+        if (token && token.includes('.')) {
+            try {
+                const firstPart = token.split('.')[0];
+                const decoded = atob(firstPart);
+                if (/^\d+$/.test(decoded)) {
+                    inviteLink.href = `https://discord.com/api/oauth2/authorize?client_id=${decoded}&permissions=8&scope=bot%20applications.commands`;
+                    inviteContainer.style.display = 'block';
+                    return;
+                }
+            } catch (e) {
+                console.error("Błąd generowania zaproszenia:", e);
+            }
+        }
+        inviteContainer.style.display = 'none';
     }
 
     window.saveCustomBotLocal = async function() {
@@ -219,6 +248,7 @@
             if (result.success) {
                 btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
                 btn.style.background = '#2d7d2a';
+                updateInviteLinkLocal(data.token);
             } else {
                 btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
                 btn.style.background = '#7d2a2a';

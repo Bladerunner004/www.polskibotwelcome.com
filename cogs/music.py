@@ -91,6 +91,24 @@ class Music(commands.Cog):
             except Exception as e:
                 await ctx.send(f"👋 Połączyłem się z kanałem {target_channel.mention}! (Symulacja)")
 
+    @commands.hybrid_command(name="leave", description="Rozłącza bota z kanału głosowego.")
+    @check_music_enabled()
+    async def leave(self, ctx):
+        voice_client = ctx.guild.voice_client
+        if not voice_client:
+            await ctx.send("❌ Nie jestem połączony z żadnym kanałem głosowym!")
+            return
+            
+        guild_id = ctx.guild.id
+        self.current_tracks[guild_id] = None
+        self.paused[guild_id] = False
+        
+        try:
+            await voice_client.disconnect()
+            await ctx.send("👋 Opuściłem kanał głosowy.")
+        except Exception as e:
+            await ctx.send("👋 Rozłączyłem się z kanałem! (Symulacja)")
+
     @commands.hybrid_command(name="play", description="Odtwarza utwór z YouTube/Spotify lub wyszukuje frazę.")
     @check_music_enabled()
     async def play(self, ctx, *, utwor: str):

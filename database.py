@@ -17,7 +17,7 @@ ALL_COMMANDS = [
     "slowmode", "warn", "warns", "modinfo", "clear",
     "temprole", "votemute", "massrole",
     "iq", "cat", "meme", "slap", "info", "pomoc",
-    "play", "skip", "stop", "queue", "nowplaying", "volume", "lyrics", "shuffle", "pause", "resume", "join"
+    "play", "skip", "stop", "queue", "nowplaying", "volume", "lyrics", "shuffle", "pause", "resume", "join", "leave"
 ]
 
 def init_db():

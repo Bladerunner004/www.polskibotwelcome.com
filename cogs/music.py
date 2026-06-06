@@ -93,7 +93,7 @@ class Music(commands.Cog):
                 )
         else:
             try:
-                await target_channel.connect()
+                await target_channel.connect(timeout=10.0)
                 await ctx.send(f"👋 Połączyłem się z kanałem {target_channel.mention}!")
             except Exception as e:
                 print(f"[VOICE] Błąd łączenia z kanałem {target_channel.name}: {e}")
@@ -155,7 +155,7 @@ class Music(commands.Cog):
         if not voice_client:
             try:
                 # Wymaga PyNaCl, jeśli go nie ma, złapie błąd i powiadomi
-                await voice_channel.connect()
+                await voice_channel.connect(timeout=10.0)
             except Exception as e:
                 # Brak bibliotek głosowych w systemie - działamy w trybie symulacji tekstowej
                 voice_connected = False

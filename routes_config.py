@@ -1113,10 +1113,22 @@ def api_get_music_bots(guild_id):
         return jsonify({'error': 'Brak dostępu'}), 403
     from database import get_music_bots
     bots = get_music_bots(guild_id)
-    # Maskujemy token dla bezpieczeństwa, np. zostawiając tylko pierwsze i ostatnie znaki
+    
+    import base64
     for b in bots:
         if b.get('token'):
             tok = b['token']
+            # Wyciągamy invite link
+            try:
+                first_part = tok.split('.')[0]
+                padding = '=' * (4 - len(first_part) % 4)
+                client_id = base64.b64decode(first_part + padding).decode('utf-8')
+                if client_id.isdigit():
+                    b['invite_url'] = f"https://discord.com/api/oauth2/authorize?client_id={client_id}&permissions=8&scope=bot%20applications.commands"
+            except:
+                b['invite_url'] = None
+                
+            # Maskujemy token
             if len(tok) > 15:
                 b['token'] = tok[:6] + '...' + tok[-6:]
             else:

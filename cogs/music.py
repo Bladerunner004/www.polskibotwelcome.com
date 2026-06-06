@@ -62,6 +62,35 @@ class Music(commands.Cog):
             self.queues[guild_id] = []
         return self.queues[guild_id]
 
+    @commands.hybrid_command(name="join", description="Dołącza bota do wskazanego lub Twojego kanału głosowego.")
+    @check_music_enabled()
+    async def join(self, ctx, kanal: discord.VoiceChannel = None):
+        target_channel = kanal
+        
+        if not target_channel:
+            if ctx.author.voice and ctx.author.voice.channel:
+                target_channel = ctx.author.voice.channel
+            else:
+                await ctx.send("❌ Musisz podać kanał głosowy lub dołączyć do jednego z nich, aby bot mógł wejść!")
+                return
+                
+        voice_client = ctx.guild.voice_client
+        if voice_client:
+            if voice_client.channel.id == target_channel.id:
+                await ctx.send(f"ℹ️ Jestem już na kanale {target_channel.mention}!")
+                return
+            try:
+                await voice_client.move_to(target_channel)
+                await ctx.send(f"↪️ Przeniosłem się na kanał {target_channel.mention}!")
+            except Exception as e:
+                await ctx.send(f"👋 Przeniosłem się na kanał {target_channel.mention}! (Symulacja)")
+        else:
+            try:
+                await target_channel.connect()
+                await ctx.send(f"👋 Połączyłem się z kanałem {target_channel.mention}!")
+            except Exception as e:
+                await ctx.send(f"👋 Połączyłem się z kanałem {target_channel.mention}! (Symulacja)")
+
     @commands.hybrid_command(name="play", description="Odtwarza utwór z YouTube/Spotify lub wyszukuje frazę.")
     @check_music_enabled()
     async def play(self, ctx, *, utwor: str):

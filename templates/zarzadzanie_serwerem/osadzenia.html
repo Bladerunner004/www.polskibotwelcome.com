@@ -1201,7 +1201,7 @@
         const container = getE('rules-blocks-container');
         const blocks = document.querySelectorAll('.rule-block-editor-card');
         const isPremium = {% if main_settings.premium %}true{% else %}false{% endif %};
-        const maxBlocks = isPremium ? 10 : 1;
+        const maxBlocks = isPremium ? 10 : 2;
 
         if (blocks.length >= maxBlocks) {
             alert(`⚠️ Osiągnięto limit bloków w tym panelu (${maxBlocks}). ${!isPremium ? 'Odblokuj PREMIUM, aby dodać do 10 bloków!' : ''}`);

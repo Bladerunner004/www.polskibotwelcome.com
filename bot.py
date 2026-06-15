@@ -98,9 +98,9 @@ class PolskiBot(commands.Bot):
             
             if guild:
                 try:
-                    from database import get_custom_bot
+                    from database import get_custom_bot, is_premium
                     c_bot = get_custom_bot(guild.id)
-                    if c_bot and c_bot.get('enabled'):
+                    if c_bot and c_bot.get('enabled') and is_premium(guild.id):
                         return
                 except:
                     pass

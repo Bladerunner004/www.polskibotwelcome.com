@@ -394,9 +394,23 @@ def start_bot_background():
                             conn.close()
                     
                     db_bots = {}
+                    from database import is_premium
                     for row in rows:
                         g_id, tok, en = row
                         if tok and tok.strip():
+                            # Jeśli własny bot jest włączony, ale serwer nie ma już Premium, wyłączamy go
+                            if en and not is_premium(g_id):
+                                try:
+                                    conn_upd = sqlite3.connect(DB_NAME, timeout=10)
+                                    c_upd = conn_upd.cursor()
+                                    c_upd.execute("UPDATE custom_bots SET enabled = 0, status = 'offline' WHERE guild_id = ?", (str(g_id),))
+                                    conn_upd.commit()
+                                    conn_upd.close()
+                                    print(f"⚠️ [MONITOR] Wyłączono własnego bota dla gildii {g_id} z powodu braku subskrypcji Premium.")
+                                except Exception as ex:
+                                    print(f"❌ [MONITOR] Błąd wyłączania własnego bota dla gildii {g_id}: {ex}")
+                                en = 0
+                            
                             db_bots[str(g_id)] = {'token': tok, 'enabled': bool(en)}
                             
                     db_music_bots = {}

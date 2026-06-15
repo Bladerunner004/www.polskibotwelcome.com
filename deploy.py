@@ -11,6 +11,7 @@ files_to_upload = [
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\cogs\\moderation.py', '/root/polskibot/cogs/moderation.py'),
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\database.py', '/root/polskibot/database.py'),
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\routes_config.py', '/root/polskibot/routes_config.py'),
+    ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\run.py', '/root/polskibot/run.py'),
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\zarzadzanie_serwerem\\osadzenia.html', '/root/polskibot/templates/zarzadzanie_serwerem/osadzenia.html'),
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\muzyka.html', '/root/polskibot/templates/glowne/muzyka.html'),
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\music_tokens.html', '/root/polskibot/templates/glowne/music_tokens.html')

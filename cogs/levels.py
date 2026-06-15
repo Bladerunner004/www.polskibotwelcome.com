@@ -17,7 +17,6 @@ class Levels(commands.Cog):
             if time.time() - user_data['last_msg_at'] > 60:
                 xp_gain = random.randint(15, 25)
                 leveled_up, new_lvl = add_xp(message.guild.id, message.author.id, xp_gain)
-                
                 if leveled_up and settings.get("level_up_msg_enabled", 1):
                     # Wybór kanału dla powiadomienia
                     target_channel = message.channel
@@ -25,8 +24,16 @@ class Levels(commands.Cog):
                     if ch_id and str(ch_id).isdigit():
                         custom_ch = message.guild.get_channel(int(ch_id))
                         if custom_ch: target_channel = custom_ch
-                    
-                    await target_channel.send(f"🎉 Gratulacje {message.author.mention}! Awansowałeś na **{new_lvl} Poziom**!")
+
+                    embed = discord.Embed(
+                        title="🎉 NOWY POZIOM!",
+                        color=0x74b816,
+                        description=f"Gratulacje {message.author.mention}!\nAwansowałeś na **{new_lvl} Poziom** na tym serwerze! 🚀"
+                    )
+                    embed.set_thumbnail(url=message.author.display_avatar.url)
+                    avatar_url = self.bot.user.avatar.url if self.bot.user and self.bot.user.avatar else None
+                    embed.set_footer(text="PolskiBot System Poziomów", icon_url=avatar_url)
+                    await target_channel.send(content=message.author.mention, embed=embed)
 
     @commands.hybrid_command(name="level", description="Sprawdź swój poziom.")
     async def level(self, ctx, uzytkownik: discord.Member = None):

@@ -3,8 +3,8 @@ from discord.ext import commands
 import asyncio
 import yt_dlp
 import os
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+# import spotipy
+# from spotipy.oauth2 import SpotifyClientCredentials
 import urllib.parse
 import requests
 from database import get_settings, is_command_enabled
@@ -22,7 +22,7 @@ ytdl_format_options = {
     'no_warnings': True,
     'default_search': 'ytsearch',
     'source_address': '0.0.0.0', # bindowanie do IPv4
-    'remote_components': 'ejs:github',
+    'remote_components': ['ejs:github'],
 }
 
 # Sprawdzenie obecności pliku cookies.txt na serwerze lub lokalnie
@@ -239,6 +239,15 @@ def check_music_enabled():
         if not ctx.guild:
             return False
         
+        # Jeśli ten bot NIE JEST dedykowanym botem muzycznym, a w bazie jest włączony dedykowany bot muzyczny dla tej gildii,
+        # to główny bot nie powinien obsługiwać komend muzycznych.
+        if not getattr(ctx.bot, 'IS_MUSIC_BOT', False):
+            from database import get_music_bots
+            active_music_bots = [b for b in get_music_bots(ctx.guild.id) if b.get('enabled')]
+            if active_music_bots:
+                await ctx.send("❌ Muzyka jest obsługiwana przez dedykowanego bota muzycznego na tym serwerze!", ephemeral=True)
+                return False
+        
         # 1. Sprawdzamy czy cały moduł muzyczny jest włączony na serwerze
         settings = get_music_settings(ctx)
         if not settings.get("music_enabled", True):
@@ -273,21 +282,8 @@ class Music(commands.Cog):
         # Status pauzy: guild_id -> bool
         self.paused = {}
 
-        # Inicjalizacja integracji ze Spotify
-        spotify_id = os.getenv("SPOTIFY_CLIENT_ID")
-        spotify_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
-        if spotify_id and spotify_secret:
-            try:
-                self.spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
-                    client_id=spotify_id,
-                    client_secret=spotify_secret
-                ))
-                print("[MUSIC] Skonfigurowano integrację ze Spotify.")
-            except Exception as e:
-                print(f"[MUSIC] Błąd konfiguracji Spotify: {e}")
-                self.spotify = None
-        else:
-            self.spotify = None
+        # Inicjalizacja integracji ze Spotify (wyłączona)
+        self.spotify = None
 
     def get_queue(self, guild_id):
         if guild_id not in self.queues:
@@ -325,10 +321,27 @@ class Music(commands.Cog):
 
                 voice_client.play(source, after=lambda e: self.play_next(ctx))
                 
-                embed = discord.Embed(title="🎵 Odtwarzanie", color=0x74b816)
-                embed.add_field(name="Tytuł", value=f"**{source.title}**", inline=False)
-                embed.add_field(name="Długość", value=self.format_duration(source.duration), inline=True)
-                embed.add_field(name="Dodano przez", value=next_track['requester'], inline=True)
+                embed = discord.Embed(
+                    title="🎵 Teraz odtwarzam",
+                    color=0x74b816,
+                    url=source.data.get('webpage_url')
+                )
+                embed.description = f"**[{source.title}]({source.data.get('webpage_url')})**"
+                
+                duration_str = self.format_duration(source.duration)
+                uploader = source.data.get('uploader', 'Nieznany')
+                
+                embed.add_field(name="👤 Wykonawca", value=f"`{uploader}`", inline=True)
+                embed.add_field(name="⏱️ Czas trwania", value=f"`{duration_str}`", inline=True)
+                embed.add_field(name="📥 Zamówione przez", value=next_track['requester'], inline=True)
+                embed.add_field(name="▶️ Odtwarzanie", value="🔴 ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ 00:00 / " + duration_str, inline=False)
+                
+                thumbnail = source.data.get('thumbnail')
+                if thumbnail:
+                    embed.set_thumbnail(url=thumbnail)
+                
+                avatar_url = ctx.bot.user.avatar.url if ctx.bot.user and ctx.bot.user.avatar else None
+                embed.set_footer(text="PolskiBot Muzyka • Kliknij tytuł, aby otworzyć w przeglądarce", icon_url=avatar_url)
                 await ctx.send(embed=embed)
             except Exception as e:
                 await ctx.send(f"❌ Wystąpił błąd podczas próby odtworzenia utworu `{next_track['title']}`: {e}")
@@ -338,7 +351,7 @@ class Music(commands.Cog):
             # Wyłączenie po bezczynności, jeśli nie ma włączonego trybu 24/7
             settings = get_music_settings(ctx)
             if not settings.get("music_247", False):
-                await asyncio.sleep(15)
+                await asyncio.sleep(180)  # Czekaj 3 minuty przed opuszczeniem kanału
                 # Sprawdzamy czy nadal nic nie gra i kolejka jest pusta
                 if voice_client and not voice_client.is_playing() and len(self.get_queue(guild_id)) == 0:
                     await voice_client.disconnect()
@@ -419,24 +432,11 @@ class Music(commands.Cog):
 
         # --- OBSŁUGA LINKÓW SPOTIFY ---
         if "spotify.com" in utwor:
-            if not self.spotify:
-                await ctx.send("ℹ️ Wykryto link Spotify, ale integracja ze Spotify nie jest skonfigurowana w pliku .env (brak SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET).")
-            else:
-                try:
-                    if "track" in utwor:
-                        track_info = self.spotify.track(utwor)
-                        track_name = track_info['name']
-                        artist_name = track_info['artists'][0]['name']
-                        utwor = f"{artist_name} - {track_name}"
-                        await ctx.send(f"🔍 Wykryto utwór Spotify: **{artist_name} - {track_name}**. Wyszukuję na YouTube...")
-                    else:
-                        await ctx.send("❌ Na ten moment bot obsługuje tylko pojedyncze utwory ze Spotify (track).")
-                        return
-                except Exception as e:
-                    await ctx.send(f"❌ Wystąpił problem z pobraniem danych ze Spotify: {e}")
-                    return
+            await ctx.send("❌ Odtwarzanie bezpośrednich linków ze Spotify jest obecnie wyłączone.")
+            return
 
         # Szybkie pobranie metadanych
+        thumbnail = None
         try:
             loop = self.bot.loop or asyncio.get_event_loop()
             data = await loop.run_in_executor(None, lambda: ytdl.extract_info(utwor, download=False, process=False))
@@ -453,6 +453,7 @@ class Music(commands.Cog):
             title = data.get('title', utwor)
             duration = self.format_duration(data.get('duration'))
             url = data.get('webpage_url', data.get('url', ''))
+            thumbnail = data.get('thumbnail')
         except Exception as e:
             title = utwor
             duration = "N/A"
@@ -463,7 +464,8 @@ class Music(commands.Cog):
             "duration": duration,
             "requester": ctx.author.mention,
             "url": url,
-            "query": utwor
+            "query": utwor,
+            "thumbnail": thumbnail
         }
         
         queue = self.get_queue(ctx.guild.id)
@@ -478,19 +480,52 @@ class Music(commands.Cog):
                 
                 voice_client.play(source, after=lambda e: self.play_next(ctx))
                 
-                embed = discord.Embed(title="🎵 Odtwarzanie", color=0x74b816)
-                embed.add_field(name="Tytuł", value=f"**{source.title}**", inline=False)
-                embed.add_field(name="Długość", value=self.format_duration(source.duration), inline=True)
-                embed.add_field(name="Dodano przez", value=track['requester'], inline=True)
+                embed = discord.Embed(
+                    title="🎵 Teraz odtwarzam",
+                    color=0x74b816,
+                    url=source.data.get('webpage_url')
+                )
+                embed.description = f"**[{source.title}]({source.data.get('webpage_url')})**"
+                
+                duration_str = self.format_duration(source.duration)
+                uploader = source.data.get('uploader', 'Nieznany')
+                
+                embed.add_field(name="👤 Wykonawca", value=f"`{uploader}`", inline=True)
+                embed.add_field(name="⏱️ Czas trwania", value=f"`{duration_str}`", inline=True)
+                embed.add_field(name="📥 Zamówione przez", value=track['requester'], inline=True)
+                embed.add_field(name="▶️ Odtwarzanie", value="🔴 ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ 00:00 / " + duration_str, inline=False)
+                
+                thumbnail = source.data.get('thumbnail')
+                if thumbnail:
+                    embed.set_thumbnail(url=thumbnail)
+                
+                avatar_url = ctx.bot.user.avatar.url if ctx.bot.user and ctx.bot.user.avatar else None
+                embed.set_footer(text="PolskiBot Muzyka • Kliknij tytuł, aby otworzyć w przeglądarce", icon_url=avatar_url)
                 await ctx.send(embed=embed)
             except Exception as e:
                 await ctx.send(f"❌ Wystąpił błąd podczas próby odtworzenia utworu: {e}")
                 self.current_tracks[ctx.guild.id] = None
         else:
             queue.append(track)
-            embed = discord.Embed(title="📥 Dodano do kolejki", color=0x74b816)
-            embed.add_field(name="Tytuł", value=f"**{track['title']}**", inline=False)
-            embed.add_field(name="Pozycja w kolejce", value=str(len(queue)), inline=True)
+            embed = discord.Embed(
+                title="📥 Dodano do kolejki",
+                color=0x3b5bdb,
+                url=track['url'] if track['url'] else None
+            )
+            if track['url']:
+                embed.description = f"**[{track['title']}]({track['url']})**"
+            else:
+                embed.description = f"**{track['title']}**"
+                
+            embed.add_field(name="⏱️ Czas trwania", value=f"`{track['duration']}`", inline=True)
+            embed.add_field(name="🔢 Pozycja w kolejce", value=f"`#{len(queue)}`", inline=True)
+            embed.add_field(name="👤 Zamówione przez", value=track['requester'], inline=True)
+            
+            if track.get('thumbnail'):
+                embed.set_thumbnail(url=track['thumbnail'])
+                
+            avatar_url = ctx.bot.user.avatar.url if ctx.bot.user and ctx.bot.user.avatar else None
+            embed.set_footer(text="PolskiBot Muzyka", icon_url=avatar_url)
             await ctx.send(embed=embed)
 
     @commands.hybrid_command(name="skip", description="Pomija aktualny utwór.")

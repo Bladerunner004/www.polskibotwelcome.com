@@ -62,7 +62,7 @@
                     </label>
                 </div>
 
-                <div class="log-toggle-item {% if main_settings.premium %}premium-border-gold{% endif %}">
+                <div class="log-toggle-item">
                     <div class="toggle-info">
                         <div class="toggle-title">Role (Nadawanie/Odbieranie)</div>
                         <div class="toggle-desc">Monitoruj kto otrzymał lub stracił uprawnienia i role.</div>
@@ -142,17 +142,17 @@ async function saveLogSettings() {
     btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
 
     const payload = {
-        logs_channel_id: document.getElementById('logs-channel-id').value,
-        logs_join_leave: document.getElementById('logs-join-leave').checked,
-        logs_mod_actions: document.getElementById('logs-mod-actions').checked,
-        logs_role_updates: document.getElementById('logs-role-updates').checked,
-        logs_voice_activity: document.getElementById('logs-voice-activity').checked,
-        logs_guild_updates: document.getElementById('logs-guild-updates').checked,
-        logs_msg_updates: document.getElementById('logs-msg-updates').checked
+        channel_id: document.getElementById('logs-channel-id').value,
+        join_leave: document.getElementById('logs-join-leave').checked,
+        mod_actions: document.getElementById('logs-mod-actions').checked,
+        role_updates: document.getElementById('logs-role-updates').checked,
+        voice_activity: document.getElementById('logs-voice-activity').checked,
+        guild_updates: document.getElementById('logs-guild-updates').checked,
+        msg_updates: document.getElementById('logs-msg-updates').checked
     };
 
     try {
-        const res = await fetch(`/config/{{ server_id }}/logs`, {
+        const res = await fetch(`/api/{{ server_id }}/logs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -163,6 +163,9 @@ async function saveLogSettings() {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-save"></i> ZAPISZ USTAWIENIA LOGÓW';
             }, 2000);
+        } else {
+            btn.innerHTML = 'BŁĄD';
+            setTimeout(() => { btn.disabled = false; btn.innerHTML = 'ZAPISZ USTAWIENIA LOGÓW'; }, 2000);
         }
     } catch(e) {
         btn.innerHTML = 'BŁĄD';

@@ -170,7 +170,7 @@ async function updateAutomod() {
     };
 
     try {
-        const res = await fetch(`/config/{{ server_id }}/automod`, {
+        const res = await fetch(`/api/{{ server_id }}/automod`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)

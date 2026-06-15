@@ -137,5 +137,338 @@ class Moderation(commands.Cog):
         # Logowanie aktywności (statystyki)
         log_message_activity(message.guild.id, message.channel.id)
 
+    @commands.Cog.listener()
+    async def on_member_ban(self, guild, user):
+        moderator_name = "System/Nieznany"
+        moderator_id = "0"
+        reason = "Brak powodu"
+        await asyncio.sleep(1)
+        try:
+            async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.ban):
+                if entry.target.id == user.id:
+                    moderator_name = f"{entry.user.name}#{entry.user.discriminator}" if entry.user.discriminator != "0" else entry.user.name
+                    moderator_id = str(entry.user.id)
+                    if entry.reason:
+                        reason = entry.reason
+                    break
+        except Exception as e:
+            print(f"Błąd odczytu audit log (ban): {e}")
+
+        add_audit_log(guild.id, "mod_actions", moderator_name, moderator_id, "BAN", f"Zbanowano użytkownika {user.name} ({user.id}). Powód: {reason}")
+
+        embed = discord.Embed(
+            title="🔨 Użytkownik zbanowany",
+            description=f"**Użytkownik:** {user.mention} ({user.name})\n**ID:** {user.id}\n**Moderator:** <@{moderator_id}>\n**Powód:** {reason}",
+            color=0xff4757,
+            timestamp=datetime.datetime.now()
+        )
+        if hasattr(user, "display_avatar") and user.display_avatar:
+            embed.set_thumbnail(url=user.display_avatar.url)
+        await self.send_log(guild, "mod_actions", embed)
+
+    @commands.Cog.listener()
+    async def on_member_unban(self, guild, user):
+        moderator_name = "System/Nieznany"
+        moderator_id = "0"
+        await asyncio.sleep(1)
+        try:
+            async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.unban):
+                if entry.target.id == user.id:
+                    moderator_name = f"{entry.user.name}#{entry.user.discriminator}" if entry.user.discriminator != "0" else entry.user.name
+                    moderator_id = str(entry.user.id)
+                    break
+        except Exception as e:
+            print(f"Błąd odczytu audit log (unban): {e}")
+
+        add_audit_log(guild.id, "mod_actions", moderator_name, moderator_id, "UNBAN", f"Odbanowano użytkownika {user.name} ({user.id})")
+
+        embed = discord.Embed(
+            title="✅ Użytkownik odbanowany",
+            description=f"**Użytkownik:** {user.name} ({user.id})\n**Moderator:** <@{moderator_id}>",
+            color=0x2ed573,
+            timestamp=datetime.datetime.now()
+        )
+        await self.send_log(guild, "mod_actions", embed)
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):
+        guild = member.guild
+        moderator_name = "System/Nieznany"
+        moderator_id = "0"
+        reason = "Brak powodu"
+        is_kick = False
+        await asyncio.sleep(1)
+        try:
+            async for entry in guild.audit_logs(limit=3, action=discord.AuditLogAction.kick):
+                if entry.target.id == member.id and (datetime.datetime.now(datetime.timezone.utc) - entry.created_at).total_seconds() < 10:
+                    moderator_name = f"{entry.user.name}#{entry.user.discriminator}" if entry.user.discriminator != "0" else entry.user.name
+                    moderator_id = str(entry.user.id)
+                    if entry.reason:
+                        reason = entry.reason
+                    is_kick = True
+                    break
+        except Exception as e:
+            print(f"Błąd odczytu audit log (kick): {e}")
+
+        if is_kick:
+            add_audit_log(guild.id, "mod_actions", moderator_name, moderator_id, "KICK", f"Wyrzucono użytkownika {member.name} ({member.id}). Powód: {reason}")
+            embed = discord.Embed(
+                title="👢 Użytkownik wyrzucony",
+                description=f"**Użytkownik:** {member.mention} ({member.name})\n**ID:** {member.id}\n**Moderator:** <@{moderator_id}>\n**Powód:** {reason}",
+                color=0xffa500,
+                timestamp=datetime.datetime.now()
+            )
+            if hasattr(member, "display_avatar") and member.display_avatar:
+                embed.set_thumbnail(url=member.display_avatar.url)
+            await self.send_log(guild, "mod_actions", embed)
+        else:
+            add_audit_log(guild.id, "join_leave", member.name, member.id, "LEAVE", f"Użytkownik {member.name} ({member.id}) opuścił serwer.")
+            embed = discord.Embed(
+                title="📤 Użytkownik opuścił serwer",
+                description=f"**Użytkownik:** {member.mention} ({member.name})\n**ID:** {member.id}",
+                color=0xff4757,
+                timestamp=datetime.datetime.now()
+            )
+            if hasattr(member, "display_avatar") and member.display_avatar:
+                embed.set_thumbnail(url=member.display_avatar.url)
+            await self.send_log(guild, "join_leave", embed)
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        guild = member.guild
+        log_join_activity(guild.id)
+        
+        add_audit_log(guild.id, "join_leave", member.name, member.id, "JOIN", f"Użytkownik {member.name} ({member.id}) dołączył do serwera.")
+        
+        embed = discord.Embed(
+            title="📥 Nowy użytkownik dołączył",
+            description=f"**Użytkownik:** {member.mention} ({member.name})\n**ID:** {member.id}\n**Data założenia konta:** {member.created_at.strftime('%Y-%m-%d %H:%M:%S')}",
+            color=0x2ed573,
+            timestamp=datetime.datetime.now()
+        )
+        if hasattr(member, "display_avatar") and member.display_avatar:
+            embed.set_thumbnail(url=member.display_avatar.url)
+        await self.send_log(guild, "join_leave", embed)
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        guild = after.guild
+        
+        if before.roles != after.roles:
+            added_roles = [r for r in after.roles if r not in before.roles]
+            removed_roles = [r for r in before.roles if r not in after.roles]
+            
+            moderator_name = "System/Nieznany"
+            moderator_id = "0"
+            await asyncio.sleep(1)
+            try:
+                async for entry in guild.audit_logs(limit=3, action=discord.AuditLogAction.member_role_update):
+                    if entry.target.id == after.id and (datetime.datetime.now(datetime.timezone.utc) - entry.created_at).total_seconds() < 10:
+                        moderator_name = f"{entry.user.name}#{entry.user.discriminator}" if entry.user.discriminator != "0" else entry.user.name
+                        moderator_id = str(entry.user.id)
+                        break
+            except Exception as e:
+                print(f"Błąd odczytu audit log (role update): {e}")
+
+            for role in added_roles:
+                if role.is_default(): continue
+                add_audit_log(guild.id, "role_updates", moderator_name, moderator_id, "ROLE_ADD", f"Dodano rolę <@&{role.id}> użytkownikowi {after.name} ({after.id})")
+                embed = discord.Embed(
+                    title="🛡️ Dodano rolę",
+                    description=f"**Użytkownik:** {after.mention}\n**Rola:** <@&{role.id}>\n**Moderator:** <@{moderator_id}>",
+                    color=0x2ed573,
+                    timestamp=datetime.datetime.now()
+                )
+                await self.send_log(guild, "role_updates", embed)
+
+            for role in removed_roles:
+                if role.is_default(): continue
+                add_audit_log(guild.id, "role_updates", moderator_name, moderator_id, "ROLE_REMOVE", f"Odebrano rolę <@&{role.id}> użytkownikowi {after.name} ({after.id})")
+                embed = discord.Embed(
+                    title="🛡️ Odebrano rolę",
+                    description=f"**Użytkownik:** {after.mention}\n**Rola:** <@&{role.id}>\n**Moderator:** <@{moderator_id}>",
+                    color=0xff4757,
+                    timestamp=datetime.datetime.now()
+                )
+                await self.send_log(guild, "role_updates", embed)
+
+        if before.timed_out != after.timed_out or before.communication_disabled_until != after.communication_disabled_until:
+            moderator_name = "System/Nieznany"
+            moderator_id = "0"
+            reason = "Brak powodu"
+            await asyncio.sleep(1)
+            try:
+                async for entry in guild.audit_logs(limit=3, action=discord.AuditLogAction.member_update):
+                    if entry.target.id == after.id and (datetime.datetime.now(datetime.timezone.utc) - entry.created_at).total_seconds() < 10:
+                        moderator_name = f"{entry.user.name}#{entry.user.discriminator}" if entry.user.discriminator != "0" else entry.user.name
+                        moderator_id = str(entry.user.id)
+                        if entry.reason:
+                            reason = entry.reason
+                        break
+            except Exception as e:
+                print(f"Błąd odczytu audit log (member update/timeout): {e}")
+
+            if after.timed_out:
+                duration_sec = int((after.communication_disabled_until - datetime.datetime.now(datetime.timezone.utc)).total_seconds())
+                duration_min = max(1, int(duration_sec / 60))
+                add_audit_log(guild.id, "mod_actions", moderator_name, moderator_id, "MUTE", f"Wyciszono użytkownika {after.name} ({after.id}) na {duration_min} min. Powód: {reason}")
+                embed = discord.Embed(
+                    title="🔇 Wyciszono użytkownika (Timeout)",
+                    description=f"**Użytkownik:** {after.mention} ({after.name})\n**Czas:** {duration_min} min\n**Moderator:** <@{moderator_id}>\n**Powód:** {reason}",
+                    color=0xffa500,
+                    timestamp=datetime.datetime.now()
+                )
+                await self.send_log(guild, "mod_actions", embed)
+            else:
+                add_audit_log(guild.id, "mod_actions", moderator_name, moderator_id, "UNMUTE", f"Zdjęto wyciszenie z użytkownika {after.name} ({after.id})")
+                embed = discord.Embed(
+                    title="🔊 Zdjęto wyciszenie (Timeout)",
+                    description=f"**Użytkownik:** {after.mention} ({after.name})\n**Moderator:** <@{moderator_id}>",
+                    color=0x2ed573,
+                    timestamp=datetime.datetime.now()
+                )
+                await self.send_log(guild, "mod_actions", embed)
+
+    @commands.Cog.listener()
+    async def on_guild_channel_create(self, channel):
+        guild = channel.guild
+        moderator_name = "System/Nieznany"
+        moderator_id = "0"
+        await asyncio.sleep(1)
+        try:
+            async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_create):
+                if entry.target.id == channel.id:
+                    moderator_name = f"{entry.user.name}#{entry.user.discriminator}" if entry.user.discriminator != "0" else entry.user.name
+                    moderator_id = str(entry.user.id)
+                    break
+        except Exception as e:
+            print(f"Błąd odczytu audit log (channel create): {e}")
+
+        ch_type = "tekstowy" if isinstance(channel, discord.TextChannel) else "głosowy" if isinstance(channel, discord.VoiceChannel) else "kategorię" if isinstance(channel, discord.CategoryChannel) else "inny"
+        add_audit_log(guild.id, "guild_updates", moderator_name, moderator_id, "CHANNEL_CREATE", f"Utworzono kanał {ch_type} <#{channel.id}> ({channel.name})")
+
+        embed = discord.Embed(
+            title="➕ Utworzono kanał",
+            description=f"**Kanał:** <#{channel.id}> ({channel.name})\n**Typ:** {ch_type}\n**Administrator:** <@{moderator_id}>",
+            color=0x2ed573,
+            timestamp=datetime.datetime.now()
+        )
+        await self.send_log(guild, "guild_updates", embed)
+
+    @commands.Cog.listener()
+    async def on_guild_channel_delete(self, channel):
+        guild = channel.guild
+        moderator_name = "System/Nieznany"
+        moderator_id = "0"
+        await asyncio.sleep(1)
+        try:
+            async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_delete):
+                if entry.target.id == channel.id:
+                    moderator_name = f"{entry.user.name}#{entry.user.discriminator}" if entry.user.discriminator != "0" else entry.user.name
+                    moderator_id = str(entry.user.id)
+                    break
+        except Exception as e:
+            print(f"Błąd odczytu audit log (channel delete): {e}")
+
+        ch_type = "tekstowy" if isinstance(channel, discord.TextChannel) else "głosowy" if isinstance(channel, discord.VoiceChannel) else "kategorię" if isinstance(channel, discord.CategoryChannel) else "inny"
+        add_audit_log(guild.id, "guild_updates", moderator_name, moderator_id, "CHANNEL_DELETE", f"Usunięto kanał {ch_type} {channel.name} ({channel.id})")
+
+        embed = discord.Embed(
+            title="➖ Usunięto kanał",
+            description=f"**Nazwa kanału:** {channel.name}\n**ID:** {channel.id}\n**Typ:** {ch_type}\n**Administrator:** <@{moderator_id}>",
+            color=0xff4757,
+            timestamp=datetime.datetime.now()
+        )
+        await self.send_log(guild, "guild_updates", embed)
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message):
+        if message.author.bot or not message.guild: return
+        guild = message.guild
+        
+        moderator_name = "System/Autor"
+        moderator_id = str(message.author.id)
+        await asyncio.sleep(0.5)
+        try:
+            async for entry in guild.audit_logs(limit=3, action=discord.AuditLogAction.message_delete):
+                if entry.target.id == message.author.id and (datetime.datetime.now(datetime.timezone.utc) - entry.created_at).total_seconds() < 5:
+                    moderator_name = f"{entry.user.name}#{entry.user.discriminator}" if entry.user.discriminator != "0" else entry.user.name
+                    moderator_id = str(entry.user.id)
+                    break
+        except Exception as e:
+            pass
+
+        content_snippet = message.content[:200] + "..." if len(message.content) > 200 else message.content
+        if not content_snippet: content_snippet = "[Brak treści / Załącznik / Embed]"
+        
+        add_audit_log(guild.id, "msg_updates", moderator_name, moderator_id, "MESSAGE_DELETE", f"Usunięto wiadomość od {message.author.name} ({message.author.id}) na kanale <#{message.channel.id}>: {content_snippet}")
+
+        embed = discord.Embed(
+            title="🗑️ Usunięto wiadomość",
+            description=f"**Autor:** {message.author.mention} ({message.author.name})\n**Kanał:** {message.channel.mention}\n**Usunięte przez:** <@{moderator_id}>\n\n**Treść:**\n```\n{content_snippet}\n```",
+            color=0xff4757,
+            timestamp=datetime.datetime.now()
+        )
+        await self.send_log(guild, "msg_updates", embed)
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        if before.author.bot or not before.guild: return
+        if before.content == after.content: return
+        guild = before.guild
+        
+        before_snippet = before.content[:200] + "..." if len(before.content) > 200 else before.content
+        if not before_snippet: before_snippet = "[Brak treści]"
+        after_snippet = after.content[:200] + "..." if len(after.content) > 200 else after.content
+        if not after_snippet: after_snippet = "[Brak treści]"
+
+        add_audit_log(guild.id, "msg_updates", before.author.name, before.author.id, "MESSAGE_EDIT", f"Edytowano wiadomość na kanale <#{before.channel.id}>.\nStara: {before_snippet}\nNowa: {after_snippet}")
+
+        embed = discord.Embed(
+            title="✏️ Edytowano wiadomość",
+            description=f"**Autor:** {before.author.mention} ({before.author.name})\n**Kanał:** {before.channel.mention}\n[Przejdź do wiadomości]({after.jump_url})",
+            color=0x00a8fc,
+            timestamp=datetime.datetime.now()
+        )
+        embed.add_field(name="Przed edycją", value=f"```\n{before_snippet}\n```", inline=False)
+        embed.add_field(name="Po edycji", value=f"```\n{after_snippet}\n```", inline=False)
+        
+        await self.send_log(guild, "msg_updates", embed)
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        guild = member.guild
+        
+        if before.channel != after.channel:
+            if before.channel is None and after.channel is not None:
+                add_audit_log(guild.id, "voice_activity", member.name, member.id, "VOICE_JOIN", f"Użytkownik dołączył do kanału głosowego <#{after.channel.id}> ({after.channel.name})")
+                embed = discord.Embed(
+                    title="🎙️ Dołączono do kanału głosowego",
+                    description=f"**Użytkownik:** {member.mention} ({member.name})\n**Kanał:** {after.channel.mention}",
+                    color=0x2ed573,
+                    timestamp=datetime.datetime.now()
+                )
+                await self.send_log(guild, "voice_activity", embed)
+                
+            elif before.channel is not None and after.channel is None:
+                add_audit_log(guild.id, "voice_activity", member.name, member.id, "VOICE_LEAVE", f"Użytkownik opuścił kanał głosowy {before.channel.name} ({before.channel.id})")
+                embed = discord.Embed(
+                    title="🎙️ Opuszczono kanał głosowy",
+                    description=f"**Użytkownik:** {member.mention} ({member.name})\n**Kanał:** {before.channel.name} ({before.channel.id})",
+                    color=0xff4757,
+                    timestamp=datetime.datetime.now()
+                )
+                await self.send_log(guild, "voice_activity", embed)
+                
+            elif before.channel is not None and after.channel is not None:
+                add_audit_log(guild.id, "voice_activity", member.name, member.id, "VOICE_MOVE", f"Użytkownik przeniósł się z <#{before.channel.id}> do <#{after.channel.id}>")
+                embed = discord.Embed(
+                    title="🎙️ Przeniesiono kanał głosowy",
+                    description=f"**Użytkownik:** {member.mention} ({member.name})\n**Z kanału:** {before.channel.name} ({before.channel.id})\n**Na kanał:** {after.channel.mention}",
+                    color=0x00a8fc,
+                    timestamp=datetime.datetime.now()
+                )
+                await self.send_log(guild, "voice_activity", embed)
+
 async def setup(bot):
     await bot.add_cog(Moderation(bot))

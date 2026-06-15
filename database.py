@@ -364,7 +364,7 @@ def init_db():
 
     conn.commit()
     conn.close()
-    print("[DB] Baza danych zostaĹ‚a zsynchronizowana.")
+    # print("[DB] Baza danych została zsynchronizowana.")
 
 def log_message_activity(guild_id, channel_id):
     """Loguje aktywnoĹ›Ä‡ wiadomoĹ›ci."""
@@ -914,8 +914,11 @@ def get_settings(guild_id):
                 if field in res:
                     res[field] = str(res[field]) in ('1', 'True')
             
+            # Sprawdzanie wygaśnięcia triala i statusu
+            # res['premium'] = True # Usunięto wymuszenie dla prawidłowych testów subskrypcji
+            
             # Automatycznie sprawdzanie wygaśnięcia triala
-            if res.get('premium') and res.get('trial_start') and res.get('subscription_type') == 'Okres Próbny':
+            if res.get('trial_start') and res.get('subscription_type') == 'Okres Próbny':
                 from datetime import datetime
                 try:
                     start_dt = datetime.fromisoformat(res['trial_start'])
@@ -924,12 +927,11 @@ def get_settings(guild_id):
                         # Trial wygasł - aktualizujemy w bazie
                         conn_upd = sqlite3.connect(DB_NAME)
                         curr_upd = conn_upd.cursor()
-                        curr_upd.execute("UPDATE settings SET premium = 0, subscription_type = 'Wygasły Trial' WHERE guild_id = ?", (str(guild_id),))
+                        curr_upd.execute("UPDATE settings SET premium = 0, subscription_type = 'Wygasła' WHERE guild_id = ?", (str(guild_id),))
                         conn_upd.commit()
                         conn_upd.close()
                         res['premium'] = False
-                        res['subscription_type'] = 'Wygasły Trial'
-                        print(f"[PREMIUM] Trial wygasł dla {guild_id}")
+                        res['subscription_type'] = 'Wygasła'
                 except Exception as e:
                     print(f"[PREMIUM] Błąd sprawdzania triala: {e}")
 
@@ -943,7 +945,7 @@ def get_settings(guild_id):
             "autorole_mode": 'disabled', "autorole_roles": [], "autorole_human_roles": [], 
             "autorole_bot_roles": [], "autorole_booster_roles": [], "autorole_booster_remove": True,
             "counter_humans_enabled": False, "counter_humans_name": "Humans: {count}", 
-            "premium": False, "premium_expiry": None, "subscription_type": "jednorazowa", 
+            "premium": False, "premium_expiry": "Bezterminowo", "subscription_type": "Brak", 
             "trial_used": False, "trial_start": None, "language": "pl",
             "music_enabled": True, "music_volume": 100, "music_dj_role_id": None,
             "music_247": False, "music_high_quality": False,
@@ -959,7 +961,7 @@ def get_settings(guild_id):
             "autorole_mode": 'disabled', "autorole_roles": [], "autorole_human_roles": [], 
             "autorole_bot_roles": [], "autorole_booster_roles": [], "autorole_booster_remove": True,
             "counter_humans_enabled": False, "counter_humans_name": "Humans: {count}", 
-            "premium": False, "premium_expiry": None, "subscription_type": "jednorazowa", "language": "pl",
+            "premium": False, "premium_expiry": "Bezterminowo", "subscription_type": "Brak", "language": "pl",
             "music_enabled": True, "music_volume": 100, "music_dj_role_id": None,
             "music_247": False, "music_high_quality": False,
             "commands_channel_id": None
@@ -1551,24 +1553,42 @@ def delete_selfrole_config(guild_id, config_id):
 
 def is_premium(guild_id):
     """Sprawdza, czy serwer posiada status Premium."""
-    settings = get_settings(guild_id)
-    return settings.get("premium", False)
+    try:
+        conn = sqlite3.connect(DB_NAME, timeout=10)
+        c = conn.cursor()
+        c.execute('SELECT premium FROM settings WHERE guild_id=?', (str(guild_id),))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return bool(row[0])
+        return False
+    except:
+        return False
 
 def set_premium(guild_id, status):
     """Nadaje lub odbiera status Premium dla serwera."""
     try:
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
-        c.execute('''
-            INSERT INTO settings (guild_id, premium)
-            VALUES (?, ?)
-            ON CONFLICT(guild_id) DO UPDATE SET premium=excluded.premium
-        ''', (str(guild_id), 1 if status else 0))
+        if status:
+            from datetime import datetime, timedelta
+            expiry_date = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M')
+            c.execute('''
+                INSERT INTO settings (guild_id, premium, subscription_type, premium_expiry)
+                VALUES (?, 1, 'Miesięczna', ?)
+                ON CONFLICT(guild_id) DO UPDATE SET premium=1, subscription_type='Miesięczna', premium_expiry=?
+            ''', (str(guild_id), expiry_date, expiry_date))
+        else:
+            c.execute('''
+                INSERT INTO settings (guild_id, premium, subscription_type, premium_expiry)
+                VALUES (?, 0, 'Brak', 'Bezterminowo')
+                ON CONFLICT(guild_id) DO UPDATE SET premium=0, subscription_type='Brak', premium_expiry='Bezterminowo'
+            ''', (str(guild_id),))
         conn.commit()
         conn.close()
         return True
     except Exception as e:
-        print(f"âťŚ BĹ‚Ä…d zapisu premium: {e}")
+        print(f"❌ Błąd zapisu premium: {e}")
         return False
 
 def get_media_configs(guild_id):

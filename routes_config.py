@@ -1245,7 +1245,7 @@ def stripe_webhook():
         # Invalid signature
         return jsonify({'error': 'Invalid signature'}), 400
 
-    # Obsługa zdarzenia zakończenia płatności
+    # Obsługa zdarzenia zakończenia płatności lub anulowania subskrypcji
     if event['type'] == 'checkout.session.completed':
         session_obj = event['data']['object']
         guild_id = session_obj.get('metadata', {}).get('guild_id')
@@ -1255,6 +1255,16 @@ def stripe_webhook():
             set_premium(guild_id, True)
             print(f"✅ [STRIPE] Aktywowano Premium dla serwera: {guild_id}")
             return jsonify({'status': 'success', 'message': 'Premium activated'})
+            
+    elif event['type'] == 'customer.subscription.deleted':
+        sub_obj = event['data']['object']
+        guild_id = sub_obj.get('metadata', {}).get('guild_id')
+        
+        if guild_id:
+            from database import set_premium
+            set_premium(guild_id, False)
+            print(f"❌ [STRIPE] Dezaktywowano Premium dla serwera: {guild_id}")
+            return jsonify({'status': 'success', 'message': 'Premium deactivated'})
     
     return jsonify({'status': 'ignored'}), 200
 
@@ -1346,6 +1356,32 @@ def api_save_logs(guild_id):
     finally:
         conn.close()
     
+    return jsonify({'success': True})
+
+@config_bp.route('/api/<guild_id>/automod', methods=['POST'])
+def api_save_automod(guild_id):
+    if not check_guild_access(guild_id):
+        return jsonify({'error': 'Brak dostępu'}), 403
+    import sqlite3
+    data = request.json
+    
+    update_data = {
+        'automod_anticaps': 1 if data.get('anti_caps') else 0,
+        'automod_antispam': 1 if data.get('anti_spam') else 0,
+        'automod_antilink': 1 if data.get('anti_link') else 0,
+        'automod_badwords': 1 if data.get('anti_badwords') else 0,
+        'automod_antiphishing': 1 if data.get('anti_phishing') else 0
+    }
+    
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    try:
+        for key, val in update_data.items():
+            cursor.execute(f"UPDATE settings SET {key} = ? WHERE guild_id = ?", (val, str(guild_id)))
+        conn.commit()
+    finally:
+        conn.close()
+        
     return jsonify({'success': True})
 
 @config_bp.route('/api/<guild_id>/music', methods=['POST'])

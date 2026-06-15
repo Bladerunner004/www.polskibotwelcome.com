@@ -66,6 +66,7 @@ class PolskiBot(commands.Bot):
         super().__init__(command_prefix=get_dynamic_prefix, intents=intents)
         self.IS_MUSIC_BOT = IS_MUSIC_BOT
         self.MUSIC_BOT_ID = MUSIC_BOT_ID
+        self.IS_CUSTOM_BOT = IS_CUSTOM_BOT
         if IS_MUSIC_BOT:
             self.initial_extensions = ['cogs.music']
         else:
@@ -83,6 +84,27 @@ class PolskiBot(commands.Bot):
                 'cogs.autorole',
                 'cogs.music'
             ]
+
+    def dispatch(self, event_name, *args, **kwargs):
+        if not self.IS_CUSTOM_BOT:
+            guild = None
+            for arg in args:
+                if isinstance(arg, discord.Guild):
+                    guild = arg
+                    break
+                elif hasattr(arg, 'guild') and isinstance(arg.guild, discord.Guild):
+                    guild = arg.guild
+                    break
+            
+            if guild:
+                try:
+                    from database import get_custom_bot
+                    c_bot = get_custom_bot(guild.id)
+                    if c_bot and c_bot.get('enabled'):
+                        return
+                except:
+                    pass
+        super().dispatch(event_name, *args, **kwargs)
 
     async def setup_hook(self):
         for ext in self.initial_extensions:

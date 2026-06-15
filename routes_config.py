@@ -787,14 +787,15 @@ def api_premium_trial(guild_id):
         conn = sqlite3.connect(DB_NAME)
         c = conn.cursor()
         c.execute('''
-            UPDATE settings SET 
+            INSERT INTO settings (guild_id, premium, trial_used, trial_start, premium_expiry, subscription_type)
+            VALUES (?, 1, 1, ?, ?, 'Okres Próbny')
+            ON CONFLICT(guild_id) DO UPDATE SET 
                 premium = 1, 
                 trial_used = 1, 
                 trial_start = ?, 
                 premium_expiry = ?,
                 subscription_type = 'Okres Próbny'
-            WHERE guild_id = ?
-        ''', (start_date, expiry_date, str(guild_id)))
+        ''', (str(guild_id), start_date, expiry_date, start_date, expiry_date))
         conn.commit()
         conn.close()
         return jsonify({'success': True})

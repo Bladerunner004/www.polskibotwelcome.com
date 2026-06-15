@@ -22,26 +22,34 @@
 
 <div class="music-tokens-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 25px;">
     <!-- Dodawanie bota -->
-    <div class="settings-card premium-card-gold" style="border: 1px solid rgba(212, 175, 55, 0.3);">
+    <div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}" style="border: 1px solid rgba(212, 175, 55, 0.3);">
         <div class="card-header">
             <h3><i class="fas fa-plus-circle"></i> Dodaj Bot Muzyczny</h3>
         </div>
         <div class="card-body">
+            {% if not main_settings.premium %}
+            <div style="background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                <p style="color: var(--accent-gold); font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 10px; margin: 0;">
+                    <i class="fas fa-lock"></i> Dodawanie własnych botów muzycznych wymaga subskrypcji PREMIUM.
+                </p>
+            </div>
+            {% endif %}
+
             <div class="modal-section">
                 <label>NAZWA BOTA:</label>
-                <input type="text" id="music-bot-name" class="modal-input" placeholder="np. PolskiBot Muzyka 1">
+                <input type="text" id="music-bot-name" class="modal-input" placeholder="np. PolskiBot Muzyka 1" {% if not main_settings.premium %}disabled{% endif %}>
             </div>
 
             <div class="modal-section" style="margin-top: 20px;">
                 <label>TOKEN BOTA (DISCORD Developer Portal):</label>
                 <div style="position: relative;">
-                    <input type="password" id="music-bot-token" class="modal-input" style="padding-right: 50px;" placeholder="Wklej token bota tutaj...">
+                    <input type="password" id="music-bot-token" class="modal-input" style="padding-right: 50px;" placeholder="Wklej token bota tutaj..." {% if not main_settings.premium %}disabled{% endif %}>
                     <i class="fas fa-eye" id="toggle-music-token-eye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666;" onclick="toggleMusicTokenVisibility()"></i>
                 </div>
                 <p style="font-size: 0.75rem; color: #888; margin-top: 8px;">Przejdź do <a href="https://discord.com/developers/applications" target="_blank" style="color: var(--accent-green);">Discord Developer Portal</a>, utwórz aplikację bota i skopiuj jego token.</p>
             </div>
 
-            <button class="btn-sidebar-save btn-gold" style="margin-top: 30px; width: 100%;" onclick="addMusicBotLocal()">
+            <button class="btn-sidebar-save btn-gold" style="margin-top: 30px; width: 100%;" onclick="addMusicBotLocal()" {% if not main_settings.premium %}disabled{% endif %}>
                 <i class="fas fa-plus"></i> DODAJ NOWEGO BOTA
             </button>
         </div>

@@ -106,28 +106,28 @@
                 <i class="fas fa-sliders-h"></i> ZAAWANSOWANE USTAWIENIA ODTWARZANIA
             </div>
 
-            <div class="config-item">
+            <div class="config-item {% if not main_settings.premium %}premium-locked-row{% endif %}">
                 <div class="config-info">
                     <div class="config-title" style="display: flex; align-items: center; gap: 8px;">
-                        Tryb 24/7
+                        Tryb 24/7 {% if not main_settings.premium %}<span class="badge-gold"><i class="fas fa-lock"></i> PREMIUM</span>{% endif %}
                     </div>
                     <div class="config-desc">Bot nie opuści kanału głosowego po zakończeniu odtwarzania kolejki.</div>
                 </div>
                 <label class="switch">
-                    <input type="checkbox" id="music-247-toggle" {% if main_settings.music_247 %}checked{% endif %}>
+                    <input type="checkbox" id="music-247-toggle" {% if main_settings.music_247 %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                     <span class="slider round"></span>
                 </label>
             </div>
 
-            <div class="config-item">
+            <div class="config-item {% if not main_settings.premium %}premium-locked-row{% endif %}">
                 <div class="config-info">
                     <div class="config-title" style="display: flex; align-items: center; gap: 8px;">
-                        Wysoka Jakość Audio
+                        Wysoka Jakość Audio {% if not main_settings.premium %}<span class="badge-gold"><i class="fas fa-lock"></i> PREMIUM</span>{% endif %}
                     </div>
                     <div class="config-desc">Odtwarzanie audio o gęstości 320kbps z algorytmem redukcji zakłóceń.</div>
                 </div>
                 <label class="switch">
-                    <input type="checkbox" id="music-hq-toggle" {% if main_settings.music_high_quality %}checked{% endif %}>
+                    <input type="checkbox" id="music-hq-toggle" {% if main_settings.music_high_quality %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
                     <span class="slider round"></span>
                 </label>
             </div>

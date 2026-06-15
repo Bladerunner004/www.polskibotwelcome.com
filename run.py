@@ -387,7 +387,7 @@ def start_bot_background():
                         c = conn.cursor()
                         c.execute('SELECT guild_id, token, enabled FROM custom_bots')
                         rows = c.fetchall()
-                        c.execute('SELECT id, token, enabled FROM music_bots')
+                        c.execute('SELECT id, token, enabled, guild_id FROM music_bots')
                         m_rows = c.fetchall()
                     finally:
                         if conn:
@@ -415,8 +415,21 @@ def start_bot_background():
                             
                     db_music_bots = {}
                     for row in m_rows:
-                        m_id, tok, en = row
+                        m_id, tok, en, g_id = row
                         if tok and tok.strip():
+                            # Jeśli bot muzyczny jest włączony, ale serwer nie ma już Premium, wyłączamy go
+                            if en and not is_premium(g_id):
+                                try:
+                                    conn_upd = sqlite3.connect(DB_NAME, timeout=10)
+                                    c_upd = conn_upd.cursor()
+                                    c_upd.execute("UPDATE music_bots SET enabled = 0, status = 'offline' WHERE id = ?", (int(m_id),))
+                                    conn_upd.commit()
+                                    conn_upd.close()
+                                    print(f"⚠️ [MONITOR] Wyłączono bota muzycznego ID {m_id} dla gildii {g_id} z powodu braku subskrypcji Premium.")
+                                except Exception as ex:
+                                    print(f"❌ [MONITOR] Błąd wyłączania bota muzycznego ID {m_id}: {ex}")
+                                en = 0
+                            
                             db_music_bots[str(m_id)] = {'token': tok, 'enabled': bool(en)}
                     
                     # Inicjalizacja/Aktualizacja liczników awarii dla custom botów

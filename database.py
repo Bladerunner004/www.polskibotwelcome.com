@@ -1556,11 +1556,24 @@ def is_premium(guild_id):
     try:
         conn = sqlite3.connect(DB_NAME, timeout=10)
         c = conn.cursor()
-        c.execute('SELECT premium FROM settings WHERE guild_id=?', (str(guild_id),))
+        c.execute('SELECT premium, trial_start, subscription_type FROM settings WHERE guild_id=?', (str(guild_id),))
         row = c.fetchone()
-        conn.close()
         if row:
-            return bool(row[0])
+            premium, trial_start, sub_type = row
+            if premium == 1 and sub_type == 'Okres Próbny' and trial_start:
+                from datetime import datetime, timedelta
+                try:
+                    start_dt = datetime.fromisoformat(trial_start)
+                    if datetime.now() > start_dt + timedelta(days=7):
+                        c.execute("UPDATE settings SET premium = 0, subscription_type = 'Wygasła' WHERE guild_id = ?", (str(guild_id),))
+                        conn.commit()
+                        conn.close()
+                        return False
+                except:
+                    pass
+            conn.close()
+            return bool(premium)
+        conn.close()
         return False
     except:
         return False

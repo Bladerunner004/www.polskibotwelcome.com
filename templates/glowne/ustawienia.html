@@ -2,10 +2,10 @@
     <div class="hero-glass">
         <div class="hero-header">
             <h1 class="hero-title">
-                <span class="decorative-text">Ustawienia</span> Główne
+                <span class="decorative-text">{{ _('general_settings') }}</span>
             </h1>
             <p class="hero-subtitle">
-                Skonfiguruj podstawowe parametry bota dla swojego serwera.
+                {{ _('general_settings_subtitle') }}
             </p>
         </div>
     </div>
@@ -13,17 +13,17 @@
 
 <div class="settings-card">
     <div class="card-header">
-        <h3><i class="fas fa-cog"></i> Konfiguracja podstawowa</h3>
+        <h3><i class="fas fa-cog"></i> {{ _('basic_config') }}</h3>
     </div>
     <div class="card-body">
         <div class="config-item">
             <div class="config-info">
                 <span class="config-title">
-                    Prefix bota 
+                    {{ _('bot_prefix') }}
                     <i class="fas fa-crown" style="color: var(--accent-gold); font-size: 0.8rem; margin-left: 5px;"></i>
                     <span class="premium-badge" style="background: var(--accent-gold); color: black; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: 900;">PREMIUM</span>
                 </span>
-                <span class="config-desc">Znak, którym wywołujesz komendy tekstowe (np. !, ?, .).</span>
+                <span class="config-desc">{{ _('bot_prefix_desc') }}</span>
             </div>
             <div class="config-control">
                 <input type="text" id="prefix-input-field" class="premium-input" 
@@ -35,14 +35,14 @@
 
         <div class="config-item">
             <div class="config-info">
-                <span class="config-title">Główny kolor bota</span>
-                <span class="config-desc">Kolor paska w wiadomościach typu Embed oraz powitaniach.</span>
+                <span class="config-title">{{ _('main_bot_color') }}</span>
+                <span class="config-desc">{{ _('main_bot_color_desc') }}</span>
             </div>
             <div class="config-control" style="display: flex; align-items: center; gap: 20px;">
                 <label class="toggle-row" style="margin: 0; padding: 0; gap: 8px; font-size: 0.7rem; color: #adb5bd; text-transform: uppercase; font-weight: 700;">
                     <input type="checkbox" id="global-rgb-switch" {% if main_settings.rgb_mode %}checked{% endif %} onchange="toggleGlobalRGB(this.checked)">
                     <div class="toggle-switch" style="transform: scale(0.75);"></div>
-                    TRYB RGB
+                    {{ _('rgb_mode') }}
                 </label>
                 <div id="global-color-picker-container" style="display:flex; align-items:center; gap:8px; {% if main_settings.rgb_mode %}opacity: 0.3; pointer-events: none;{% endif %}">
                     <input type="color" id="global-embed-color" value="{{ main_settings.embed_color or '#74b816' }}" 
@@ -53,12 +53,12 @@
 
         <div class="config-item">
             <div class="config-info">
-                <span class="config-title">Kanał dla komend bota</span>
-                <span class="config-desc">Kanał tekstowy, na którym użytkownicy mogą wpisywać komendy. Pozostaw puste, aby komendy działały wszędzie.</span>
+                <span class="config-title">{{ _('bot_commands_channel') }}</span>
+                <span class="config-desc">{{ _('bot_commands_channel_desc') }}</span>
             </div>
             <div class="config-control" style="width: 200px;">
                 <select id="commands-channel-id" class="modal-select" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); color: white; width: 100%; border-radius: 10px; padding: 10px 15px;">
-                    <option value="">Wszystkie kanały</option>
+                    <option value="">{{ _('all_channels') }}</option>
                     {% for channel in channels %}
                     <option value="{{ channel.id }}" {% if main_settings.commands_channel_id == channel.id %}selected{% endif %}>#{{ channel.name }}</option>
                     {% endfor %}
@@ -67,7 +67,7 @@
         </div>
 
         <button type="button" class="btn-save" onclick="saveGeneralSettings()" style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
-            <i class="fas fa-save"></i> ZAPISZ USTAWIENIA GŁÓWNE
+            <i class="fas fa-save"></i> {{ _('save_general_settings') }}
         </button>
     </div>
 </div>
@@ -88,7 +88,7 @@ window.saveGeneralSettings = async function() {
     const btn = event.currentTarget;
     const originalHTML = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> {{ _('saving') }}';
 
     try {
         const prefix = document.getElementById('prefix-input-field')?.value || '!';
@@ -108,7 +108,7 @@ window.saveGeneralSettings = async function() {
             })
         });
 
-        btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
+        btn.innerHTML = '<i class="fas fa-check"></i> {{ _('saved') }}';
         btn.style.background = '#2d7d2a';
         setTimeout(() => {
             btn.innerHTML = originalHTML;
@@ -116,7 +116,7 @@ window.saveGeneralSettings = async function() {
             btn.disabled = false;
         }, 2000);
     } catch (err) {
-        btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+        btn.innerHTML = '<i class="fas fa-times"></i> {{ _('error') }}';
         btn.style.background = '#7d2a2a';
         setTimeout(() => {
             btn.innerHTML = originalHTML;

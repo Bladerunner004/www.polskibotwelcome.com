@@ -2,10 +2,10 @@
     <div class="hero-glass">
         <div class="hero-header">
             <h1 class="hero-title">
-                <span class="decorative-text">Tutorial</span> Discord Developer Portal
+                <span class="decorative-text">{{ _('tutorials_decorative') }}</span> {{ _('tutorials_title') }}
             </h1>
             <p class="hero-subtitle">
-                Dowiedz się, jak poprawnie skonfigurować swojego bota i panel w portalu deweloperskim Discorda.
+                {{ _('tutorials_subtitle') }}
             </p>
         </div>
     </div>
@@ -13,7 +13,7 @@
 
 <div class="settings-card">
     <div class="card-header">
-        <h3><i class="fab fa-youtube"></i> Poradnik Video</h3>
+        <h3><i class="fab fa-youtube"></i> {{ _('tutorials_video_guide') }}</h3>
     </div>
     <div class="card-body" style="padding: 0; overflow: hidden; border-radius: 0 0 16px 16px;">
         <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000;">
@@ -31,13 +31,13 @@
 
 <div class="settings-card" style="margin-top: 20px;">
     <div class="card-header">
-        <h3><i class="fas fa-info-circle"></i> Kluczowe kroki</h3>
+        <h3><i class="fas fa-info-circle"></i> {{ _('tutorials_key_steps') }}</h3>
     </div>
     <div class="card-body">
         <ul style="list-style: none; padding: 0; color: var(--text-gray); font-size: 0.9rem;">
-            <li style="margin-bottom: 10px;"><i class="fas fa-check-circle" style="color: var(--accent-green); margin-right: 10px;"></i> Upewnij się, że dodałeś poprawny <strong>Redirect URI</strong>.</li>
-            <li style="margin-bottom: 10px;"><i class="fas fa-check-circle" style="color: var(--accent-green); margin-right: 10px;"></i> Włącz <strong>Public Bot</strong> w zakładce Bot.</li>
-            <li style="margin-bottom: 10px;"><i class="fas fa-check-circle" style="color: var(--accent-green); margin-right: 10px;"></i> Skonfiguruj uprawnienia (Intents), aby bot mógł czytać wiadomości.</li>
+            <li style="margin-bottom: 10px;"><i class="fas fa-check-circle" style="color: var(--accent-green); margin-right: 10px;"></i> {{ _('tutorials_step_1')|safe }}</li>
+            <li style="margin-bottom: 10px;"><i class="fas fa-check-circle" style="color: var(--accent-green); margin-right: 10px;"></i> {{ _('tutorials_step_2')|safe }}</li>
+            <li style="margin-bottom: 10px;"><i class="fas fa-check-circle" style="color: var(--accent-green); margin-right: 10px;"></i> {{ _('tutorials_step_3')|safe }}</li>
         </ul>
     </div>
 </div>

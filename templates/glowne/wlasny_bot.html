@@ -2,10 +2,10 @@
     <div class="hero-glass">
         <div class="hero-header">
             <h1 class="hero-title">
-                <span class="decorative-text">Własny</span> Bot (White Label)
+                <span class="decorative-text">{{ _('custom_bot_decorative') }}</span> {{ _('custom_bot_title') }}
             </h1>
             <p class="hero-subtitle">
-                Zmień nazwę, awatar i status bota na własne. Spraw, aby PolskiBot stał się integralną częścią Twojej marki.
+                {{ _('custom_bot_subtitle') }}
             </p>
         </div>
         <div class="hero-stats">
@@ -13,14 +13,14 @@
                 <div class="stat-icon"><i class="fas fa-crown" style="color: var(--accent-gold);"></i></div>
                 <div class="stat-info">
                     <span class="stat-value">Premium</span>
-                    <span class="stat-label">Funkcja dostępna</span>
+                    <span class="stat-label">{{ _('custom_bot_available') }}</span>
                 </div>
             </div>
             <div class="hero-stat-item" id="bot-status-container">
                 <div class="stat-icon" id="bot-status-icon"><i class="fas fa-circle"></i></div>
                 <div class="stat-info">
                     <span class="stat-value" id="bot-status-text">OFFLINE</span>
-                    <span class="stat-label">Status Twojego bota</span>
+                    <span class="stat-label">{{ _('custom_bot_status_title') }}</span>
                 </div>
             </div>
         </div>
@@ -31,47 +31,47 @@
     <!-- Konfiguracja -->
     <div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
         <div class="card-header">
-            <h3><i class="fas fa-cog"></i> Konfiguracja Bota</h3>
+            <h3><i class="fas fa-cog"></i> {{ _('custom_bot_config') }}</h3>
         </div>
         <div class="card-body">
             {% if not main_settings.premium %}
             <div style="background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
                 <p style="color: var(--accent-gold); font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-lock"></i> Funkcja "Własny Bot" wymaga subskrypcji PREMIUM.
+                    <i class="fas fa-lock"></i> {{ _('custom_bot_req_premium') }}
                 </p>
             </div>
             {% endif %}
 
             <div class="modal-section">
-                <label>NAZWA TWOJEGO BOTA:</label>
+                <label>{{ _('custom_bot_name_label') }}</label>
                 <input type="text" id="custom-bot-name" class="modal-input" placeholder="np. MójSuperBot" {% if not main_settings.premium %}disabled{% endif %}>
             </div>
 
             <div class="modal-section" style="margin-top: 20px;">
-                <label>TOKEN BOTA (DISCORD):</label>
+                <label>{{ _('custom_bot_token_label') }}</label>
                 <div style="position: relative;">
                     <input type="password" id="custom-bot-token" class="modal-input" style="padding-right: 50px;" placeholder="MTE5MzI4..." {% if not main_settings.premium %}disabled{% endif %}>
                     <i class="fas fa-eye" id="toggle-token-eye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666;" onclick="toggleTokenVisibility()"></i>
                 </div>
-                <p style="font-size: 0.75rem; color: #888; margin-top: 8px;">Token znajdziesz w <a href="https://discord.com/developers/applications" target="_blank" style="color: var(--accent-green);">Discord Developer Portal</a>.</p>
+                <p style="font-size: 0.75rem; color: #888; margin-top: 8px;">{{ _('custom_bot_token_hint') }} <a href="https://discord.com/developers/applications" target="_blank" style="color: var(--accent-green);">Discord Developer Portal</a>.</p>
             </div>
 
             <div class="modal-section" style="margin-top: 25px; border-top: 1px solid var(--border-gray); padding-top: 20px;">
                 <label class="toggle-row">
                     <input type="checkbox" id="custom-bot-enabled" {% if not main_settings.premium %}disabled{% endif %}>
                     <div class="toggle-switch {% if main_settings.premium %}toggle-switch-gold{% endif %}"></div>
-                    Uruchom dedykowanego bota
+                    {{ _('custom_bot_run_label') }}
                 </label>
             </div>
 
             <button class="btn-sidebar-save {% if main_settings.premium %}btn-gold{% endif %}" style="margin-top: 30px; width: 100%;" onclick="saveCustomBotLocal()" {% if not main_settings.premium %}disabled style="opacity: 0.5;"{% endif %}>
-                <i class="fas fa-save"></i> ZAPISZ KONFIGURACJĘ
+                <i class="fas fa-save"></i> {{ _('custom_bot_save_btn') }}
             </button>
 
             <!-- Link zaproszenia dla własnego bota -->
             <div id="custom-bot-invite-container" style="margin-top: 15px; display: none;">
                 <a id="custom-bot-invite-link" href="#" target="_blank" class="btn" style="background: rgba(116, 184, 22, 0.1); border: 1px solid var(--accent-green); color: var(--accent-green); text-transform: uppercase; font-weight: 800; font-size: 0.8rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 15px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.background='var(--accent-green)'; this.style.color='black'" onmouseout="this.style.background='rgba(116, 184, 22, 0.1)'; this.style.color='var(--accent-green)'">
-                    <i class="fas fa-user-plus"></i> Zaproś swojego bota
+                    <i class="fas fa-user-plus"></i> {{ _('custom_bot_invite_btn') }}
                 </a>
             </div>
         </div>
@@ -80,15 +80,15 @@
     <!-- Instrukcja -->
     <div class="settings-card {% if main_settings.premium %}premium-card-gold{% endif %}">
         <div class="card-header">
-            <h3><i class="fas fa-info-circle"></i> Jak to działa?</h3>
+            <h3><i class="fas fa-info-circle"></i> {{ _('custom_bot_guide_title') }}</h3>
         </div>
         <div class="card-body">
             <div class="guide-item" style="margin-bottom: 20px;">
                 <div style="display: flex; gap: 15px;">
                     <div style="width: 30px; height: 30px; background: {% if main_settings.premium %}var(--accent-gold){% else %}var(--accent-green){% endif %}; color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0;">1</div>
                     <div>
-                        <strong style="display: block; margin-bottom: 5px;">Utwórz Aplikację</strong>
-                        <p style="font-size: 0.85rem; color: #888;">Wejdź na portal deweloperski Discorda i stwórz nową aplikację. W zakładce "Bot" skopiuj jego TOKEN.</p>
+                        <strong style="display: block; margin-bottom: 5px;">{{ _('custom_bot_step1_title') }}</strong>
+                        <p style="font-size: 0.85rem; color: #888;">{{ _('custom_bot_step1_desc') }}</p>
                     </div>
                 </div>
             </div>
@@ -96,8 +96,8 @@
                 <div style="display: flex; gap: 15px;">
                     <div style="width: 30px; height: 30px; background: {% if main_settings.premium %}var(--accent-gold){% else %}var(--accent-green){% endif %}; color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0;">2</div>
                     <div>
-                        <strong style="display: block; margin-bottom: 5px;">Włącz Intenty</strong>
-                        <p style="font-size: 0.85rem; color: #888;">W ustawieniach bota na portalu Discorda włącz: "Presence Intent", "Server Members Intent" oraz "Message Content Intent".</p>
+                        <strong style="display: block; margin-bottom: 5px;">{{ _('custom_bot_step2_title') }}</strong>
+                        <p style="font-size: 0.85rem; color: #888;">{{ _('custom_bot_step2_desc') }}</p>
                     </div>
                 </div>
             </div>
@@ -105,8 +105,8 @@
                 <div style="display: flex; gap: 15px;">
                     <div style="width: 30px; height: 30px; background: {% if main_settings.premium %}var(--accent-gold){% else %}var(--accent-green){% endif %}; color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0;">3</div>
                     <div>
-                        <strong style="display: block; margin-bottom: 5px;">Wprowadź Token</strong>
-                        <p style="font-size: 0.85rem; color: #888;">Wklej token w panelu po lewej stronie i kliknij Zapisz. PolskiBot zacznie działać pod Twoją własną tożsamością!</p>
+                        <strong style="display: block; margin-bottom: 5px;">{{ _('custom_bot_step3_title') }}</strong>
+                        <p style="font-size: 0.85rem; color: #888;">{{ _('custom_bot_step3_desc') }}</p>
                     </div>
                 </div>
             </div>
@@ -114,7 +114,7 @@
             <div style="margin-top: 30px; padding: 20px; background: rgba(116, 184, 22, 0.05); border-radius: 12px; border: 1px solid rgba(116, 184, 22, 0.1);">
                 <p style="font-size: 0.85rem; color: #ccc;">
                     <i class="fas fa-lightbulb" style="color: #74b816; margin-right: 5px;"></i>
-                    Własny bot będzie posiadał wszystkie funkcje PolskiBota, ale na serwerze będzie widoczny z Twoim awatarem i nazwą.
+                    {{ _('custom_bot_features_tip') }}
                 </p>
             </div>
         </div>
@@ -191,15 +191,15 @@
         
         if (status === 'online') {
             icon.className = 'stat-icon status-online';
-            text.textContent = 'ONLINE';
+            text.textContent = '{{ _("status_online") }}';
             text.style.color = '#74b816';
         } else if (status === 'suspended') {
             icon.className = 'stat-icon status-suspended';
-            text.textContent = 'ZAWIESZONY';
+            text.textContent = '{{ _("status_suspended") }}';
             text.style.color = '#f1c40f';
         } else {
             icon.className = 'stat-icon status-offline';
-            text.textContent = 'OFFLINE';
+            text.textContent = '{{ _("status_offline") }}';
             text.style.color = '#ff4444';
         }
     }
@@ -219,7 +219,7 @@
                     return;
                 }
             } catch (e) {
-                console.error("Błąd generowania zaproszenia:", e);
+                console.error("Error generating invite:", e);
             }
         }
         inviteContainer.style.display = 'none';
@@ -229,7 +229,7 @@
         const btn = event.currentTarget;
         const originalHTML = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> {{ _("saving") }}';
 
         try {
             const data = {
@@ -246,11 +246,11 @@
             const result = await res.json();
 
             if (result.success) {
-                btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
+                btn.innerHTML = '<i class="fas fa-check"></i> {{ _("saved") }}';
                 btn.style.background = '#2d7d2a';
                 updateInviteLinkLocal(data.token);
             } else {
-                btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+                btn.innerHTML = '<i class="fas fa-times"></i> {{ _("error") }}';
                 btn.style.background = '#7d2a2a';
             }
 
@@ -260,7 +260,7 @@
                 btn.disabled = false;
             }, 2000);
         } catch (err) {
-            btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+            btn.innerHTML = '<i class="fas fa-times"></i> {{ _("error") }}';
             btn.style.background = '#7d2a2a';
             setTimeout(() => {
                 btn.innerHTML = originalHTML;

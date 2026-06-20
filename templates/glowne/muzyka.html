@@ -5,15 +5,15 @@
                 <span class="decorative-text">PolskiBot</span> Music
             </h1>
             <p class="hero-subtitle">
-                Zarządzaj odtwarzaczem muzycznym na swoim serwerze. Skonfigurowane role DJ i ustawienia głośności zapewnią porządek na kanałach głosowych.
+                {{ _('music_subtitle') }}
             </p>
         </div>
         <div class="hero-stats">
             <div class="hero-stat-item">
                 <div class="stat-icon"><i class="fas fa-headphones-alt"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value">Dostępny</span>
-                    <span class="stat-label">Odtwarzacz Hi-Fi</span>
+                    <span class="stat-value">{{ _('music_player_available') }}</span>
+                    <span class="stat-label">{{ _('music_player_label') }}</span>
                 </div>
             </div>
         </div>
@@ -22,7 +22,7 @@
 
 <div class="settings-card">
     <div class="card-header">
-        <h3><i class="fas fa-sliders-h"></i> Ustawienia Odtwarzacza</h3>
+        <h3><i class="fas fa-sliders-h"></i> {{ _('music_player_settings') }}</h3>
     </div>
     <div class="card-body">
         <div class="music-form">
@@ -30,13 +30,13 @@
             <div class="config-item" id="music-bot-selector-container" style="display: none; padding: 20px; flex-direction: column; align-items: stretch; gap: 12px; border: 1px solid rgba(212, 175, 55, 0.35); background: rgba(212, 175, 55, 0.03); border-radius: 12px; margin-bottom: 25px;">
                 <div class="config-info">
                     <div class="config-title" style="display: flex; align-items: center; gap: 8px; color: var(--accent-gold); font-weight: 700;">
-                        <i class="fas fa-robot"></i> Wybierz bota do konfiguracji
+                        <i class="fas fa-robot"></i> {{ _('music_choose_bot') }}
                     </div>
-                    <div class="config-desc">Możesz skonfigurować niezależne ustawienia dla każdego ze swoich botów muzycznych.</div>
+                    <div class="config-desc">{{ _('music_choose_bot_desc') }}</div>
                 </div>
                 <div style="position: relative;">
                     <select id="config-selected-bot" onchange="changeConfiguredBot()" class="modal-select" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); color: white; width: 100%; border-radius: 12px; padding: 12px 16px; font-weight: 600;">
-                        <option value="main">Główny Bot</option>
+                        <option value="main">{{ _('main_bot') }}</option>
                     </select>
                 </div>
             </div>
@@ -44,8 +44,8 @@
             <!-- Włącznik modułu -->
             <div class="config-item">
                 <div class="config-info">
-                    <div class="config-title">Włącz moduł muzyczny</div>
-                    <div class="config-desc">Umożliwia użytkownikom odtwarzanie muzyki na kanałach głosowych.</div>
+                    <div class="config-title">{{ _('music_enable') }}</div>
+                    <div class="config-desc">{{ _('music_enable_desc') }}</div>
                 </div>
                 <label class="switch">
                     <input type="checkbox" id="music-enabled-toggle" {% if main_settings.music_enabled %}checked{% endif %}>
@@ -57,8 +57,8 @@
             <div class="config-item" style="flex-direction: column; align-items: stretch; gap: 15px; padding: 20px;">
                 <div class="config-info" style="display: flex; justify-content: space-between; flex-direction: row; align-items: center; width: 100%;">
                     <div>
-                        <div class="config-title">Domyślna głośność</div>
-                        <div class="config-desc">Głośność startowa dla nowych utworów na kanale.</div>
+                        <div class="config-title">{{ _('music_default_volume') }}</div>
+                        <div class="config-desc">{{ _('music_default_volume_desc') }}</div>
                     </div>
                     <span id="volume-val-display" style="font-weight: 800; font-size: 1.1rem; color: var(--accent-green); background: var(--green-dim); padding: 4px 12px; border-radius: 8px;">{{ main_settings.music_volume or 100 }}%</span>
                 </div>
@@ -72,12 +72,12 @@
             <!-- Rola DJ -->
             <div class="config-item" style="flex-direction: column; align-items: stretch; gap: 12px; padding: 20px;">
                 <div class="config-info">
-                    <div class="config-title">Rola DJ (Wymaganie)</div>
-                    <div class="config-desc">Osoby z tą rolą będą mogły pomijać i zatrzymywać muzykę bez głosowania. Pozostaw puste, aby każdy mógł korzystać.</div>
+                    <div class="config-title">{{ _('music_dj_role') }}</div>
+                    <div class="config-desc">{{ _('music_dj_role_desc') }}</div>
                 </div>
                 <div style="position: relative;">
                     <select id="music-dj-role" class="modal-select" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); color: white; width: 100%; border-radius: 12px; padding: 12px 16px;">
-                        <option value="">Brak (Dla każdego)</option>
+                        <option value="">{{ _('music_dj_none') }}</option>
                         {% for role in roles %}
                         <option value="{{ role.id }}" {% if main_settings.music_dj_role_id == role.id %}selected{% endif %}>{{ role.name }}</option>
                         {% endfor %}
@@ -88,12 +88,12 @@
             <!-- Dedykowany Kanał dla Komend bota -->
             <div class="config-item" style="flex-direction: column; align-items: stretch; gap: 12px; padding: 20px;">
                 <div class="config-info">
-                    <div class="config-title">Kanał dla komend bota</div>
-                    <div class="config-desc">Wpisanie komendy tego bota będzie dozwolone wyłącznie na wybranym kanale. Wybierz puste, aby komendy działały wszędzie.</div>
+                    <div class="config-title">{{ _('bot_commands_channel') }}</div>
+                    <div class="config-desc">{{ _('music_commands_channel_desc') }}</div>
                 </div>
                 <div style="position: relative;">
                     <select id="music-commands-channel" class="modal-select" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gray); color: white; width: 100%; border-radius: 12px; padding: 12px 16px;">
-                        <option value="">Wszystkie kanały</option>
+                        <option value="">{{ _('all_channels') }}</option>
                         {% for ch in channels %}
                         <option value="{{ ch.id }}" {% if main_settings.commands_channel_id == ch.id %}selected{% endif %}>{{ ch.name }}</option>
                         {% endfor %}
@@ -103,15 +103,15 @@
 
             <!-- Zaawansowane ustawienia odtwarzania -->
             <div style="margin-top: 30px; margin-bottom: 15px; font-size: 0.75rem; font-weight: 900; color: var(--text-gray); letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-sliders-h"></i> ZAAWANSOWANE USTAWIENIA ODTWARZANIA
+                <i class="fas fa-sliders-h"></i> {{ _('music_advanced_settings') }}
             </div>
 
             <div class="config-item {% if not main_settings.premium %}premium-locked-row{% endif %}">
                 <div class="config-info">
                     <div class="config-title" style="display: flex; align-items: center; gap: 8px;">
-                        Tryb 24/7 {% if not main_settings.premium %}<span class="badge-gold"><i class="fas fa-lock"></i> PREMIUM</span>{% endif %}
+                        {{ _('music_mode_247') }} {% if not main_settings.premium %}<span class="badge-gold"><i class="fas fa-lock"></i> PREMIUM</span>{% endif %}
                     </div>
-                    <div class="config-desc">Bot nie opuści kanału głosowego po zakończeniu odtwarzania kolejki.</div>
+                    <div class="config-desc">{{ _('music_mode_247_desc') }}</div>
                 </div>
                 <label class="switch">
                     <input type="checkbox" id="music-247-toggle" {% if main_settings.music_247 %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
@@ -122,9 +122,9 @@
             <div class="config-item {% if not main_settings.premium %}premium-locked-row{% endif %}">
                 <div class="config-info">
                     <div class="config-title" style="display: flex; align-items: center; gap: 8px;">
-                        Wysoka Jakość Audio {% if not main_settings.premium %}<span class="badge-gold"><i class="fas fa-lock"></i> PREMIUM</span>{% endif %}
+                        {{ _('music_hq') }} {% if not main_settings.premium %}<span class="badge-gold"><i class="fas fa-lock"></i> PREMIUM</span>{% endif %}
                     </div>
-                    <div class="config-desc">Odtwarzanie audio o gęstości 320kbps z algorytmem redukcji zakłóceń.</div>
+                    <div class="config-desc">{{ _('music_hq_desc') }}</div>
                 </div>
                 <label class="switch">
                     <input type="checkbox" id="music-hq-toggle" {% if main_settings.music_high_quality %}checked{% endif %} {% if not main_settings.premium %}disabled{% endif %}>
@@ -133,7 +133,7 @@
             </div>
 
             <button type="button" class="btn-save" onclick="saveMusicSettings()" style="margin-top: 25px; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; background: var(--accent-green); color: black; border: none; cursor: pointer;">
-                <i class="fas fa-save"></i> ZAPISZ USTAWIENIA MUZYKI
+                <i class="fas fa-save"></i> {{ _('music_save_btn') }}
             </button>
         </div>
     </div>
@@ -141,58 +141,58 @@
 
 <div class="settings-card" style="margin-top: 25px;">
     <div class="card-header">
-        <h3><i class="fas fa-info-circle"></i> Dostępne Komendy Muzyczne</h3>
+        <h3><i class="fas fa-info-circle"></i> {{ _('music_available_commands') }}</h3>
     </div>
     <div class="card-body" style="padding: 0;">
         <div style="display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border-gray);">
             <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/play [link/nazwa]</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Uruchamia odtwarzanie muzyki z YouTube, Spotify lub SoundCloud.</div>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">{{ _('play_cmd_desc') }}</div>
                 </div>
-                <span class="badge-status-on">KOMENDA</span>
+                <span class="badge-status-on">{{ _('command_label') }}</span>
             </div>
             <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/skip</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Pomija aktualnie grany utwór i przechodzi do kolejnego.</div>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">{{ _('skip_cmd_desc') }}</div>
                 </div>
-                <span class="badge-status-on">KOMENDA</span>
+                <span class="badge-status-on">{{ _('command_label') }}</span>
             </div>
             <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/stop</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Zatrzymuje odtwarzanie i całkowicie czyści serwerową kolejkę utworów.</div>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">{{ _('stop_cmd_desc') }}</div>
                 </div>
-                <span class="badge-status-on">KOMENDA</span>
+                <span class="badge-status-on">{{ _('command_label') }}</span>
             </div>
             <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/queue</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Pokazuje listę nadchodzących utworów w kolejce.</div>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">{{ _('queue_cmd_desc') }}</div>
                 </div>
-                <span class="badge-status-on">KOMENDA</span>
+                <span class="badge-status-on">{{ _('command_label') }}</span>
             </div>
             <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/volume [10-100]</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Zmienia głośność odtwarzacza w czasie rzeczywistym.</div>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">{{ _('volume_cmd_desc') }}</div>
                 </div>
-                <span class="badge-status-on">KOMENDA</span>
+                <span class="badge-status-on">{{ _('command_label') }}</span>
             </div>
             <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/join [kanał]</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Dołącza bota do wskazanego lub Twojego kanału głosowego.</div>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">{{ _('join_cmd_desc') }}</div>
                 </div>
-                <span class="badge-status-on">KOMENDA</span>
+                <span class="badge-status-on">{{ _('command_label') }}</span>
             </div>
             <div style="background: var(--bg2); padding: 16px 25px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong style="color: white; font-family: monospace; font-size: 0.95rem;">/leave</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">Rozłącza bota z kanału głosowego.</div>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 4px;">{{ _('leave_cmd_desc') }}</div>
                 </div>
-                <span class="badge-status-on">KOMENDA</span>
+                <span class="badge-status-on">{{ _('command_label') }}</span>
             </div>
         </div>
     </div>
@@ -310,7 +310,7 @@
         const btn = event.currentTarget;
         const originalHTML = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ZAPISYWANIE...';
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> {{ _("saving") }}';
 
         const selector = document.getElementById('config-selected-bot');
         const botId = selector.value;
@@ -342,7 +342,7 @@
                     Object.assign(mainBotSettings, payload);
                 }
                 
-                btn.innerHTML = '<i class="fas fa-check"></i> ZAPISANO!';
+                btn.innerHTML = '<i class="fas fa-check"></i> {{ _("saved") }}';
                 btn.style.background = '#2d7d2a';
                 setTimeout(() => {
                     btn.innerHTML = originalHTML;
@@ -353,7 +353,7 @@
                 throw new Error("API responded with error");
             }
         } catch (err) {
-            btn.innerHTML = '<i class="fas fa-times"></i> BŁĄD';
+            btn.innerHTML = '<i class="fas fa-times"></i> {{ _("error") }}';
             btn.style.background = '#7d2a2a';
             setTimeout(() => {
                 btn.innerHTML = originalHTML;

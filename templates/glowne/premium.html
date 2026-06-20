@@ -5,23 +5,23 @@
                 <span class="decorative-text">PolskiBot</span> Premium
             </h1>
             <p class="hero-subtitle">
-                Odblokuj pełny potencjał swojego serwera, zdejmij wszystkie limity i zyskaj dostęp do ekskluzywnych funkcji dla profesjonalistów.
+                {{ _('premium_subtitle') }}
             </p>
         </div>
         <div class="hero-stats">
             <div class="hero-stat-item">
                 <div class="stat-icon" style="color: #d4af37;"><i class="fas fa-gem"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value">{{ "Aktywne" if main_settings.premium else "Nieaktywne" }}</span>
-                    <span class="stat-label">Premium Status</span>
+                    <span class="stat-value">{{ _('premium_active') if main_settings.premium else _('premium_inactive') }}</span>
+                    <span class="stat-label">{{ _('premium_status_label') }}</span>
                 </div>
             </div>
             {% if not bot_latency %}
             <div class="hero-stat-item" style="cursor: pointer;" onclick="wakeUpBot()">
                 <div class="stat-icon" style="background: rgba(255,140,0,0.1); color: #ff8c00;"><i class="fas fa-power-off"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value" style="font-size: 0.7rem; color: #ff8c00;">OBUDŹ BOTA</span>
-                    <span class="stat-label">Kliknij tutaj</span>
+                    <span class="stat-value" style="font-size: 0.7rem; color: #ff8c00;">{{ _('premium_wake_bot') }}</span>
+                    <span class="stat-label">{{ _('premium_wake_bot_hint') }}</span>
                 </div>
             </div>
             {% endif %}
@@ -36,23 +36,23 @@
             <i class="fas {% if main_settings.premium %}fa-crown{% else %}fa-star-half-alt{% endif %}"></i>
         </div>
         <div>
-            <h3>TWOJA SUBSKRYPCJA: <span>{% if main_settings.premium %}PREMIUM ACTIVE{% else %}BASIC FREE{% endif %}</span></h3>
-            <p>{% if main_settings.premium %}Twój serwer jest w pełni uzbrojony w najnowsze technologie PolskiBota.{% else %}Twoja społeczność korzysta z ograniczonej wersji. Odblokuj pełną moc już dziś!{% endif %}</p>
+            <h3>{{ _('premium_your_sub') }} <span>{% if main_settings.premium %}PREMIUM ACTIVE{% else %}BASIC FREE{% endif %}</span></h3>
+            <p>{% if main_settings.premium %}{{ _('premium_active_desc') }}{% else %}{{ _('premium_free_desc') }}{% endif %}</p>
         </div>
     </div>
     {% if not main_settings.premium %}
     <div class="status-actions">
         <button type="button" class="btn-premium-buy" onclick="scrollToPlans()">
-            <i class="fas fa-crown"></i> ULEPSZ DO PREMIUM
+            <i class="fas fa-crown"></i> {{ _('premium_upgrade_btn') }}
         </button>
     </div>
     {% else %}
     <div class="premium-active-badge">
         <div class="active-badge-inner">
-            <i class="fas fa-gem"></i> SUBSKRYPCJA AKTYWNA
+            <i class="fas fa-gem"></i> {{ _('premium_sub_active') }}
         </div>
         <div class="active-badge-details">
-            Typ subskrypcji: {{ main_settings.subscription_type|capitalize }}
+            {{ _('premium_sub_type') }} {{ main_settings.subscription_type|capitalize }}
         </div>
     </div>
     {% endif %}
@@ -61,70 +61,56 @@
 <!-- SZCZEGÓŁOWA LISTA KORZYŚCI -->
 <div class="benefits-section">
     <div class="section-header-gold">
-        <h2>DLACZEGO WARTO WYBRAĆ PREMIUM?</h2>
-        <p>Zobacz dokładnie, co zyskujesz przechodząc na wyższy poziom zarządzania.</p>
+        <h2>{{ _('premium_why_choose') }}</h2>
+        <p>{{ _('premium_why_choose_desc') }}</p>
     </div>
 
     <div class="benefits-grid">
         <!-- KATEGORIA: BEZPIECZEŃSTWO -->
         <div class="benefit-card">
             <div class="benefit-icon" style="background: rgba(255, 71, 87, 0.1); color: #ff4757;"><i class="fas fa-shield-virus"></i></div>
-            <h4>Elitarna Ochrona</h4>
+            <h4>{{ _('premium_benefit_shield_title') }}</h4>
             <ul>
-                <li><i class="fas fa-check"></i> <strong>Filtr Anty-Link:</strong> Blokuj zaproszenia i spam.</li>
-                <li><i class="fas fa-check"></i> <strong>Anty-Badwords:</strong> Usuwaj wulgaryzmy.</li>
-                <li><i class="fas fa-check"></i> <strong>Anty-Phishing:</strong> Chroń przed scamem.</li>
-                <li><i class="fas fa-check"></i> <strong>Zaawansowane Logi:</strong> Historia usunięć i edycji.</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_shield_1')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_shield_2')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_shield_3')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_shield_4')|safe }}</li>
             </ul>
         </div>
 
         <!-- KATEGORIA: CUSTOMIZACJA -->
         <div class="benefit-card">
             <div class="benefit-icon" style="background: rgba(212, 175, 55, 0.1); color: #d4af37;"><i class="fas fa-paint-brush"></i></div>
-            <h4>Pełna Customizacja</h4>
+            <h4>{{ _('premium_benefit_paint_title') }}</h4>
             <ul>
-                <li><i class="fas fa-check"></i> <strong>RGB Embeds:</strong> Animowane paski wiadomości.</li>
-                <li><i class="fas fa-check"></i> <strong>Brak Brandingu:</strong> Usuń logo bota ze stopki.</li>
-                <li><i class="fas fa-check"></i> <strong>Własne Banery:</strong> Unikalne tła w powitaniach.</li>
-                <li><i class="fas fa-check"></i> <strong>Własne Ikony:</strong> Personalizowane reakcje i przyciski.</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_paint_1')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_paint_2')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_paint_3')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_paint_4')|safe }}</li>
             </ul>
         </div>
 
         <!-- KATEGORIA: LIMITY -->
         <div class="benefit-card">
             <div class="benefit-icon" style="background: rgba(46, 213, 115, 0.1); color: #2ed573;"><i class="fas fa-infinity"></i></div>
-            <h4>Zdjęte Limity</h4>
+            <h4>{{ _('premium_benefit_limits_title') }}</h4>
             <ul>
-                <li><i class="fas fa-check"></i> <strong>Embedy:</strong> Do 10 aktywnych osadzeń (zamiast 2).</li>
-                <li><i class="fas fa-check"></i> <strong>Liczniki:</strong> Do 5 liczników ról (zamiast 1).</li>
-                <li><i class="fas fa-check"></i> <strong>Powitania:</strong> Do 5 niezależnych kanałów.</li>
-                <li><i class="fas fa-check"></i> <strong>SelfRole:</strong> Do 10 opcji w jednym panelu.</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_limits_1')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_limits_2')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_limits_3')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_limits_4')|safe }}</li>
             </ul>
         </div>
 
         <!-- KATEGORIA: FUNKCJE PRO -->
         <div class="benefit-card">
             <div class="benefit-icon" style="background: rgba(0, 168, 252, 0.1); color: #00a8fc;"><i class="fas fa-tools"></i></div>
-            <h4>Narzędzia PRO</h4>
+            <h4>{{ _('premium_benefit_tools_title') }}</h4>
             <ul>
-                <li><i class="fas fa-check"></i> <strong>Kreator Formularzy:</strong> Rekrutacje i ankiety.</li>
-                <li><i class="fas fa-check"></i> <strong>System Ticketów:</strong> Profesjonalna obsługa.</li>
-                <li><i class="fas fa-check"></i> <strong>Monitorowanie Voice:</strong> Logi kanałów głosowych.</li>
-                <li><i class="fas fa-check"></i> <strong>Priorytet:</strong> Szybsze wsparcie i aktualizacje.</li>
-            </ul>
-        </div>
-
-        <!-- KATEGORIA: LIMITOWANY FREE -->
-        <div class="benefit-card free-limits-card" style="border-color: rgba(255, 71, 87, 0.2); background: rgba(255, 71, 87, 0.02);">
-            <div class="benefit-icon" style="background: rgba(255, 71, 87, 0.1); color: #ff4757;"><i class="fas fa-exclamation-circle"></i></div>
-            <h4>Zasady i Ograniczenia wersji Free</h4>
-            <ul>
-                <li><i class="fas fa-times" style="color: #ff4757;"></i> <strong>Liczniki:</strong> Maksymalnie 3 (w Premium do 15)</li>
-                <li><i class="fas fa-times" style="color: #ff4757;"></i> <strong>Powitania:</strong> Maksymalnie 2 kanały (w Premium do 20)</li>
-                <li><i class="fas fa-times" style="color: #ff4757;"></i> <strong>Wiadomości Embed:</strong> Maksymalnie 5 (w Premium do 50)</li>
-                <li><i class="fas fa-times" style="color: #ff4757;"></i> <strong>Powiadomienia Media:</strong> Maksymalnie 2 (w Premium do 10)</li>
-                <li><i class="fas fa-times" style="color: #ff4757;"></i> <strong>Tła GIF w powitaniach:</strong> Brak obsługi (tylko statyczne)</li>
-                <li><i class="fas fa-times" style="color: #ff4757;"></i> <strong>Stopka reklamowa:</strong> Znak wodny "Powered by PolskiBot"</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_tools_1')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_tools_2')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_tools_3')|safe }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_benefit_tools_4')|safe }}</li>
             </ul>
         </div>
     </div>
@@ -136,32 +122,32 @@
     <div class="premium-plans">
         <div class="plan-card featured">
             <div class="plan-badge">BEST VALUE</div>
-            <h3>SUBSKRYPCJA MIESIĘCZNA</h3>
+            <h3>{{ _('premium_monthly_sub') }}</h3>
             <div class="plan-price">15.00 PLN<span>/mc</span></div>
             <div class="trial-info">
                 {% if main_settings.trial_used %}
-                <span class="trial-used"><i class="fas fa-times-circle"></i> OKRES PRÓBNY WYKORZYSTANY</span>
+                <span class="trial-used"><i class="fas fa-times-circle"></i> {{ _('premium_trial_used') }}</span>
                 {% else %}
-                <span class="trial-available"><i class="fas fa-gift"></i> 7 DNI ZA DARMO NA START</span>
+                <span class="trial-available"><i class="fas fa-gift"></i> {{ _('premium_trial_available') }}</span>
                 {% endif %}
             </div>
             <ul class="plan-features">
-                <li><i class="fas fa-check"></i> Odblokuj wszystkie funkcje PRO</li>
-                <li><i class="fas fa-check"></i> Usuń wszystkie limity</li>
-                <li><i class="fas fa-check"></i> Priorytetowe wsparcie 24/7</li>
-                <li><i class="fas fa-check"></i> Dostęp do nowych modułów w beta</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_features_pro_1') }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_features_pro_2') }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_features_pro_3') }}</li>
+                <li><i class="fas fa-check"></i> {{ _('premium_features_pro_4') }}</li>
             </ul>
             <div class="plan-actions">
                 {% if not main_settings.trial_used %}
-                <button class="btn-trial" onclick="startTrial()">AKTYWUJ 7 DNI TRIAL</button>
+                <button class="btn-trial" onclick="startTrial()">{{ _('premium_activate_trial_btn') }}</button>
                 {% endif %}
                 {% if stripe_available %}
                 <a href="{{ url_for('config.premium_checkout', server_id=server_id) }}?plan=miesieczny" class="btn-buy-now">
-                    <i class="fas fa-credit-card"></i> KUP PRZEZ STRIPE / BLIK
+                    <i class="fas fa-credit-card"></i> {{ _('premium_buy_stripe_blik') }}
                 </a>
                 {% else %}
-                <a href="javascript:void(0)" class="btn-buy-now btn-buy-disabled" onclick="alert('{{ stripe_config_error or 'Stripe nie jest skonfigurowany. Skontaktuj się z administratorem.' }}')">
-                    <i class="fas fa-credit-card"></i> STRIPE NIEDOSTĘPNY
+                <a href="javascript:void(0)" class="btn-buy-now btn-buy-disabled" onclick="alert('{{ stripe_config_error or _('stripe_config_error') }}')">
+                    <i class="fas fa-credit-card"></i> {{ _('premium_stripe_unavailable') }}
                 </a>
                 {% if stripe_config_error %}
                 <p class="stripe-error-note">{{ stripe_config_error }}</p>
@@ -319,19 +305,19 @@
     async function wakeUpBot() {
         try {
             const res = await fetch('http://127.0.0.1:5006/ping');
-            alert("✅ Bot został obudzony!");
+            alert("{{ _('premium_js_wake_success') }}");
             location.reload();
         } catch(e) {
-            alert("❌ Bot nie odpowiada. Spróbuj za chwilę.");
+            alert("{{ _('premium_js_wake_fail') }}");
         }
     }
 
     async function startTrial() {
-        if (!confirm("Aktywować 7 dni Premium za darmo? Możesz to zrobić tylko raz na tym serwerze.")) return;
+        if (!confirm("{{ _('premium_js_trial_confirm') }}")) return;
         try {
             const res = await fetch(`/api/{{ server_id }}/premium/trial`, { method: 'POST' });
-            if (res.ok) { alert("✅ OKRES PRÓBNY AKTYWNY! Korzystaj śmiało."); location.reload(); }
+            if (res.ok) { alert("{{ _('premium_js_trial_success') }}"); location.reload(); }
             else { const d = await res.json(); alert("❌ " + d.error); }
-        } catch(e) { alert("❌ Błąd połączenia."); }
+        } catch(e) { alert("{{ _('premium_js_trial_fail') }}"); }
     }
 </script>

@@ -2,10 +2,10 @@
     <div class="hero-glass">
         <div class="hero-header">
             <h1 class="hero-title">
-                <span class="decorative-text">Prace</span> Techniczne
+                <span class="decorative-text">{{ _('server_page_maint_decorative') }}</span> {{ _('server_page_maint_title') }}
             </h1>
             <p class="hero-subtitle">
-                Strona serwera jest obecnie modernizowana, aby zapewnić najlepszą jakość prezentacji Twojej społeczności.
+                {{ _('server_page_maint_subtitle') }}
             </p>
         </div>
     </div>
@@ -16,13 +16,13 @@
         <div style="font-size: 6rem; color: #ffaa00; margin-bottom: 40px; animation: maintenance-pulse 2s infinite;">
             <i class="fas fa-tools"></i>
         </div>
-        <h2 style="font-weight: 900; letter-spacing: -1px; color: white; font-size: 2.5rem; margin-bottom: 20px;">MODUŁ W TRAKCIE PRAC</h2>
+        <h2 style="font-weight: 900; letter-spacing: -1px; color: white; font-size: 2.5rem; margin-bottom: 20px;">{{ _('server_page_module_under_maint') }}</h2>
         <p style="color: var(--text-gray); max-width: 600px; margin: 0 auto 40px; font-size: 1.1rem; line-height: 1.6;">
-            Przepraszamy! Ta sekcja panelu przechodzi obecnie gruntowną przebudowę. Pracujemy nad nowym silnikiem wizytówek serwerów, który pozwoli na jeszcze lepszą personalizację.
+            {{ _('server_page_maint_desc') }}
         </p>
         <div style="display: flex; justify-content: center; gap: 20px;">
             <button class="btn-sidebar-save" style="width: auto; padding: 15px 40px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;" onclick="window.open('https://discord.gg/RunF9ehW6', '_blank')">
-                <i class="fas fa-comments"></i> STATUS PRAC NA DISCORDZIE
+                <i class="fas fa-comments"></i> {{ _('server_page_maint_discord_status') }}
             </button>
         </div>
     </div>

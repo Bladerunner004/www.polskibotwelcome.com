@@ -15,6 +15,12 @@ files_to_upload = [
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\utils\\translations.py', '/root/polskibot/utils/translations.py'),
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\config.html', '/root/polskibot/templates/config.html'),
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\strona_glowna.html', '/root/polskibot/templates/glowne/strona_glowna.html'),
+    ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\ustawienia.html', '/root/polskibot/templates/glowne/ustawienia.html'),
+    ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\strona_serwera.html', '/root/polskibot/templates/glowne/strona_serwera.html'),
+    ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\komendy.html', '/root/polskibot/templates/glowne/komendy.html'),
+    ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\Tutoriale.html', '/root/polskibot/templates/glowne/Tutoriale.html'),
+    ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\wlasny_bot.html', '/root/polskibot/templates/glowne/wlasny_bot.html'),
+    ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\premium.html', '/root/polskibot/templates/glowne/premium.html'),
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\zarzadzanie_serwerem\\osadzenia.html', '/root/polskibot/templates/zarzadzanie_serwerem/osadzenia.html'),
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\muzyka.html', '/root/polskibot/templates/glowne/muzyka.html'),
     ('c:\\Users\\danie\\Pictures\\POLSKIBOT\\templates\\glowne\\music_tokens.html', '/root/polskibot/templates/glowne/music_tokens.html')
@@ -45,7 +51,11 @@ print(f"Service restarted. Exit code: {exit_status}")
 
 print("Logs after restart:")
 stdin, stdout, stderr = ssh.exec_command("systemctl status polskibot --no-pager")
-print(stdout.read().decode('utf-8', errors='replace'))
+log_text = stdout.read().decode('utf-8', errors='replace').replace('\u25cf', '*')
+try:
+    print(log_text)
+except UnicodeEncodeError:
+    print(log_text.encode('ascii', errors='replace').decode('ascii'))
 
 ssh.close()
 print("Done!")

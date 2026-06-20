@@ -1,97 +1,97 @@
 <div class="hero-banner" style="background-image: linear-gradient(135deg, rgba(12, 13, 17, 0.8), rgba(12, 13, 17, 0.4)), url('{{ url_for('static', filename='uploads/home_banner_premium.png') }}');">
     <div class="hero-glass">
-        <div class="hero-header">
-            <h1 class="hero-title">
-                <span class="decorative-text">Witaj w</span> PolskiBot
-            </h1>
-            <p class="hero-subtitle">
-                Zarządzaj swoim serwerem z poziomu najbardziej zaawansowanego panelu w Polsce. Stabilność, szybkość i styl - wszystko w jednym miejscu.
-            </p>
-        </div>
-        <div class="hero-stats">
-            <div class="hero-stat-item">
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-info">
-                    <span class="stat-value">{{ guild.member_count }}</span>
-                    <span class="stat-label">Członków</span>
-                </div>
-            </div>
-            <div class="hero-stat-item">
-                <div class="stat-icon"><i class="fas fa-bolt"></i></div>
-                <div class="stat-info">
-                    <span class="stat-value" id="bot-latency-value">
-                        {% if bot_latency %}
-                            {{ (bot_latency)|int }}ms
-                        {% else %}
-                            <span style="color: #ff4757; font-size: 0.75rem;">OFFLINE</span>
-                        {% endif %}
-                    </span>
-                    <span class="stat-label">Ping bota</span>
-                </div>
-            </div>
-            {% if main_settings.premium %}
-            <div class="hero-stat-item" style="border-left: 1px solid rgba(212, 175, 55, 0.2); padding-left: 25px;">
-                <div class="stat-icon" style="color: #d4af37;"><i class="fas fa-gem"></i></div>
-                <div class="stat-info">
-                    <span class="stat-value" style="color: #d4af37;">{{ main_settings.premium_expiry or 'Bezterminowo' }}</span>
-                    <span class="stat-label">Wygasa za</span>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<div class="dashboard-overview">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-        <div class="settings-card" style="margin-bottom: 0;">
-            <div class="card-header">
-                <h3><i class="fas fa-rocket"></i> Szybki Start</h3>
-            </div>
-            <div class="card-body">
-                <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 20px;">Wybierz moduł z paska bocznego, aby rozpocząć konfigurację swojego serwera.</p>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;">
-                        <i class="fas fa-shield-alt" style="color: var(--accent-green);"></i>
-                        <div>
-                            <div style="font-weight: 700; font-size: 0.85rem;">Zabezpiecz serwer</div>
-                            <div style="font-size: 0.75rem; color: #666;">Skonfiguruj AutoMod i logi</div>
-                        </div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;">
-                        <i class="fas fa-star" style="color: var(--accent-gold);"></i>
-                        <div>
-                            <div style="font-weight: 700; font-size: 0.85rem;">Status Premium</div>
-                            <div style="font-size: 0.75rem; color: #666;">Zdejmij limity i włącz analitykę</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="settings-card" style="margin-bottom: 0;">
-            <div class="card-header">
-                <h3><i class="fas fa-info-circle"></i> Informacje o serwerze</h3>
-            </div>
-            <div class="card-body">
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                        <span style="color: #666;">Właściciel:</span>
-                        <span style="font-weight: 600;">{{ guild.owner.name if guild.owner else 'Nieznany' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                        <span style="color: #666;">Region:</span>
-                        <span style="font-weight: 600;">Europe / Poland</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                        <span style="color: #666;">Prefix bota:</span>
-                        <span style="color: var(--accent-green); font-weight: 800;">/</span>
-                    </div>
-                </div>
-                <button type="button" class="btn-sidebar-save" style="margin-top: 25px; background: rgba(255,255,255,0.05); color: white; box-shadow: none;" onclick="window.open('https://discord.gg/RunF9ehW6', '_blank')">
-                    <i class="fab fa-discord"></i> SERWER SUPPORT
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+         <div class="hero-header">
+             <h1 class="hero-title">
+                 <span class="decorative-text">{{ _('welcome_to') }}</span> PolskiBot
+             </h1>
+             <p class="hero-subtitle">
+                 {{ _('hero_subtitle') }}
+             </p>
+         </div>
+         <div class="hero-stats">
+             <div class="hero-stat-item">
+                 <div class="stat-icon"><i class="fas fa-users"></i></div>
+                 <div class="stat-info">
+                     <span class="stat-value">{{ guild.member_count }}</span>
+                     <span class="stat-label">{{ _('members') }}</span>
+                 </div>
+             </div>
+             <div class="hero-stat-item">
+                 <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+                 <div class="stat-info">
+                     <span class="stat-value" id="bot-latency-value">
+                         {% if bot_latency %}
+                             {{ (bot_latency)|int }}ms
+                         {% else %}
+                             <span style="color: #ff4757; font-size: 0.75rem;">OFFLINE</span>
+                         {% endif %}
+                     </span>
+                     <span class="stat-label">{{ _('bot_ping') }}</span>
+                 </div>
+             </div>
+             {% if main_settings.premium %}
+             <div class="hero-stat-item" style="border-left: 1px solid rgba(212, 175, 55, 0.2); padding-left: 25px;">
+                 <div class="stat-icon" style="color: #d4af37;"><i class="fas fa-gem"></i></div>
+                 <div class="stat-info">
+                     <span class="stat-value" style="color: #d4af37;">{{ main_settings.premium_expiry or 'Bezterminowo' }}</span>
+                     <span class="stat-label">{{ _('expires_in') }}</span>
+                 </div>
+             </div>
+             {% endif %}
+         </div>
+     </div>
+ </div>
+ 
+ <div class="dashboard-overview">
+     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+         <div class="settings-card" style="margin-bottom: 0;">
+             <div class="card-header">
+                 <h3><i class="fas fa-rocket"></i> {{ _('quick_start') }}</h3>
+             </div>
+             <div class="card-body">
+                 <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 20px;">{{ _('quick_start_desc') }}</p>
+                 <div style="display: flex; flex-direction: column; gap: 10px;">
+                     <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;">
+                         <i class="fas fa-shield-alt" style="color: var(--accent-green);"></i>
+                         <div>
+                             <div style="font-weight: 700; font-size: 0.85rem;">{{ _('secure_server') }}</div>
+                             <div style="font-size: 0.75rem; color: #666;">{{ _('secure_server_desc') }}</div>
+                         </div>
+                     </div>
+                     <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;">
+                         <i class="fas fa-star" style="color: var(--accent-gold);"></i>
+                         <div>
+                             <div style="font-weight: 700; font-size: 0.85rem;">{{ _('premium_status') }}</div>
+                             <div style="font-size: 0.75rem; color: #666;">{{ _('remove_limits') }}</div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+         </div>
+         
+         <div class="settings-card" style="margin-bottom: 0;">
+             <div class="card-header">
+                 <h3><i class="fas fa-info-circle"></i> {{ _('server_info') }}</h3>
+             </div>
+             <div class="card-body">
+                 <div style="display: flex; flex-direction: column; gap: 12px;">
+                     <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                         <span style="color: #666;">{{ _('owner') }}</span>
+                         <span style="font-weight: 600;">{{ guild.owner.name if guild.owner else _('unknown') }}</span>
+                     </div>
+                     <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                         <span style="color: #666;">{{ _('region') }}</span>
+                         <span style="font-weight: 600;">Europe / Poland</span>
+                     </div>
+                     <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                         <span style="color: #666;">{{ _('bot_prefix') }}</span>
+                         <span style="color: var(--accent-green); font-weight: 800;">/</span>
+                     </div>
+                 </div>
+                 <button type="button" class="btn-sidebar-save" style="margin-top: 25px; background: rgba(255,255,255,0.05); color: white; box-shadow: none;" onclick="window.open('https://discord.gg/RunF9ehW6', '_blank')">
+                     <i class="fab fa-discord"></i> {{ _('support_server') }}
+                 </button>
+             </div>
+         </div>
+     </div>
+ </div>

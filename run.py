@@ -185,19 +185,30 @@ def add_header(response):
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
+@app.route('/set_language/<lang>')
+def set_language(lang):
+    if lang in ('pl', 'en'):
+        session['lang'] = lang
+    ref = request.referrer or '/'
+    return redirect(ref)
+
 # --- KONTEKST GLOBALNY ---
 @app.context_processor
 def inject_global_vars():
     user = session.get('user')
-    # Używamy user_avatar zapisanego w sesji lub generujemy go na bieżąco
     avatar = session.get('user_avatar') or (get_user_avatar(user) if user else None)
+    
+    from utils.translations import translate
+    lang = session.get('lang', 'pl')
     
     return {
         'user': user,
         'user_avatar': avatar,
         'user_guilds': _guilds_memory_cache.get(user.get('id') if user else None, []),
         'login_url': get_login_url(),
-        'discord_invite': DISCORD_INVITE_URL
+        'discord_invite': DISCORD_INVITE_URL,
+        'current_lang': lang,
+        '_': lambda key: translate(key, lang)
     }
 
 app.register_blueprint(home_bp)

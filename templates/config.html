@@ -499,13 +499,20 @@
             <img src="{{ user_avatar or 'https://cdn.discordapp.com/embed/avatars/0.png' }}" class="nav-avatar" id="cfgAvatarBtn" alt="Avatar">
             <div class="dropdown-content" id="cfgDropdown">
                 <div class="dropdown-header">
-                    <small>Zalogowany jako</small>
+                    <small>{{ _('logged_in_as') }}</small>
                     <strong>{{ user.username if user else 'Użytkownik' }}</strong>
                 </div>
-                <a href="/" class="dropdown-item"><i class="fas fa-home"></i> Strona główna</a>
-                <a href="/dashboard" class="dropdown-item"><i class="fas fa-server"></i> Zmień serwer</a>
-                <a href="?refresh=true" class="dropdown-item" style="color: var(--accent-green); font-weight: 700;"><i class="fas fa-sync-alt"></i> Synchronizuj z Discordem</a>
-                <a href="{{ url_for('logout') }}" class="dropdown-item logout"><i class="fas fa-sign-out-alt"></i> Wyloguj się</a>
+                <a href="/" class="dropdown-item"><i class="fas fa-home"></i> {{ _('home_page') }}</a>
+                <a href="/dashboard" class="dropdown-item"><i class="fas fa-server"></i> {{ _('change_server') }}</a>
+                <a href="?refresh=true" class="dropdown-item" style="color: var(--accent-green); font-weight: 700;"><i class="fas fa-sync-alt"></i> {{ _('sync_with_discord') }}</a>
+                <a href="{{ url_for('logout') }}" class="dropdown-item logout"><i class="fas fa-sign-out-alt"></i> {{ _('log_out') }}</a>
+                <div style="border-top: 1px solid rgba(255,255,255,0.08); padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <span style="font-size: 0.75rem; color: #888;"><i class="fas fa-language"></i> Language:</span>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="/set_language/pl" class="lang-btn" style="text-decoration: none; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: {% if current_lang == 'pl' %}rgba(116, 184, 22, 0.2){% else %}transparent{% endif %}; color: {% if current_lang == 'pl' %}var(--accent-green){% else %}#aaa{% endif %}; border: 1px solid {% if current_lang == 'pl' %}var(--accent-green){% else %}rgba(255,255,255,0.2){% endif %};">PL</a>
+                        <a href="/set_language/en" class="lang-btn" style="text-decoration: none; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: {% if current_lang == 'en' %}rgba(116, 184, 22, 0.2){% else %}transparent{% endif %}; color: {% if current_lang == 'en' %}var(--accent-green){% else %}#aaa{% endif %}; border: 1px solid {% if current_lang == 'en' %}var(--accent-green){% else %}rgba(255,255,255,0.2){% endif %};">EN</a>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -536,27 +543,27 @@
                     <div style="font-weight: 800; font-size: 0.95rem;">{{ guild.name }}</div>
                 </div>
 
-                <div class="category-label">Konfiguracja bota</div>
-                <div class="menu-item active" onclick="openTab(event, 'strona_glowna')"><i class="fas fa-home"></i> <span>Strona Główna</span></div>
-                <div class="menu-item" onclick="openTab(event, 'ustawienia')"><i class="fas fa-cog"></i> <span>Ustawienia Ogólne</span></div>
-                <div class="menu-item" onclick="openTab(event, 'komendy')"><i class="fas fa-terminal"></i> <span>Komendy</span></div>
-                <div class="menu-item" onclick="openTab(event, 'strona_serwera')"><i class="fas fa-globe"></i> <span>Strona Serwera</span></div>
+                <div class="category-label">{{ _('bot_config') }}</div>
+                <div class="menu-item active" onclick="openTab(event, 'strona_glowna')"><i class="fas fa-home"></i> <span>{{ _('home') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'ustawienia')"><i class="fas fa-cog"></i> <span>{{ _('general_settings') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'komendy')"><i class="fas fa-terminal"></i> <span>{{ _('commands') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'strona_serwera')"><i class="fas fa-globe"></i> <span>{{ _('server_page') }}</span></div>
                 <div class="menu-item" onclick="openTab(event, 'wlasny_bot')">
-                    <i class="fas fa-robot"></i> <span>Własny bot</span>
+                    <i class="fas fa-robot"></i> <span>{{ _('custom_bot') }}</span>
                 </div>
-                <div class="menu-item" onclick="openTab(event, 'tutoriale')"><i class="fas fa-video"></i> <span>Tutoriale</span></div>
-                <div class="menu-item" onclick="openTab(event, 'premium')"><i class="fas fa-gem" style="color: #00a8fc;"></i> <span>Status Premium</span></div>
+                <div class="menu-item" onclick="openTab(event, 'tutoriale')"><i class="fas fa-video"></i> <span>{{ _('tutorials') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'premium')"><i class="fas fa-gem" style="color: #00a8fc;"></i> <span>{{ _('premium_status') }}</span></div>
 
-                <div class="category-label">Zarządzanie serwerem</div>
-                <div class="menu-item" onclick="openTab(event, 'powitania')"><i class="fas fa-door-open"></i> <span>Powitania</span></div>
-                <div class="menu-item" onclick="openTab(event, 'auto_role')"><i class="fas fa-user-plus"></i> <span>Auto Role</span></div>
-                <div class="menu-item" onclick="openTab(event, 'liczniki')"><i class="fas fa-sort-numeric-up"></i> <span>Liczniki</span></div>
-                <div class="menu-item" onclick="openTab(event, 'media')"><i class="fas fa-share-alt"></i> <span>Media Socialne</span></div>
+                <div class="category-label">{{ _('server_mgmt') }}</div>
+                <div class="menu-item" onclick="openTab(event, 'powitania')"><i class="fas fa-door-open"></i> <span>{{ _('welcome_msg') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'auto_role')"><i class="fas fa-user-plus"></i> <span>{{ _('auto_role') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'liczniki')"><i class="fas fa-sort-numeric-up"></i> <span>{{ _('counters') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'media')"><i class="fas fa-share-alt"></i> <span>{{ _('social_media') }}</span></div>
                 <div class="menu-item" onclick="openTab(event, 'monitor')">
-                    <i class="fas fa-chart-line"></i> <span>Analityka (Monitor)</span>
+                    <i class="fas fa-chart-line"></i> <span>{{ _('analytics') }}</span>
                 </div>
-                <div class="menu-item" onclick="openTab(event, 'osadzenia')"><i class="fas fa-bullhorn"></i> <span>Osadzenia</span></div>
-                <div class="menu-item" onclick="openTab(event, 'selfrole')"><i class="fas fa-tags"></i> <span>Selfrole</span></div>
+                <div class="menu-item" onclick="openTab(event, 'osadzenia')"><i class="fas fa-bullhorn"></i> <span>{{ _('embeds') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'selfrole')"><i class="fas fa-tags"></i> <span>{{ _('self_role') }}</span></div>
                 
                 <div class="category-label">Moderacja</div>
                 <div class="menu-item" onclick="openTab(event, 'moderacja')"><i class="fas fa-gavel"></i> <span>Moderacja</span></div>
@@ -564,15 +571,15 @@
                     <i class="fas fa-shield-alt"></i> <span>Auto Mod</span>
                 </div>
                 <div class="menu-item" onclick="openTab(event, 'logi')">
-                    <i class="fas fa-history"></i> <span>Logi</span>
+                    <i class="fas fa-history"></i> <span>{{ _('logs') }}</span>
                 </div>
-                <div class="menu-item" onclick="openTab(event, 'zmiany_na_serwerze')"><i class="fas fa-history"></i> <span>Zmiany na serwerze</span></div>
-                <div class="menu-item" onclick="openTab(event, 'formularz')"><i class="fas fa-clipboard-list"></i> <span>Formularz</span></div>
-                <div class="menu-item" onclick="openTab(event, 'zgloszenia')"><i class="fas fa-ticket-alt"></i> <span>Zgłoszenia</span></div>
+                <div class="menu-item" onclick="openTab(event, 'zmiany_na_serwerze')"><i class="fas fa-history"></i> <span>{{ _('server_changes') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'formularz')"><i class="fas fa-clipboard-list"></i> <span>{{ _('forms') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'zgloszenia')"><i class="fas fa-ticket-alt"></i> <span>{{ _('tickets') }}</span></div>
                 
-                <div class="category-label">Muzyka</div>
-                <div class="menu-item" onclick="openTab(event, 'polskibot_music')"><i class="fas fa-music"></i> <span>PolskiBot Music</span></div>
-                <div class="menu-item" onclick="openTab(event, 'music_tokens')"><i class="fas fa-key"></i> <span>Tokeny do muzyki</span></div>
+                <div class="category-label">{{ _('music') }}</div>
+                <div class="menu-item" onclick="openTab(event, 'polskibot_music')"><i class="fas fa-music"></i> <span>{{ _('polskibot_music') }}</span></div>
+                <div class="menu-item" onclick="openTab(event, 'music_tokens')"><i class="fas fa-key"></i> <span>{{ _('music_tokens') }}</span></div>
             </div>
 
 
